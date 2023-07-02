@@ -25,7 +25,8 @@ fn rocket() -> _ {
 ***REMOVED***
 
     let pool = PoolBuilder::new(username, password, database)
-    .max_connections(20)
+    .min_connections(10) // Had to specify, would otherwise cause error: Invalid number of sessions
+    .max_connections(10) // min and max must be the same for it to work on linux?
     .build();
 
     let pool = match pool {
