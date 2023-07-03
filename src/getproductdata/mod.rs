@@ -1,3 +1,4 @@
+#[allow(non_snake_case)]
 use oracle::{Result};
 use oracle::pool::Pool;
 use rocket::serde::json::Json;
@@ -98,9 +99,6 @@ fn get_product(params: Json<FetchParams>, pool: &Pool) -> Result<Vec<Product>> {
     println!("Time Started: {:?}", SystemTime::now().duration_since(UNIX_EPOCH));
 
 
-    let username = "odbc_jhc";
-    let password = "odbc_jhc";
-    let database = "//10.0.0.21:1521/a12";
     
 
     let mut mypRef = "%";
