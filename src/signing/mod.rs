@@ -1,11 +1,5 @@
-use hmac::{Hmac, Mac};
-use jwt::{SignWithKey, VerifyWithKey};
-use oracle::pool;
 use rocket::{time::{Date, Duration}, serde::json::Json};
-use sha2::Sha256;
-use std::{collections::BTreeMap, time::{SystemTime, UNIX_EPOCH}};
-use chrono::prelude::*;
-
+use std::{time::{SystemTime, UNIX_EPOCH}};
 
 use oracle::pool::Pool;
 
@@ -96,7 +90,9 @@ fn generate_token(user: &User) -> String {
     return token.unwrap();
 }
 
-pub fn validate_token(token: String) -> bool{
-    let DecodedToken = decode::<Claims>(&token, &DecodingKey::from_secret("secret".as_ref()), &Validation::default());
-    return DecodedToken.unwrap().claims.exp > SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as usize;    
+pub fn validate_token(token: &str) -> bool{
+    let DecodedToken = decode::<Claims>(&token, &DecodingKey::from_secret(SECRET.as_ref()), &Validation::default());
+    let result: bool = DecodedToken.unwrap().claims.exp > SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as usize;    
+    println!("Token Valid: {}", result);
+    return result;
 }
