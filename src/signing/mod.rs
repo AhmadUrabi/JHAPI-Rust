@@ -34,6 +34,10 @@ impl Claims {
 const SECRET : &str = "SecretKey";
 
 pub async fn signin(params:Json<LoginParams>, pool: &Pool) -> Option<Json<String>> {
+    // Check for empty username and password
+    if params.pUserName.is_none() || params.pPassword.is_none() {
+        return None;
+    }
 
     let mut mypUsername = "%";
     let mut mypPassword = "%";
@@ -47,16 +51,28 @@ pub async fn signin(params:Json<LoginParams>, pool: &Pool) -> Option<Json<String
     }
 
     let user = fetch_user_data(mypUsername.to_string(), mypPassword.to_string(), pool);
-    let token = generate_token(&user);
+
+    // If user doesn't exist, return None
+    if user.is_none() {
+        return None;
+    }
+
+    let token = generate_token(&user.unwrap());
     return Some(Json(token));
 }
 
-fn fetch_user_data(username: String, password: String, pool: &Pool) -> User {
+fn fetch_user_data(username: String, password: String, pool: &Pool) -> Option<User> {
     let conn = pool.get().unwrap();
     let mut stmt = conn
         .statement("SELECT USERNAME, FULLNAME, EMAIL, LOGINDURATION FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1 AND PASSWORD = :2").build()
         .unwrap();
     let rows = stmt.query(&[&username, &password]).unwrap();
+    
+    // check for rows size without moving
+    if rows.size_hint().0 == 0 {
+        return None;
+    }
+
     let mut user = User {
         USER_ID: None,
         USER_NAME: None,
@@ -70,7 +86,7 @@ fn fetch_user_data(username: String, password: String, pool: &Pool) -> User {
         user.USER_EMAIL = Some(row.get::<&str, String>("EMAIL").unwrap());
         user.LOGIN_DURATION = Some(row.get::<&str, String>("LOGINDURATION").unwrap());
     }
-    return user;
+    return Some(user);
 }
 
 fn generate_token(user: &User) -> String {
@@ -82,7 +98,7 @@ fn generate_token(user: &User) -> String {
     );
 
 
-    let token = jsonwebtoken::encode(
+    let token = encode(
         &Header::default(),
         &claims,
         &EncodingKey::from_secret(SECRET.to_string().as_ref()),

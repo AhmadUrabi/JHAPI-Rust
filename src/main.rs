@@ -2,10 +2,6 @@
 
 #[macro_use] extern crate rocket;
 
-use std::time::SystemTime;
-use std::time::UNIX_EPOCH;
-
-
 use rocket::{State, post};
 use rocket::serde::json::Json;
 use rocket::http::Status;
@@ -80,7 +76,6 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
 
 #[post("/GetProductData", data = "<params>")]
 async fn get_products(params: Json<FetchParams>, pool: &State<Pool>, key: ApiKey<'_>) -> Option<Json<Vec<Product>>> {
-    println!("Time on request: {:?}", SystemTime::now().duration_since(UNIX_EPOCH));
     return get_product_data(params, pool).await;
 }
 
@@ -88,7 +83,6 @@ async fn get_products(params: Json<FetchParams>, pool: &State<Pool>, key: ApiKey
 async fn get_store_list(pool: &State<Pool>) -> Option<Json<Vec<Store>>> {
     return fetch_store_list(pool).await;
 }
-
 
 #[post("/Sign", data = "<params>")]
 async fn sign(params:Json<LoginParams>, pool: &State<Pool>) -> Option<Json<String>> {
