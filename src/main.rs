@@ -60,15 +60,15 @@ fn rocket() -> _ {
 // Start Request Guard Functions
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for ApiKey<'r> {
-    type Error = ApiKeyError;
+    type Error = String;
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         // Returns true if `key` is a valid JWT Token.
 
         match req.headers().get_one("Authentication") {
-            None => Outcome::Failure((Status::BadRequest, ApiKeyError::Missing)),
+            None => Outcome::Failure((Status::Unauthorized, "Please include an Authentication header".to_string())),
             Some(key) if validate_token(key) => Outcome::Success(ApiKey(key)),
-            Some(_) => Outcome::Failure((Status::BadRequest, ApiKeyError::Invalid)),
+            Some(_) => Outcome::Failure((Status::Unauthorized, "Please include a valid Authentication header".to_string())),
         }
     }
 }
@@ -80,7 +80,7 @@ async fn get_products(params: Json<FetchParams>, pool: &State<Pool>, key: ApiKey
 }
 
 #[get("/StoreList")]
-async fn get_store_list(pool: &State<Pool>) -> Option<Json<Vec<Store>>> {
+async fn get_store_list(pool: &State<Pool>, key: ApiKey<'_>) -> Option<Json<Vec<Store>>> {
     return fetch_store_list(pool).await;
 }
 

@@ -9,6 +9,7 @@ use std::time::{SystemTime};
 use crate::apistructs::Product;
 use crate::apistructs::FetchParams;
 
+
 pub async fn get_product_data(params: Json<FetchParams>, pool: &Pool) -> Option<Json<Vec<Product>>> {
         // check for empty params
     if params.pRef.is_none() && params.pBarcode.is_none() && params.pId.is_none() {
