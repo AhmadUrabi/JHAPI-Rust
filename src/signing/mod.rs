@@ -1,12 +1,18 @@
 use hmac::{Hmac, Mac};
 use jwt::{SignWithKey, VerifyWithKey};
-use rocket::time::{Date, Duration};
+use oracle::pool;
+use rocket::{time::{Date, Duration}, serde::json::Json};
 use sha2::Sha256;
 use std::{collections::BTreeMap, time::{SystemTime, UNIX_EPOCH}};
 use chrono::prelude::*;
 
+
+use oracle::pool::Pool;
+
 use serde::{Serialize, Deserialize};
 use jsonwebtoken::{encode, decode, Header, Algorithm, Validation, EncodingKey, DecodingKey};
+
+use crate::apistructs::{User, LoginParams};
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
@@ -31,17 +37,46 @@ impl Claims {
     }
 }
 
-use crate::apistructs::User;
+const SECRET : &str = "SecretKey";
 
-pub async fn signin(){
-    let user = User {
-        USER_ID: Some("1".to_string()),
-        USER_NAME: Some("test".to_string()),
-        USER_EMAIL: Some("ahmad.u@live.com".to_string()),
-        LOGIN_DURATION: Some("1".to_string())
-    };
+pub async fn signin(params:Json<LoginParams>, pool: &Pool) -> Option<Json<String>> {
+
+    let mut mypUsername = "%";
+    let mut mypPassword = "%";
+
+    if let Some(pUserName) = &params.pUserName {
+        mypUsername = pUserName;
+    }
+
+    if let Some(pPassword) = &params.pPassword {
+        mypPassword = pPassword;
+    }
+
+    let user = fetch_user_data(mypUsername.to_string(), mypPassword.to_string(), pool);
     let token = generate_token(&user);
-    println!("Token: {}", token);
+    return Some(Json(token));
+}
+
+fn fetch_user_data(username: String, password: String, pool: &Pool) -> User {
+    let conn = pool.get().unwrap();
+    let mut stmt = conn
+        .statement("SELECT USERNAME, FULLNAME, EMAIL, LOGINDURATION FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1 AND PASSWORD = :2").build()
+        .unwrap();
+    let rows = stmt.query(&[&username, &password]).unwrap();
+    let mut user = User {
+        USER_ID: None,
+        USER_NAME: None,
+        USER_EMAIL: None,
+        LOGIN_DURATION: None
+    };
+    for row_result in rows {
+        let row = row_result.unwrap();
+        user.USER_ID = Some(row.get::<&str, String>("USERNAME").unwrap());
+        user.USER_NAME = Some(row.get::<&str, String>("FULLNAME").unwrap());
+        user.USER_EMAIL = Some(row.get::<&str, String>("EMAIL").unwrap());
+        user.LOGIN_DURATION = Some(row.get::<&str, String>("LOGINDURATION").unwrap());
+    }
+    return user;
 }
 
 fn generate_token(user: &User) -> String {
@@ -56,7 +91,12 @@ fn generate_token(user: &User) -> String {
     let token = jsonwebtoken::encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret("S".as_ref()),
+        &EncodingKey::from_secret(SECRET.to_string().as_ref()),
     );
     return token.unwrap();
+}
+
+pub fn validate_token(token: String) -> bool{
+    let DecodedToken = decode::<Claims>(&token, &DecodingKey::from_secret("secret".as_ref()), &Validation::default());
+    return DecodedToken.unwrap().claims.exp > SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as usize;    
 }

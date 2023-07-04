@@ -99,3 +99,9 @@ pub struct User {
     pub USER_EMAIL : Option<String>,
     pub LOGIN_DURATION : Option<String>
 }
+
+#[derive(serde::Deserialize, Debug)]
+pub struct LoginParams {
+    pub pUserName: Option<String>,
+    pub pPassword: Option<String>
+}

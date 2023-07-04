@@ -2,32 +2,34 @@
 
 #[macro_use] extern crate rocket;
 
-
 use std::time::SystemTime;
 use std::time::UNIX_EPOCH;
-use oracle::pool::Pool;
 
+use jwt::Claims;
+use rocket::Request;
+use rocket::request::FromRequest;
 use rocket::{State, post};
-
-
-use oracle::pool::PoolBuilder;
 use rocket::serde::json::Json;
 
+use oracle::pool::Pool;
+use oracle::pool::PoolBuilder;
 
 mod getproductdata;
 mod apistructs;
 mod fetchstores;
 mod signing;
 
-
 use crate::getproductdata::get_product_data;
 use crate::fetchstores::fetch_store_list;
+
 use crate::apistructs::FetchParams;
+use crate::apistructs::LoginParams;
 use crate::apistructs::Product;
 use crate::apistructs::Store;
 
 #[launch]
 fn rocket() -> _ {
+    // Build Connection Pool
     let username = "odbc_jhc";
     let password = "odbc_jhc";
     let database = "//10.0.0.21:1521/a12";
@@ -41,6 +43,8 @@ fn rocket() -> _ {
         Ok(pool) => pool,
         Err(err) => panic!("Error Creating Pool: {}", err.to_string()),
     };
+    // Pool built
+
     rocket::build().manage(pool).mount("/", routes![get_products, get_store_list, sign])
 }
 
@@ -55,7 +59,12 @@ async fn get_store_list(pool: &State<Pool>) -> Option<Json<Vec<Store>>> {
     return fetch_store_list(pool).await;
 }
 
-#[get("/Sign")]
-async fn sign() {
-    signing::signin().await;
+
+#[post("/Sign", data = "<params>")]
+async fn sign(params:Json<LoginParams>, pool: &State<Pool>) -> Option<Json<String>> {
+    let token = signing::signin(params,pool).await;
+    match token {
+        Some(token) => return Some(Json(token.to_string())),
+        None => return None,
+    }
 }
