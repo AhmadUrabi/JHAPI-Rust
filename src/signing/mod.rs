@@ -54,25 +54,29 @@ pub async fn signin(params:Json<LoginParams>, pool: &Pool) -> Option<Json<String
 
     // If user doesn't exist, return None
     if user.is_none() {
+        println!("User not found");
         return None;
     }
 
     let token = generate_token(&user.unwrap());
+
+    if (token == "") {
+        println!("Token generation failed");
+        return None;
+    }
+
     return Some(Json(token));
 }
 
 fn fetch_user_data(username: String, password: String, pool: &Pool) -> Option<User> {
+
+
     let conn = pool.get().unwrap();
     let mut stmt = conn
         .statement("SELECT USERNAME, FULLNAME, EMAIL, LOGINDURATION FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1 AND PASSWORD = :2").build()
         .unwrap();
     let rows = stmt.query(&[&username, &password]).unwrap();
     
-    // check for rows size without moving
-    if rows.size_hint().0 == 0 {
-        return None;
-    }
-
     let mut user = User {
         USER_ID: None,
         USER_NAME: None,
@@ -90,6 +94,11 @@ fn fetch_user_data(username: String, password: String, pool: &Pool) -> Option<Us
 }
 
 fn generate_token(user: &User) -> String {
+
+    if user.USER_ID.is_none() || user.USER_NAME.is_none() || user.USER_EMAIL.is_none() || user.LOGIN_DURATION.is_none() {
+        return String::from("");
+    }
+
     let claims = Claims::new(
         user.USER_ID.clone().unwrap(),
         user.USER_NAME.clone().unwrap(),

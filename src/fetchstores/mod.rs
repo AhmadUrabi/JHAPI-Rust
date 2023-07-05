@@ -5,6 +5,7 @@ use rocket::serde::json::Json;
 use crate::apistructs::Store;
 
 pub async fn fetch_store_list(pool: &Pool) -> Option<Json<Vec<Store>>> {
+    println!("Fetching Store List");
     let stores = get_stores(pool).unwrap();
     if stores.is_empty() {
         return None;
