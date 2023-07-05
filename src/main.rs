@@ -34,8 +34,6 @@ enum ApiKeyError {
 }
 // End Request Guard Structs
 
-
-
 #[launch]
 fn rocket() -> _ {
     // Build Connection Pool
@@ -54,7 +52,7 @@ fn rocket() -> _ {
     };
     // Pool built
 
-    rocket::build().manage(pool).mount("/", routes![get_products, get_store_list, sign])
+    rocket::build().register("/", catchers![Unauthorized, not_found]).manage(pool).mount("/", routes![get_products, get_store_list, sign])
 }
 
 // Start Request Guard Functions
@@ -84,11 +82,25 @@ async fn get_store_list(pool: &State<Pool>, key: ApiKey<'_>) -> Option<Json<Vec<
     return fetch_store_list(pool).await;
 }
 
+// Catcher Test
+
+#[catch(401)]
+fn Unauthorized() -> &'static str {
+    "Unauthorized, please include a valid Authentication header, or check your request body"
+}
+
+#[catch(404)]
+fn not_found(req: &Request) -> String {
+    format!("I couldn't find '{}'. Try something else?", req.uri())
+}
+
+//
+
+
 #[post("/Sign", data = "<params>")]
-async fn sign(params:Json<LoginParams>, pool: &State<Pool>) -> Option<Json<String>> {
-    let token = signing::signin(params,pool).await;
-    match token {
-        Some(token) => return Some(Json(token.to_string())),
-        None => return None,
+async fn sign(params: Json<LoginParams>, pool: &State<Pool>) -> Result<Json<String>, Status> {
+    match signing::signin(params, pool).await {
+        Some(token) => Ok(Json(token.to_string())),
+        None => Err(Status::Unauthorized),
     }
 }
