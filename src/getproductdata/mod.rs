@@ -3,109 +3,16 @@ use oracle::{Result};
 use oracle::pool::Pool;
 use rocket::serde::json::Json;
 
-use std::time::UNIX_EPOCH;
-use std::time::{SystemTime};
-
 use crate::apistructs::Product;
 use crate::apistructs::FetchParams;
 
 
-pub async fn get_product_data(params: Json<FetchParams>, pool: &Pool) -> Option<Json<Vec<Product>>> {
-        // check for empty params
+pub fn get_product(params: Json<FetchParams>, pool: &Pool) -> Result<Vec<Product>> {
+
     if params.pRef.is_none() && params.pBarcode.is_none() && params.pId.is_none() {
-        return None;
+        return Ok(vec![]);
     }
 
-    let s = get_product(params, pool).unwrap();
-    if s.is_empty() {
-        None
-    } else {
-        println!("{}", s.len());
-        Some(Json(s.into_iter().map(|i| Product {
-        ITEM_ID : i.ITEM_ID.clone(),
-        IS_ACTIVE : i.IS_ACTIVE.clone(),
-        CAN_BE_SOLD : i.CAN_BE_SOLD.clone(),
-        ITEM_DESC : i.ITEM_DESC.clone(),
-        ITEM_DESC_S : i.ITEM_DESC_S.clone(),
-        FOREIGN_ITEM_CODE : i.FOREIGN_ITEM_CODE.clone(),
-        ITEM_CAT : i.ITEM_CAT.clone(),
-        ITEM_SUB_CAT : i.ITEM_SUB_CAT.clone(),
-        SALE_UNIT : i.SALE_UNIT.clone(),
-        UNIT_DESC : i.UNIT_DESC.clone(),
-        PACKING : i.PACKING.clone(),
-        CARD_OPEN_DATE : i.CARD_OPEN_DATE.clone(),
-        HS_CODE : i.HS_CODE.clone(),
-        COUNTRY : i.COUNTRY.clone(),
-        COUNTRY_DESC : i.COUNTRY_DESC.clone(),
-        SUPPLIER_ID : i.SUPPLIER_ID.clone(),
-        SUPPLIER_DESC : i.SUPPLIER_DESC.clone(),
-        ITEM_MAIN_BARCODE : i.ITEM_MAIN_BARCODE.clone(),
-        NATURE_ID : i.NATURE_ID.clone(),
-        NATURE_DESC : i.NATURE_DESC.clone(),
-        TRADE_ID : i.TRADE_ID.clone(),
-        TRADE_DESC : i.TRADE_DESC.clone(),
-        QTY_STORE_01 : i.QTY_STORE_01.clone(),
-        QTY_STORE_02 : i.QTY_STORE_02.clone(),
-        QTY_STORE_05 : i.QTY_STORE_05.clone(),
-        QTY_STORE_06 : i.QTY_STORE_06.clone(),
-        QTY_STORE_07 : i.QTY_STORE_07.clone(),
-        QTY_STORE_08 : i.QTY_STORE_08.clone(),
-        QTY_STORE_10 : i.QTY_STORE_10.clone(),
-        QTY_STORE_11 : i.QTY_STORE_11.clone(),
-        QTY_STORE_12 : i.QTY_STORE_12.clone(),
-        QTY_STORE_19 : i.QTY_STORE_19.clone(),
-        QTY_STORE_21 : i.QTY_STORE_21.clone(),
-        QTY_STORE_23 : i.QTY_STORE_23.clone(),
-        QTY_STORE_31 : i.QTY_STORE_31.clone(),
-        QTY_STORE_32 : i.QTY_STORE_32.clone(),
-        QTY_STORE_33 : i.QTY_STORE_33.clone(),
-        QTY_STORE_34 : i.QTY_STORE_34.clone(),
-        QTY_STORE_35 : i.QTY_STORE_35.clone(),
-        SALE_PRICE_NOTAX_STORE_01 : i.SALE_PRICE_NOTAX_STORE_01.clone(),
-        SALE_PRICE_NOTAX_STORE_02 : i.SALE_PRICE_NOTAX_STORE_02.clone(),
-        SALE_PRICE_NOTAX_STORE_05 : i.SALE_PRICE_NOTAX_STORE_05.clone(),
-        SALE_PRICE_NOTAX_STORE_06 : i.SALE_PRICE_NOTAX_STORE_06.clone(),
-        SALE_PRICE_NOTAX_STORE_08 : i.SALE_PRICE_NOTAX_STORE_08.clone(),
-        SALE_PRICE_NOTAX_STORE_07 : i.SALE_PRICE_NOTAX_STORE_07.clone(),
-        SALE_PRICE_NOTAX_STORE_31 : i.SALE_PRICE_NOTAX_STORE_31.clone(),
-        SALE_PRICE_NOTAX_STORE_32 : i.SALE_PRICE_NOTAX_STORE_32.clone(),
-        SALE_PRICE_NOTAX_STORE_33 : i.SALE_PRICE_NOTAX_STORE_33.clone(),
-        SALE_PRICE_NOTAX_STORE_34 : i.SALE_PRICE_NOTAX_STORE_34.clone(),
-        SALE_PRICE_NOTAX_STORE_35 : i.SALE_PRICE_NOTAX_STORE_35.clone(),
-        FIRST_DISC_PER_STORE_01 : i.FIRST_DISC_PER_STORE_01.clone(),
-        FIRST_DISC_PER_STORE_02 : i.FIRST_DISC_PER_STORE_02.clone(),
-        FIRST_DISC_PER_STORE_05 : i.FIRST_DISC_PER_STORE_05.clone(),
-        FIRST_DISC_PER_STORE_06 : i.FIRST_DISC_PER_STORE_06.clone(),
-        FIRST_DISC_PER_STORE_07 : i.FIRST_DISC_PER_STORE_07.clone(),
-        FIRST_DISC_PER_STORE_08 : i.FIRST_DISC_PER_STORE_08.clone(),
-        FIRST_DISC_PER_STORE_31 : i.FIRST_DISC_PER_STORE_31.clone(),
-        FIRST_DISC_PER_STORE_32 : i.FIRST_DISC_PER_STORE_32.clone(),
-        FIRST_DISC_PER_STORE_33 : i.FIRST_DISC_PER_STORE_33.clone(),
-        FIRST_DISC_PER_STORE_34 : i.FIRST_DISC_PER_STORE_34.clone(),
-        FIRST_DISC_PER_STORE_35 : i.FIRST_DISC_PER_STORE_35.clone(),
-        SECOND_DISC_PER_STORE_01 : i.SECOND_DISC_PER_STORE_01.clone(),
-        SECOND_DISC_PER_STORE_02 : i.SECOND_DISC_PER_STORE_02.clone(),
-        SECOND_DISC_PER_STORE_05 : i.SECOND_DISC_PER_STORE_05.clone(),
-        SECOND_DISC_PER_STORE_06 : i.SECOND_DISC_PER_STORE_06.clone(),
-        SECOND_DISC_PER_STORE_07 : i.SECOND_DISC_PER_STORE_07.clone(),
-        SECOND_DISC_PER_STORE_08 : i.SECOND_DISC_PER_STORE_08.clone(),
-        SECOND_DISC_PER_STORE_31 : i.SECOND_DISC_PER_STORE_31.clone(),
-        SECOND_DISC_PER_STORE_32 : i.SECOND_DISC_PER_STORE_32.clone(),
-        SECOND_DISC_PER_STORE_33 : i.SECOND_DISC_PER_STORE_33.clone(),
-        SECOND_DISC_PER_STORE_34 : i.SECOND_DISC_PER_STORE_34.clone(),
-        SECOND_DISC_PER_STORE_35 : i.SECOND_DISC_PER_STORE_35.clone(),
-    }).collect()))
-}
-}
-
-
-fn get_product(params: Json<FetchParams>, pool: &Pool) -> Result<Vec<Product>> {
-    
-    println!("params: {:?}", params);
-    println!("Time Started: {:?}", SystemTime::now().duration_since(UNIX_EPOCH));
-
-
-    
 
     let mut mypRef = "%";
     let mut mypBarcode = "%";
@@ -124,8 +31,7 @@ fn get_product(params: Json<FetchParams>, pool: &Pool) -> Result<Vec<Product>> {
         mypId = pId;
     }
 
-    println!("Time before connection: {:?}", SystemTime::now().duration_since(UNIX_EPOCH));
-
+   
 
     let conn = pool.get()?;
 
@@ -134,7 +40,7 @@ fn get_product(params: Json<FetchParams>, pool: &Pool) -> Result<Vec<Product>> {
     
     let mut stmt = conn.statement("SELECT * FROM ODBC_JHC.JHC_INVDATA WHERE FOREIGN_ITEM_CODE LIKE :ref AND ITEM_MAIN_BARCODE LIKE :barcode AND ITEM_ID LIKE :id").build()?;
     let rows = stmt.query(&[&mypRef,&mypBarcode,&mypId])?;
-    println!("Time after fetching: {:?}", SystemTime::now().duration_since(UNIX_EPOCH));
+
     let mut products : Vec<Product> = vec![];
     
     for row_result in rows {
@@ -216,6 +122,5 @@ fn get_product(params: Json<FetchParams>, pool: &Pool) -> Result<Vec<Product>> {
         };
         products.push(prod);
     }
-    println!("Time when vector ready: {:?}", SystemTime::now().duration_since(UNIX_EPOCH));
     Ok(products)
 }

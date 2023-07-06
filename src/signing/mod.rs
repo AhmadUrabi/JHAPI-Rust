@@ -1,10 +1,10 @@
-use rocket::{time::{Date, Duration}, serde::json::Json};
+use rocket::{serde::json::Json};
 use std::{time::{SystemTime, UNIX_EPOCH}};
 
 use oracle::pool::Pool;
 
 use serde::{Serialize, Deserialize};
-use jsonwebtoken::{encode, decode, Header, Algorithm, Validation, EncodingKey, DecodingKey};
+use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
 
 use crate::apistructs::{User, LoginParams};
 
@@ -60,7 +60,7 @@ pub async fn signin(params:Json<LoginParams>, pool: &Pool) -> Option<Json<String
 
     let token = generate_token(&user.unwrap());
 
-    if (token == "") {
+    if token == "" {
         println!("Token generation failed");
         return None;
     }
@@ -117,7 +117,14 @@ fn generate_token(user: &User) -> String {
 
 pub fn validate_token(token: &str) -> bool{
     let DecodedToken = decode::<Claims>(&token, &DecodingKey::from_secret(SECRET.as_ref()), &Validation::default());
-    let result: bool = DecodedToken.unwrap().claims.exp > SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as usize;    
-    println!("Token Valid: {}", result);
-    return result;
+
+
+    match DecodedToken {
+        Ok(token) => return token.claims.exp > SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as usize,
+        Err(err) => {
+            println!("Error decoding token: {}", err);
+            return false;
+        },
+    }
+
 }

@@ -5,7 +5,7 @@
 use rocket::{State, post};
 use rocket::serde::json::Json;
 use rocket::http::Status;
-use rocket::request::{self, Outcome, Request, FromRequest};
+use rocket::request::{Outcome, Request, FromRequest};
 
 use oracle::pool::Pool;
 use oracle::pool::PoolBuilder;
@@ -15,7 +15,7 @@ mod apistructs;
 mod fetchstores;
 mod signing;
 
-use crate::getproductdata::get_product_data;
+use crate::getproductdata::get_product;
 use crate::fetchstores::fetch_store_list;
 use crate::signing::validate_token;
 
@@ -24,15 +24,8 @@ use crate::apistructs::LoginParams;
 use crate::apistructs::Product;
 use crate::apistructs::Store;
 
-// Start Request Guard Structs
-struct ApiKey<'r>(&'r str);
 
-#[derive(Debug)]
-enum ApiKeyError {
-    Missing,
-    Invalid,
-}
-// End Request Guard Structs
+
 
 #[launch]
 fn rocket() -> _ {
@@ -56,6 +49,8 @@ fn rocket() -> _ {
 }
 
 // Start Request Guard Functions
+struct ApiKey<'r>(&'r str);
+
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for ApiKey<'r> {
     type Error = String;
@@ -73,17 +68,26 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
 // End Request Guard Functions
 
 #[post("/GetProductData", data = "<params>")]
-async fn get_products(params: Json<FetchParams>, pool: &State<Pool>, key: ApiKey<'_>) -> Option<Json<Vec<Product>>> {
-    return get_product_data(params, pool).await;
+async fn get_products(params: Json<FetchParams>, pool: &State<Pool>, _key: ApiKey<'_>) -> Json<Vec<Product>> {
+    
+    // No error handling as the function will always return a result
+    Json(get_product(params, pool).unwrap())
 }
 
 #[get("/StoreList")]
-async fn get_store_list(pool: &State<Pool>, key: ApiKey<'_>) -> Option<Json<Vec<Store>>> {
-    return fetch_store_list(pool).await;
+async fn get_store_list(pool: &State<Pool>, _key: ApiKey<'_>) -> Json<Vec<Store>> {
+    Json(fetch_store_list(pool).await)
 }
 
-// Catcher Test
+#[post("/Sign", data = "<params>")]
+async fn sign(params: Json<LoginParams>, pool: &State<Pool>) -> Result<Json<String>, Status> {
+    match signing::signin(params, pool).await {
+        Some(token) => Ok(Json(token.to_string())),
+        None => Err(Status::Unauthorized),
+    }
+}
 
+// Route catchers
 #[catch(401)]
 fn Unauthorized() -> &'static str {
     "Unauthorized, please include a valid Authentication header, or check your request body"
@@ -92,15 +96,4 @@ fn Unauthorized() -> &'static str {
 #[catch(404)]
 fn not_found(req: &Request) -> String {
     format!("I couldn't find '{}'. Try something else?", req.uri())
-}
-
-//
-
-
-#[post("/Sign", data = "<params>")]
-async fn sign(params: Json<LoginParams>, pool: &State<Pool>) -> Result<Json<String>, Status> {
-    match signing::signin(params, pool).await {
-        Some(token) => Ok(Json(token.to_string())),
-        None => Err(Status::Unauthorized),
-    }
 }
