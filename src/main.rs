@@ -6,6 +6,7 @@ use rocket::{State, post};
 use rocket::serde::json::Json;
 use rocket::http::Status;
 use rocket::request::{Outcome, Request, FromRequest};
+use rocket::fs::{FileServer, relative};
 
 use oracle::pool::Pool;
 use oracle::pool::PoolBuilder;
@@ -45,7 +46,7 @@ fn rocket() -> _ {
     };
     // Pool built
 
-    rocket::build().register("/", catchers![Unauthorized, not_found]).manage(pool).mount("/", routes![get_products, get_store_list, sign])
+    rocket::build().register("/", catchers![Unauthorized, not_found]).manage(pool).mount("/", routes![get_products, get_store_list, sign]).mount("/images", rocket::fs::FileServer::from(relative!("static")))
 }
 
 // Start Request Guard Functions

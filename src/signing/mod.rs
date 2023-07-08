@@ -131,7 +131,7 @@ pub fn validate_token(token: &str) -> bool{
 
 pub fn get_cost_permission(token: &str, pool: &Pool) -> bool {
     let DecodedToken = decode::<Claims>(&token, &DecodingKey::from_secret(SECRET.as_ref()), &Validation::default());
-    let mut username = String::from("");
+    let username;
     match DecodedToken {
         Ok(token) => username = token.claims.id,
         Err(err) => {
