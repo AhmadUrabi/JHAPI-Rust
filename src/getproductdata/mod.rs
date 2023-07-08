@@ -1,6 +1,7 @@
 #[allow(non_snake_case)]
 use oracle::{Result};
 use oracle::pool::Pool;
+use rocket::log::private::info;
 use rocket::serde::json::Json;
 
 use crate::apistructs::Product;
@@ -125,5 +126,8 @@ pub fn get_product(params: Json<FetchParams>, pool: &Pool, key : ApiKey<'_>) -> 
         };
         products.push(prod);
     }
+
+    info!("Products Count: {:?}", products.len());
+
     Ok(products)
 }
