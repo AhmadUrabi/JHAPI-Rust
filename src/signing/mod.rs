@@ -35,7 +35,10 @@ const SECRET : &str = "SecretKey";
 
 pub async fn signin(params:Json<LoginParams>, pool: &Pool) -> Option<Json<String>> {
     // Check for empty username and password
+    info!("Login Attempt: {:?}", params.0.pUserName);
+
     if params.pUserName.is_none() || params.pPassword.is_none() {
+        error!("Empty username or password");
         return None;
     }
 
@@ -54,6 +57,7 @@ pub async fn signin(params:Json<LoginParams>, pool: &Pool) -> Option<Json<String
 
     // If user doesn't exist, return None
     if user.is_none() {
+        error!("User not found");
         println!("User not found");
         return None;
     }
@@ -61,10 +65,12 @@ pub async fn signin(params:Json<LoginParams>, pool: &Pool) -> Option<Json<String
     let token = generate_token(&user.unwrap());
 
     if token == "" {
+        error!("Token generation failed");
         println!("Token generation failed");
         return None;
     }
 
+    info!("Token generated successfully");
     return Some(Json(token));
 }
 
@@ -153,4 +159,33 @@ pub fn get_cost_permission(token: &str, pool: &Pool) -> bool {
         return false;
     }
 
+}
+
+pub fn decode_token_data(token: &str) -> Option<User> {
+    let DecodedToken = decode::<Claims>(&token, &DecodingKey::from_secret(SECRET.as_ref()), &Validation::default());
+    let username;
+    let name;
+    let email;
+    let duration;
+    match DecodedToken {
+        Ok(token) => {
+            username = token.claims.id;
+            name = token.claims.name;
+            email = token.claims.email;
+            duration = token.claims.exp - token.claims.iat;
+        },
+        Err(err) => {
+            println!("Error decoding token: {}", err);
+            return None;
+        },
+    }
+
+    let user = User {
+        USER_ID: Some(username),
+        USER_NAME: Some(name),
+        USER_EMAIL: Some(email),
+        LOGIN_DURATION: Some(duration.to_string()),
+    };
+
+    return Some(user);
 }

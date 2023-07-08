@@ -2,11 +2,12 @@
 
 #[macro_use] extern crate rocket;
 
+use rocket::log::private::info;
 use rocket::{State, post};
 use rocket::serde::json::Json;
 use rocket::http::Status;
 use rocket::request::{Outcome, Request, FromRequest};
-use rocket::fs::{FileServer, relative};
+use rocket::fs::{relative};
 
 use oracle::pool::Pool;
 use oracle::pool::PoolBuilder;
@@ -19,6 +20,7 @@ mod signing;
 use crate::getproductdata::get_product;
 use crate::fetchstores::fetch_store_list;
 use crate::signing::validate_token;
+use crate::signing::decode_token_data;
 
 use crate::apistructs::FetchParams;
 use crate::apistructs::LoginParams;
@@ -30,6 +32,10 @@ use crate::apistructs::Store;
 
 #[launch]
 fn rocket() -> _ {
+    // Logging Setup
+    log4rs::init_file("config/log4rs.yaml", Default::default()).unwrap();
+    // Logging Setup End
+
     // Build Connection Pool
 ***REMOVED***
 ***REMOVED***
@@ -50,6 +56,7 @@ fn rocket() -> _ {
 }
 
 // Start Request Guard Functions
+#[derive(Debug)]
 pub struct ApiKey<'r>(&'r str);
 
 #[rocket::async_trait]
@@ -60,9 +67,17 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
         // Returns true if `key` is a valid JWT Token.
 
         match req.headers().get_one("Authentication") {
-            None => Outcome::Failure((Status::Unauthorized, "Please include an Authentication header".to_string())),
-            Some(key) if validate_token(key) => Outcome::Success(ApiKey(key)),
-            Some(_) => Outcome::Failure((Status::Unauthorized, "Please include a valid Authentication header".to_string())),
+            None => {
+                error!("No Authentication header found");
+                Outcome::Failure((Status::Unauthorized, "Please include an Authentication header".to_string()))
+            },
+            Some(key) if validate_token(key) => {
+                info!("Valid Token Found");
+                Outcome::Success(ApiKey(key))
+            },
+            Some(_) => {
+                error!("Invalid Token Found");
+                Outcome::Failure((Status::Unauthorized, "Please include a valid Authentication header".to_string()))},
         }
     }
 }
@@ -71,20 +86,40 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
 #[post("/GetProductData", data = "<params>")]
 async fn get_products(params: Json<FetchParams>, pool: &State<Pool>, key: ApiKey<'_>) -> Json<Vec<Product>> {
     
+    info!("GetProductData Request: {:?}", params);
+    match decode_token_data(key.0) {
+        Some(data) => info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap()),
+        None => info!("Token Data: None"),
+    }
+
     // No error handling as the function will always return a result
     Json(get_product(params, pool, key).unwrap())
 }
 
 #[get("/StoreList")]
 async fn get_store_list(pool: &State<Pool>, _key: ApiKey<'_>) -> Json<Vec<Store>> {
+
+    info!("StoreList Request");
+    match decode_token_data(_key.0) {
+        Some(data) => info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap()),
+        None => info!("Token Data: None"),
+    }
+
     Json(fetch_store_list(pool).await)
 }
 
 #[post("/Sign", data = "<params>")]
 async fn sign(params: Json<LoginParams>, pool: &State<Pool>) -> Result<Json<String>, Status> {
+    info!("Sign Request: {:?}", params.0.pUserName);
     match signing::signin(params, pool).await {
-        Some(token) => Ok(Json(token.to_string())),
-        None => Err(Status::Unauthorized),
+        Some(token) => {
+            info!("Valid User Data, Token Sent");
+            Ok(Json(token.to_string()))
+        },
+        None => {
+            error!("Invalid User Data, Token Not Sent");
+            Err(Status::Unauthorized)
+        },
     }
 }
 

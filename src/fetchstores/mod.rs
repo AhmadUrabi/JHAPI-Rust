@@ -29,5 +29,6 @@ fn get_stores(pool: &Pool) -> Result<Vec<Store>> {
 
         stores.push(store);
     }
+    info!("Stores Count: {}", stores.len());
     Ok(stores)
 }

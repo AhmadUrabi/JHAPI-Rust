@@ -93,7 +93,7 @@ pub struct Store {
     pub STORE_DESC_S : Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize,Debug)]
 pub struct User {
     pub USER_ID : Option<String>,
     pub USER_NAME : Option<String>,
