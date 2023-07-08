@@ -49,7 +49,7 @@ fn rocket() -> _ {
 }
 
 // Start Request Guard Functions
-struct ApiKey<'r>(&'r str);
+pub struct ApiKey<'r>(&'r str);
 
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for ApiKey<'r> {
@@ -68,10 +68,10 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
 // End Request Guard Functions
 
 #[post("/GetProductData", data = "<params>")]
-async fn get_products(params: Json<FetchParams>, pool: &State<Pool>, _key: ApiKey<'_>) -> Json<Vec<Product>> {
+async fn get_products(params: Json<FetchParams>, pool: &State<Pool>, key: ApiKey<'_>) -> Json<Vec<Product>> {
     
     // No error handling as the function will always return a result
-    Json(get_product(params, pool).unwrap())
+    Json(get_product(params, pool, key).unwrap())
 }
 
 #[get("/StoreList")]

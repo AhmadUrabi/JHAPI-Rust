@@ -128,3 +128,29 @@ pub fn validate_token(token: &str) -> bool{
     }
 
 }
+
+pub fn get_cost_permission(token: &str, pool: &Pool) -> bool {
+    let DecodedToken = decode::<Claims>(&token, &DecodingKey::from_secret(SECRET.as_ref()), &Validation::default());
+    let mut username = String::from("");
+    match DecodedToken {
+        Ok(token) => username = token.claims.id,
+        Err(err) => {
+            println!("Error decoding token: {}", err);
+            return false;
+        },
+    }
+    let conn = pool.get().unwrap();
+    let mut stmt = conn
+        .statement("SELECT * FROM ODBC_JHC.PERMISSIONS_JHC WHERE USERNAME = :1 AND PERMISSION = :2").build()
+        .unwrap();
+    let rows = stmt.query(&[&username, &"admin"]).unwrap();
+    
+
+    
+    if rows.count() > 0 {
+        return true;
+    } else {
+        return false;
+    }
+
+}

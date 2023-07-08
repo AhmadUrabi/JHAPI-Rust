@@ -6,13 +6,15 @@ use rocket::serde::json::Json;
 use crate::apistructs::Product;
 use crate::apistructs::FetchParams;
 
+use crate::signing::get_cost_permission;
 
-pub fn get_product(params: Json<FetchParams>, pool: &Pool) -> Result<Vec<Product>> {
+use crate::ApiKey;
 
+
+pub fn get_product(params: Json<FetchParams>, pool: &Pool, key : ApiKey<'_>) -> Result<Vec<Product>> {
     if params.pRef.is_none() && params.pBarcode.is_none() && params.pId.is_none() {
         return Ok(vec![]);
     }
-
 
     let mut mypRef = "%";
     let mut mypBarcode = "%";
@@ -119,6 +121,7 @@ pub fn get_product(params: Json<FetchParams>, pool: &Pool) -> Result<Vec<Product
             SECOND_DISC_PER_STORE_33 : row.get("SECOND_DISC_PER_STORE_33")?,
             SECOND_DISC_PER_STORE_34 : row.get("SECOND_DISC_PER_STORE_34")?,
             SECOND_DISC_PER_STORE_35 : row.get("SECOND_DISC_PER_STORE_35")?,
+            T_AVE_COST : if get_cost_permission(key.0, pool) {row.get("T_AVE_COST")?} else {None},
         };
         products.push(prod);
     }

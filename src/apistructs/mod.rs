@@ -75,6 +75,7 @@ pub struct Product {
     pub SECOND_DISC_PER_STORE_33 : Option<String>,
     pub SECOND_DISC_PER_STORE_34 : Option<String>,
     pub SECOND_DISC_PER_STORE_35 : Option<String>,
+    pub T_AVE_COST : Option<String>,
     
 }
 
