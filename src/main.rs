@@ -7,7 +7,7 @@ use rocket::{State, post};
 use rocket::serde::json::Json;
 use rocket::http::Status;
 use rocket::request::{Outcome, Request, FromRequest};
-use rocket::fs::{relative};
+use rocket::fs::NamedFile;
 
 use oracle::pool::Pool;
 use oracle::pool::PoolBuilder;
@@ -21,13 +21,14 @@ use crate::getproductdata::get_product;
 use crate::fetchstores::fetch_store_list;
 use crate::signing::validate_token;
 use crate::signing::decode_token_data;
+use crate::signing::get_image_permissions;
 
 use crate::apistructs::FetchParams;
 use crate::apistructs::LoginParams;
 use crate::apistructs::Product;
 use crate::apistructs::Store;
 
-
+use std::path::*;
 
 
 #[launch]
@@ -52,7 +53,7 @@ fn rocket() -> _ {
     };
     // Pool built
 
-    rocket::build().register("/", catchers![Unauthorized, not_found]).manage(pool).mount("/", routes![get_products, get_store_list, sign]).mount("/images", rocket::fs::FileServer::from(relative!("static")))
+    rocket::build().register("/", catchers![Unauthorized, not_found]).manage(pool).mount("/", routes![get_products, get_store_list, sign, files])
 }
 
 // Start Request Guard Functions
@@ -93,7 +94,15 @@ async fn get_products(params: Json<FetchParams>, pool: &State<Pool>, key: ApiKey
     }
 
     // No error handling as the function will always return a result
-    Json(get_product(params, pool, key).unwrap())
+    //Json(get_product(params, pool, key).unwrap())
+    match get_product(params, pool, key) {
+        Ok(products) => Json(products),
+        Err(err) => {
+            error!("Error: {}", err);
+            Json(vec![])
+        },
+    }
+
 }
 
 #[get("/StoreList")]
@@ -120,6 +129,18 @@ async fn sign(params: Json<LoginParams>, pool: &State<Pool>) -> Result<Json<Stri
             error!("Invalid User Data, Token Not Sent");
             Err(Status::Unauthorized)
         },
+    }
+}
+
+// File Server
+#[get("/images/<file..>")]
+async fn files(file: PathBuf, _key: ApiKey<'_>, pool: &State<Pool>) -> Result<Option<NamedFile>, Status> {
+    if get_image_permissions(_key.0, &pool) {
+        info!("Image Request: {:?}", file);
+        Ok(NamedFile::open(Path::new("static/").join(file)).await.ok())
+    } else {
+        error!("Image Request: {:?} - Unauthorized", file);
+        Err(Status::Unauthorized)
     }
 }
 
