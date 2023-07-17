@@ -32,7 +32,7 @@ use std::path::*;
 
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
-use rocket::{Response};
+use rocket::Response;
 pub struct CORS;
 
 #[rocket::async_trait]
