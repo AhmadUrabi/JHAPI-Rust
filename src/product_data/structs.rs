@@ -85,24 +85,3 @@ pub struct FetchParams {
     pub pBarcode: Option<String>,
     pub pId: Option<String>
 }
-
-#[derive(Serialize, Deserialize)]
-pub struct Store {
-    pub STORE_ID : Option<String>,
-    pub STORE_DESC : Option<String>,
-    pub STORE_DESC_S : Option<String>,
-}
-
-#[derive(Serialize, Deserialize,Debug)]
-pub struct User {
-    pub USER_ID : Option<String>,
-    pub USER_NAME : Option<String>,
-    pub USER_EMAIL : Option<String>,
-    pub LOGIN_DURATION : Option<String>
-}
-
-#[derive(serde::Deserialize, Debug)]
-pub struct LoginParams {
-    pub pUserName: Option<String>,
-    pub pPassword: Option<String>
-}

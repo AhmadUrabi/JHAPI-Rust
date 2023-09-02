@@ -1,16 +1,17 @@
 #[allow(non_snake_case)]
-use oracle::{Result};
+use oracle::Result;
 use oracle::pool::Pool;
 use rocket::log::private::info;
 use rocket::serde::json::Json;
 
-use crate::apistructs::Product;
-use crate::apistructs::FetchParams;
+use crate::product_data::structs::Product;
+use crate::product_data::structs::FetchParams;
 
 use crate::signing::get_cost_permission;
 
 use crate::ApiKey;
 
+pub mod structs;
 
 pub fn get_product(params: Json<FetchParams>, pool: &Pool, key : ApiKey<'_>) -> Result<Vec<Product>> {
     if params.pRef.is_none() && params.pBarcode.is_none() && params.pId.is_none() {

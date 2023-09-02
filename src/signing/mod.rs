@@ -1,12 +1,15 @@
-use rocket::{serde::json::Json};
-use std::{time::{SystemTime, UNIX_EPOCH}};
+use rocket::serde::json::Json;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use oracle::pool::Pool;
 
 use serde::{Serialize, Deserialize};
 use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
 
-use crate::apistructs::{User, LoginParams};
+use crate::signing::structs::LoginParams;
+use crate::signing::structs::User;
+
+pub mod structs;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
