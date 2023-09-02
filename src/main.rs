@@ -3,32 +3,22 @@
 #[macro_use] extern crate rocket;
 
 use rocket::log::private::info;
-use rocket::{State, post};
-use rocket::serde::json::Json;
 use rocket::http::Status;
 use rocket::request::{Outcome, Request, FromRequest};
-use rocket::fs::NamedFile;
 
-use oracle::pool::Pool;
 use oracle::pool::PoolBuilder;
 
-mod getproductdata;
-mod apistructs;
-mod fetchstores;
+mod product_data;
+mod fetch_stores;
 mod signing;
+mod routes;
 
-use crate::getproductdata::get_product;
-use crate::fetchstores::fetch_store_list;
+use crate::routes::product_data::get_products;
+use crate::routes::fetch_stores::get_store_list;
+use crate::routes::signing::sign;
+use crate::routes::file_server::files;
+
 use crate::signing::validate_token;
-use crate::signing::decode_token_data;
-use crate::signing::get_image_permissions;
-
-use crate::apistructs::FetchParams;
-use crate::apistructs::LoginParams;
-use crate::apistructs::Product;
-use crate::apistructs::Store;
-
-use std::path::*;
 
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
@@ -105,65 +95,11 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
 }
 // End Request Guard Functions
 
-#[post("/GetProductData", data = "<params>")]
-async fn get_products(params: Json<FetchParams>, pool: &State<Pool>, key: ApiKey<'_>) -> Json<Vec<Product>> {
-    
-    info!("GetProductData Request: {:?}", params);
-    match decode_token_data(key.0) {
-        Some(data) => info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap()),
-        None => info!("Token Data: None"),
-    }
 
-    // No error handling as the function will always return a result
-    //Json(get_product(params, pool, key).unwrap())
-    match get_product(params, pool, key) {
-        Ok(products) => Json(products),
-        Err(err) => {
-            error!("Error: {}", err);
-            Json(vec![])
-        },
-    }
 
-}
 
-#[get("/StoreList")]
-async fn get_store_list(pool: &State<Pool>, _key: ApiKey<'_>) -> Json<Vec<Store>> {
 
-    info!("StoreList Request");
-    match decode_token_data(_key.0) {
-        Some(data) => info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap()),
-        None => info!("Token Data: None"),
-    }
 
-    Json(fetch_store_list(pool).await)
-}
-
-#[post("/Sign", data = "<params>")]
-async fn sign(params: Json<LoginParams>, pool: &State<Pool>) -> Result<Json<String>, Status> {
-    info!("Sign Request: {:?}", params.0.pUserName);
-    match signing::signin(params, pool).await {
-        Some(token) => {
-            info!("Valid User Data, Token Sent");
-            Ok(Json(token.to_string()))
-        },
-        None => {
-            error!("Invalid User Data, Token Not Sent");
-            Err(Status::Unauthorized)
-        },
-    }
-}
-
-// File Server
-#[get("/images/<file..>")]
-async fn files(file: PathBuf, _key: ApiKey<'_>, pool: &State<Pool>) -> Result<Option<NamedFile>, Status> {
-    if get_image_permissions(_key.0, &pool) {
-        info!("Image Request: {:?}", file);
-        Ok(NamedFile::open(Path::new("static/").join(file)).await.ok())
-    } else {
-        error!("Image Request: {:?} - Unauthorized", file);
-        Err(Status::Unauthorized)
-    }
-}
 
 // Route catchers
 #[catch(401)]
