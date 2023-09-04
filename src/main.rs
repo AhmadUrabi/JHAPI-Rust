@@ -7,16 +7,25 @@ use rocket::http::Status;
 use rocket::request::{Outcome, Request, FromRequest};
 
 use oracle::pool::PoolBuilder;
+use routes::user_control::get_user_list;
+use routes::user_control::get_user_by_id;
+use routes::user_control::create_user_route;
 
 mod product_data;
 mod fetch_stores;
 mod signing;
 mod routes;
+mod permissions;
+mod user_control;
+mod utils;
 
 use crate::routes::product_data::get_products;
 use crate::routes::fetch_stores::get_store_list;
 use crate::routes::signing::sign;
 use crate::routes::file_server::files;
+use crate::routes::permissions::get_permissions;
+use crate::routes::permissions::edit_permissions;
+// use crate::routes::user_control::edit_user;
 
 use crate::signing::validate_token;
 
@@ -42,11 +51,15 @@ impl Fairing for CORS {
     }
 }
 
+
+
 #[launch]
 fn rocket() -> _ {
     // Logging Setup
     log4rs::init_file("config/log4rs.yaml", Default::default()).unwrap();
     // Logging Setup End
+
+    //let routes = routes![get_products, get_store_list, sign, files, get_permissions, edit_permissions, get_user_list];
 
     // Build Connection Pool
 ***REMOVED***
@@ -64,7 +77,7 @@ fn rocket() -> _ {
     };
     // Pool built
 
-    rocket::build().register("/", catchers![Unauthorized, not_found]).manage(pool).mount("/", routes![get_products, get_store_list, sign, files]).attach(CORS)
+    rocket::build().register("/", catchers![Unauthorized, not_found]).manage(pool).mount("/", routes![get_products, get_store_list, sign, files, get_permissions, edit_permissions, get_user_list, get_user_by_id, create_user_route]).attach(CORS)
 }
 
 // Start Request Guard Functions
