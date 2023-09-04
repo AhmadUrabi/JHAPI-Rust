@@ -20,8 +20,6 @@ pub async fn get_products(params: Json<FetchParams>, pool: &State<Pool>, key: Ap
         None => info!("Token Data: None"),
     }
 
-    // No error handling as the function will always return a result
-    //Json(get_product(params, pool, key).unwrap())
     match get_product(params, pool, key) {
         Ok(products) => Json(products),
         Err(err) => {
