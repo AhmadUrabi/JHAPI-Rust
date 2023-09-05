@@ -1,5 +1,6 @@
 use crate::user_control::*;
 use crate::ApiKey;
+use crate::utils::is_users_perm;
 use oracle::pool::Pool;
 use rocket::State;
 use rocket::serde::json::Json;
@@ -10,7 +11,7 @@ use crate::utils::is_admin_perm;
 // Get User List
 #[get("/UserList")]
 pub async fn get_user_list(pool: &State<Pool>, _key: ApiKey<'_>) -> Json<Vec<User>> {
-    if !is_admin_perm(&_key, pool) {
+    if !is_admin_perm(&_key, pool) || !is_users_perm(&_key, pool) {
         return Json(Vec::new());
     }
     Json(get_users(_key, pool).await.unwrap())
@@ -18,7 +19,7 @@ pub async fn get_user_list(pool: &State<Pool>, _key: ApiKey<'_>) -> Json<Vec<Use
 
 #[get("/User/<user_id>")]
 pub async fn get_user_by_id(pool: &State<Pool>, _key: ApiKey<'_>, user_id: String) -> Json<User> {
-    if !is_admin_perm(&_key, pool) {
+    if !is_admin_perm(&_key, pool) || !is_users_perm(&_key, pool) {
         return Json(User {
             username: "".to_string(),
             fullname: "".to_string(),
@@ -30,8 +31,11 @@ pub async fn get_user_by_id(pool: &State<Pool>, _key: ApiKey<'_>, user_id: Strin
 }
 
 #[post("/CreateUser", data = "<params>")]
-pub async fn create_user_route(params: Json<NewUser>, pool: &State<Pool>) -> String {
+pub async fn create_user_route(params: Json<NewUser>, pool: &State<Pool>, _key: ApiKey<'_>) -> String {
     println!("Create User Request: {:?}", params.0);
+    if !is_admin_perm(&_key, pool) || !is_users_perm(&_key, pool){
+        return "Permission Denied".to_string();
+    }
     create_user(params.0, pool).await.unwrap();
     "User Created".to_string()
 }

@@ -8,12 +8,12 @@ use crate::signing::signin;
 
 
 #[post("/Sign", data = "<params>")]
-pub async fn sign(params: Json<LoginParams>, pool: &State<Pool>) -> Result<Json<String>, Status> {
+pub async fn sign(params: Json<LoginParams>, pool: &State<Pool>) -> Result<String, Status> {
     info!("Sign Request: {:?}", params.0.pUserName);
     match signin(params, pool).await {
         Some(token) => {
             info!("Valid User Data, Token Sent");
-            Ok(Json(token.to_string()))
+            Ok(token.to_string())
         },
         None => {
             error!("Invalid User Data, Token Not Sent");
