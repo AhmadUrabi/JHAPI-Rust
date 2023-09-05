@@ -1,15 +1,16 @@
 #[allow(non_snake_case)]
 use oracle::Result;
 use oracle::pool::Pool;
+
 use rocket::log::private::info;
 use rocket::serde::json::Json;
 
 use crate::product_data::structs::Product;
 use crate::product_data::structs::FetchParams;
 
-use crate::signing::get_cost_permission;
-
 use crate::ApiKey;
+
+use crate::utils::permissions::is_cost_perm;
 
 pub mod structs;
 
@@ -34,8 +35,6 @@ pub fn get_product(params: Json<FetchParams>, pool: &Pool, key : ApiKey<'_>) -> 
     if let Some(pId) = &params.pId {
         mypId = pId;
     }
-
-   
 
     let conn = pool.get()?;
 
@@ -123,7 +122,7 @@ pub fn get_product(params: Json<FetchParams>, pool: &Pool, key : ApiKey<'_>) -> 
             SECOND_DISC_PER_STORE_33 : row.get("SECOND_DISC_PER_STORE_33")?,
             SECOND_DISC_PER_STORE_34 : row.get("SECOND_DISC_PER_STORE_34")?,
             SECOND_DISC_PER_STORE_35 : row.get("SECOND_DISC_PER_STORE_35")?,
-            T_AVE_COST : if get_cost_permission(key.0, pool) {row.get("T_AVE_COST")?} else {None},
+            T_AVE_COST : if is_cost_perm(&key, pool) {row.get("T_AVE_COST")?} else {None},
         };
         products.push(prod);
     }

@@ -4,7 +4,7 @@ use rocket::http::Status;
 use oracle::pool::Pool;
 
 use crate::ApiKey;
-use crate::utils::is_images_perm;
+use crate::utils::permissions::is_images_perm;
 
 use std::path::*;
 

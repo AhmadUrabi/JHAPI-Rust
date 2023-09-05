@@ -9,7 +9,7 @@ use crate::signing::decode_token_data;
 
 use crate::ApiKey;
 
-use crate::utils::{is_perm_perm, is_admin_perm};
+use crate::utils::permissions::{is_perm_perm, is_admin_perm};
 
 
 #[get("/GetUserPermissions/<username>")]
