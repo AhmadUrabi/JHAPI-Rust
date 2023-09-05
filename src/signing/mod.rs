@@ -1,12 +1,15 @@
-use rocket::{serde::json::Json};
-use std::{time::{SystemTime, UNIX_EPOCH}};
+use rocket::serde::json::Json;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use oracle::pool::Pool;
 
 use serde::{Serialize, Deserialize};
 use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
 
-use crate::apistructs::{User, LoginParams};
+use crate::signing::structs::LoginParams;
+use crate::signing::structs::User;
+
+pub mod structs;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
@@ -135,6 +138,7 @@ pub fn validate_token(token: &str) -> bool{
 
 }
 
+// OLD PERMISSIONS FUNCTIONS
 pub fn get_cost_permission(token: &str, pool: &Pool) -> bool {
     let DecodedToken = decode::<Claims>(&token, &DecodingKey::from_secret(SECRET.as_ref()), &Validation::default());
     let username;
@@ -149,7 +153,7 @@ pub fn get_cost_permission(token: &str, pool: &Pool) -> bool {
     let mut stmt = conn
         .statement("SELECT * FROM ODBC_JHC.PERMISSIONS_JHC WHERE USERNAME = :1 AND PERMISSION = :2").build()
         .unwrap();
-    let rows = stmt.query(&[&username, &"admin"]).unwrap();
+    let rows = stmt.query(&[&username, &"cost"]).unwrap();
     
 
     
@@ -160,32 +164,7 @@ pub fn get_cost_permission(token: &str, pool: &Pool) -> bool {
     }
 
 }
-
-pub fn get_image_permissions(token: &str, pool: &Pool) -> bool {
-    let DecodedToken = decode::<Claims>(&token, &DecodingKey::from_secret(SECRET.as_ref()), &Validation::default());
-    let username;
-    match DecodedToken {
-        Ok(token) => username = token.claims.id,
-        Err(err) => {
-            println!("Error decoding token: {}", err);
-            return false;
-        },
-    }
-    let conn = pool.get().unwrap();
-    let mut stmt = conn
-        .statement("SELECT * FROM ODBC_JHC.PERMISSIONS_JHC WHERE USERNAME = :1 AND PERMISSION = :2").build()
-        .unwrap();
-    let rows = stmt.query(&[&username, &"image"]).unwrap();
-    
-
-    
-    if rows.count() > 0 {
-        return true;
-    } else {
-        return false;
-    }
-
-}
+// OLD PERMISSIONS FUNCTIONS END
 
 pub fn decode_token_data(token: &str) -> Option<User> {
     let DecodedToken = decode::<Claims>(&token, &DecodingKey::from_secret(SECRET.as_ref()), &Validation::default());

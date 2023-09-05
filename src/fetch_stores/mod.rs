@@ -1,7 +1,9 @@
-use oracle::{Result};
+use oracle::Result;
 use oracle::pool::Pool;
 
-use crate::apistructs::Store;
+use crate::fetch_stores::structs::Store;
+
+pub mod structs;
 
 pub async fn fetch_store_list(pool: &Pool) -> Vec<Store> {
     match get_stores(pool) {
