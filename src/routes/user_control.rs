@@ -1,11 +1,12 @@
 use crate::user_control::*;
 use crate::ApiKey;
-use crate::utils::is_users_perm;
+
 use oracle::pool::Pool;
+
 use rocket::State;
 use rocket::serde::json::Json;
 
-use crate::utils::is_admin_perm;
+use crate::utils::permissions::{is_admin_perm, is_users_perm};
 
 
 // Get User List

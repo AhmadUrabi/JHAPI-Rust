@@ -1,15 +1,5 @@
 #![allow(non_snake_case)]
-
 #[macro_use] extern crate rocket;
-
-use rocket::log::private::info;
-use rocket::http::Status;
-use rocket::request::{Outcome, Request, FromRequest};
-
-use oracle::pool::PoolBuilder;
-use routes::user_control::get_user_list;
-use routes::user_control::get_user_by_id;
-use routes::user_control::create_user_route;
 
 mod product_data;
 mod fetch_stores;
@@ -19,19 +9,29 @@ mod permissions;
 mod user_control;
 mod utils;
 
-use crate::routes::product_data::get_products;
-use crate::routes::fetch_stores::get_store_list;
-use crate::routes::signing::sign;
-use crate::routes::file_server::files;
-use crate::routes::permissions::get_permissions;
-use crate::routes::permissions::edit_permissions;
-// use crate::routes::user_control::edit_user;
-
-use crate::signing::validate_token;
-
+use rocket::log::private::info;
+use rocket::http::Status;
+use rocket::request::{Outcome, Request, FromRequest};
 use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::Response;
+
+use oracle::pool::PoolBuilder;
+
+use routes::user_control::get_user_list;
+use routes::user_control::get_user_by_id;
+use routes::user_control::create_user_route;
+use routes::product_data::get_products;
+use routes::fetch_stores::get_store_list;
+use routes::signing::sign;
+use routes::file_server::files;
+use routes::permissions::get_permissions;
+use routes::permissions::edit_permissions;
+// use crate::routes::user_control::edit_user;
+
+use signing::validate_token;
+
+// CORS Setup
 pub struct CORS;
 
 #[rocket::async_trait]
@@ -107,11 +107,6 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
     }
 }
 // End Request Guard Functions
-
-
-
-
-
 
 
 // Route catchers

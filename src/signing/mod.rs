@@ -138,6 +138,7 @@ pub fn validate_token(token: &str) -> bool{
 
 }
 
+// OLD PERMISSIONS FUNCTIONS
 pub fn get_cost_permission(token: &str, pool: &Pool) -> bool {
     let DecodedToken = decode::<Claims>(&token, &DecodingKey::from_secret(SECRET.as_ref()), &Validation::default());
     let username;
@@ -163,7 +164,7 @@ pub fn get_cost_permission(token: &str, pool: &Pool) -> bool {
     }
 
 }
-
+// OLD PERMISSIONS FUNCTIONS END
 
 pub fn decode_token_data(token: &str) -> Option<User> {
     let DecodedToken = decode::<Claims>(&token, &DecodingKey::from_secret(SECRET.as_ref()), &Validation::default());
