@@ -41,6 +41,28 @@ pub async fn create_user_route(params: Json<NewUser>, pool: &State<Pool>, _key: 
     "User Created".to_string()
 }
 
+#[put("/EditUser", data = "<params>")]
+pub async fn edit_user_route(params: Json<EditUserParams>, pool: &State<Pool>, _key: ApiKey<'_>) -> String {
+    println!("Edit User Request: {:?}", params.0);
+    if !is_admin_perm(&_key, pool) || !is_users_perm(&_key, pool){
+        return "Permission Denied".to_string();
+    }
+    let res = edit_user(params, pool).await.unwrap();
+    if res == false {
+        return "User Not Found".to_string();
+    }
+    "User Edited".to_string()
+}
+
+
+#[delete("/DeleteUser/<user_id>")]
+pub async fn delete_user_route(pool: &State<Pool>, _key: ApiKey<'_>, user_id: String) -> String {
+    if !is_admin_perm(&_key, pool) || !is_users_perm(&_key, pool){
+        return "Permission Denied".to_string();
+    }
+    delete_user(&user_id, pool).await.unwrap();
+    "User Deleted".to_string()
+}
 
 
 /*

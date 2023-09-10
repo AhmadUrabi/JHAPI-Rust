@@ -21,6 +21,8 @@ use oracle::pool::PoolBuilder;
 use routes::user_control::get_user_list;
 use routes::user_control::get_user_by_id;
 use routes::user_control::create_user_route;
+use routes::user_control::edit_user_route;
+use routes::user_control::delete_user_route;
 use routes::product_data::get_products;
 use routes::fetch_stores::get_store_list;
 use routes::signing::sign;
@@ -77,7 +79,7 @@ fn rocket() -> _ {
     };
     // Pool built
 
-    rocket::build().register("/", catchers![Unauthorized, not_found]).manage(pool).mount("/", routes![get_products, get_store_list, sign, files, get_permissions, edit_permissions, get_user_list, get_user_by_id, create_user_route]).attach(CORS)
+    rocket::build().register("/", catchers![Unauthorized, not_found]).manage(pool).mount("/", routes![get_products, get_store_list, sign, files, get_permissions, edit_permissions, get_user_list, get_user_by_id, create_user_route, edit_user_route, delete_user_route]).attach(CORS)
 }
 
 // Start Request Guard Functions

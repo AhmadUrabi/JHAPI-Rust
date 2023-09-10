@@ -2,6 +2,7 @@ use crate::ApiKey;
 use crate::signing::decode_token_data;
 use oracle::pool::Pool;
 use oracle::Result;
+use rocket::serde::json::Json;
 
 use crate::permissions::get_user_permissions;
 
@@ -86,7 +87,7 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<()> {
     Ok(())
 }
 
-/*
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct EditUserParams {
     pub username: Option<String>,
@@ -96,15 +97,54 @@ pub struct EditUserParams {
     pub loginduration: Option<i32>,
 }
 
-pub async fn edit_user(params: Json<EditUserParams>, pool: &Pool) -> Result<()> {
+pub async fn edit_user(params: Json<EditUserParams>, pool: &Pool) -> Result<bool> {
+
+    let paramsUnwrapped = params.into_inner();
+
+    
+    let original_user = get_user(&paramsUnwrapped.username.unwrap(), pool).await.unwrap();
+
+    if original_user.username == "" {
+        return Ok(false);
+    }
+
+    let mut new_user = User {
+        username: original_user.username,
+        fullname: original_user.fullname,
+        email: original_user.email,
+        login_duration: original_user.login_duration,
+    };
+
+    if paramsUnwrapped.fullname.is_some() {
+        new_user.fullname = paramsUnwrapped.fullname.unwrap();
+    }
+
+    if paramsUnwrapped.email.is_some() {
+        new_user.email = paramsUnwrapped.email.unwrap();
+    }
+
+    if paramsUnwrapped.loginduration.is_some() {
+        new_user.login_duration = paramsUnwrapped.loginduration.unwrap();
+    }
 
     let conn = pool.get().unwrap();
     let mut stmt = conn
         .statement("UPDATE ODBC_JHC.AUTHENTICATION_JHC SET FULLNAME = :1, EMAIL = :2, LOGINDURATION = :3 WHERE USERNAME = :4")
         .build()?;
-    stmt.execute(&[&params.fullname, &params.email, &params.loginduration, &params.username])
+    stmt.execute(&[&new_user.fullname, &new_user.email, &new_user.login_duration, &new_user.username])
+        .unwrap();
+    conn.commit()?;
+    Ok(true)
+}
+
+
+pub async fn delete_user(user_id: &str, pool: &Pool) -> Result<()> {
+    let conn = pool.get().unwrap();
+    let mut stmt = conn
+        .statement("DELETE FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1")
+        .build()?;
+    stmt.execute(&[&user_id])
         .unwrap();
     conn.commit()?;
     Ok(())
 }
-*/
