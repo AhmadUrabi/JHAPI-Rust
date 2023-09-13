@@ -9,6 +9,8 @@ mod permissions;
 mod user_control;
 mod utils;
 
+use dotenv::dotenv;
+
 use rocket::log::private::info;
 use rocket::http::Status;
 use rocket::request::{Outcome, Request, FromRequest};
@@ -47,7 +49,7 @@ impl Fairing for CORS {
 
     async fn on_response<'r>(&self, _request: &'r Request<'_>, response: &mut Response<'r>) {
         response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
-        response.set_header(Header::new("Access-Control-Allow-Methods", "POST, GET, PATCH, OPTIONS"));
+        response.set_header(Header::new("Access-Control-Allow-Methods", "POST, GET, PATCH, OPTIONS, PUT, DELETE"));
         response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
         response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
     }
@@ -57,6 +59,10 @@ impl Fairing for CORS {
 
 #[launch]
 fn rocket() -> _ {
+    
+    // Load .env file
+    dotenv().ok();
+
     // Logging Setup
     log4rs::init_file("config/log4rs.yaml", Default::default()).unwrap();
     // Logging Setup End
@@ -64,13 +70,13 @@ fn rocket() -> _ {
     //let routes = routes![get_products, get_store_list, sign, files, get_permissions, edit_permissions, get_user_list];
 
     // Build Connection Pool
-***REMOVED***
-***REMOVED***
-***REMOVED***
+    let username = std::env::var("LOGIN_USERNAME").expect("LOGIN_USERNAME must be set.");
+    let password = std::env::var("LOGIN_PASSWORD").expect("LOGIN_PASSWORD must be set.");
+    let database = std::env::var("DB_CONNECTION").expect("DB_CONNECTION must be set.");
 
     let pool = PoolBuilder::new(username, password, database)
     .min_connections(10) // Had to specify, would otherwise cause error: Invalid number of sessions
-    .max_connections(10) // min and max must be the same for it to work on linux?
+    .max_connections(10) // min and max must be the same for it to work on linux? TODO: Test with new values
     .build();
 
     let pool = match pool {
