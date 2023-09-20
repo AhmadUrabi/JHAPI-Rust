@@ -3,8 +3,8 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use oracle::pool::Pool;
 
-use serde::{Serialize, Deserialize};
-use jsonwebtoken::{encode, decode, Header, Validation, EncodingKey, DecodingKey};
+use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use serde::{Deserialize, Serialize};
 
 use crate::signing::structs::LoginParams;
 use crate::signing::structs::User;
@@ -23,20 +23,29 @@ struct Claims {
 impl Claims {
     pub fn new(id: String, name: String, email: String, duration: u64) -> Self {
         // normalize the timestamps by stripping of microseconds
-        let iat = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+        let iat = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
         let exp = iat + (duration * 3600);
 
         // Convert iat to usize
         let iat = iat as usize;
         let exp = exp as usize;
 
-        Self { id, name, email, iat, exp }
+        Self {
+            id,
+            name,
+            email,
+            iat,
+            exp,
+        }
     }
 }
 
-const SECRET : &str = "SecretKey";
+const SECRET: &str = "SecretKey";
 
-pub async fn signin(params:Json<LoginParams>, pool: &Pool) -> Option<Json<String>> {
+pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Option<Json<String>> {
     // Check for empty username and password
     info!("Login Attempt: {:?}", params.0.pUserName);
 
@@ -78,19 +87,17 @@ pub async fn signin(params:Json<LoginParams>, pool: &Pool) -> Option<Json<String
 }
 
 fn fetch_user_data(username: String, password: String, pool: &Pool) -> Option<User> {
-
-
     let conn = pool.get().unwrap();
     let mut stmt = conn
         .statement("SELECT USERNAME, FULLNAME, EMAIL, LOGINDURATION FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1 AND PASSWORD = :2").build()
         .unwrap();
     let rows = stmt.query(&[&username, &password]).unwrap();
-    
+
     let mut user = User {
         USER_ID: None,
         USER_NAME: None,
         USER_EMAIL: None,
-        LOGIN_DURATION: None
+        LOGIN_DURATION: None,
     };
     for row_result in rows {
         let row = row_result.unwrap();
@@ -103,8 +110,11 @@ fn fetch_user_data(username: String, password: String, pool: &Pool) -> Option<Us
 }
 
 fn generate_token(user: &User) -> String {
-
-    if user.USER_ID.is_none() || user.USER_NAME.is_none() || user.USER_EMAIL.is_none() || user.LOGIN_DURATION.is_none() {
+    if user.USER_ID.is_none()
+        || user.USER_NAME.is_none()
+        || user.USER_EMAIL.is_none()
+        || user.LOGIN_DURATION.is_none()
+    {
         return String::from("");
     }
 
@@ -115,7 +125,6 @@ fn generate_token(user: &User) -> String {
         user.LOGIN_DURATION.clone().unwrap().parse::<u64>().unwrap(),
     );
 
-
     let token = encode(
         &Header::default(),
         &claims,
@@ -124,22 +133,34 @@ fn generate_token(user: &User) -> String {
     return token.unwrap();
 }
 
-pub fn validate_token(token: &str) -> bool{
-    let DecodedToken = decode::<Claims>(&token, &DecodingKey::from_secret(SECRET.as_ref()), &Validation::default());
-
+pub fn validate_token(token: &str) -> bool {
+    let DecodedToken = decode::<Claims>(
+        &token,
+        &DecodingKey::from_secret(SECRET.as_ref()),
+        &Validation::default(),
+    );
 
     match DecodedToken {
-        Ok(token) => return token.claims.exp > SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as usize,
+        Ok(token) => {
+            return token.claims.exp
+                > SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_secs() as usize
+        }
         Err(err) => {
             println!("Error decoding token: {}", err);
             return false;
-        },
+        }
     }
-
 }
 
 pub fn decode_token_data(token: &str) -> Option<User> {
-    let DecodedToken = decode::<Claims>(&token, &DecodingKey::from_secret(SECRET.as_ref()), &Validation::default());
+    let DecodedToken = decode::<Claims>(
+        &token,
+        &DecodingKey::from_secret(SECRET.as_ref()),
+        &Validation::default(),
+    );
     let username;
     let name;
     let email;
@@ -150,11 +171,11 @@ pub fn decode_token_data(token: &str) -> Option<User> {
             name = token.claims.name;
             email = token.claims.email;
             duration = token.claims.exp - token.claims.iat;
-        },
+        }
         Err(err) => {
             println!("Error decoding token: {}", err);
             return None;
-        },
+        }
     }
 
     let user = User {

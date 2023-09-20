@@ -1,16 +1,19 @@
-use rocket::fs::NamedFile;
-use rocket::{State, get};
-use rocket::http::Status;
 use oracle::pool::Pool;
+use rocket::fs::NamedFile;
+use rocket::http::Status;
+use rocket::{get, State};
 
-use crate::ApiKey;
 use crate::utils::permissions::is_images_perm;
+use crate::ApiKey;
 
 use std::path::*;
 
-
 #[get("/images/<file..>")]
-pub async fn files(file: PathBuf, _key: ApiKey<'_>, pool: &State<Pool>) -> Result<Option<NamedFile>, Status> {
+pub async fn files(
+    file: PathBuf,
+    _key: ApiKey<'_>,
+    pool: &State<Pool>,
+) -> Result<Option<NamedFile>, Status> {
     if !is_images_perm(&_key, pool) {
         return Err(Status::Unauthorized);
     }

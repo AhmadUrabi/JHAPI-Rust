@@ -1,5 +1,5 @@
 use rocket::serde::json::Json;
-use rocket::{State, post};
+use rocket::{post, State};
 
 use oracle::pool::Pool;
 
@@ -9,11 +9,14 @@ use crate::signing::decode_token_data;
 
 use crate::ApiKey;
 
-use crate::utils::permissions::{is_perm_perm, is_admin_perm};
-
+use crate::utils::permissions::{is_admin_perm, is_perm_perm};
 
 #[get("/GetUserPermissions/<username>")]
-pub async fn get_permissions(username: String, pool: &State<Pool>, key: ApiKey<'_>) -> Json<Vec<String>> {
+pub async fn get_permissions(
+    username: String,
+    pool: &State<Pool>,
+    key: ApiKey<'_>,
+) -> Json<Vec<String>> {
     info!("GetUserPermissions Request: {:?}", username);
     match decode_token_data(key.0) {
         Some(data) => info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap()),
@@ -29,15 +32,16 @@ pub async fn get_permissions(username: String, pool: &State<Pool>, key: ApiKey<'
         Err(err) => {
             error!("Error: {}", err);
             Json(vec![])
-        },
+        }
     }
 }
 
-
-
 #[post("/EditUserPermissions", data = "<params>")]
-pub async fn edit_permissions(params: Json<PermissionEditParams>, pool: &State<Pool>, key: ApiKey<'_>) -> String {
-    
+pub async fn edit_permissions(
+    params: Json<PermissionEditParams>,
+    pool: &State<Pool>,
+    key: ApiKey<'_>,
+) -> String {
     info!("GetUserPermissions Request: {:?}", params);
     match decode_token_data(key.0) {
         Some(data) => info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap()),
@@ -51,10 +55,10 @@ pub async fn edit_permissions(params: Json<PermissionEditParams>, pool: &State<P
             info!("Permissions Edited");
             info!("New Permissions: {:?}", permissions);
             "Permissions Edited".to_string()
-        },
+        }
         Err(err) => {
             error!("Error: {}", err);
             ("Error Editing Permissions").to_string()
-        },
+        }
     }
 }
