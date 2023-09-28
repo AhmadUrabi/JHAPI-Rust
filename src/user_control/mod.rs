@@ -6,6 +6,8 @@ use rocket::serde::json::Json;
 
 use crate::permissions::get_user_permissions;
 
+use crate::utils::permissions::{is_admin_perm, is_users_perm};
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct User {
     pub username: String,
@@ -15,11 +17,8 @@ pub struct User {
 }
 
 pub async fn get_users(_key: ApiKey<'_>, pool: &Pool) -> Result<Vec<User>> {
-    let user_id = decode_token_data(_key.0).unwrap().USER_ID.unwrap();
-    let permissions: Vec<String> = get_user_permissions(&user_id, pool).unwrap();
-    println!("Permissions: {:?}", permissions);
     let mut users: Vec<User> = Vec::new();
-    if permissions.contains(&"admin".to_string()) {
+    if is_admin_perm(&_key, pool) || is_users_perm(&_key, pool) {
         println!("Admin Permissions Found");
         let conn = pool.get().unwrap();
 

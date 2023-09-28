@@ -3,7 +3,7 @@ use rocket::{post, State};
 
 use oracle::pool::Pool;
 
-use crate::permissions::structs::PermissionEditParams;
+use crate::permissions::structs::{PermissionEditParams, Permissions};
 
 use crate::signing::decode_token_data;
 
@@ -16,22 +16,33 @@ pub async fn get_permissions(
     username: String,
     pool: &State<Pool>,
     key: ApiKey<'_>,
-) -> Json<Vec<String>> {
+) -> Json<Permissions> {
     info!("GetUserPermissions Request: {:?}", username);
     match decode_token_data(key.0) {
         Some(data) => info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap()),
         None => info!("Token Data: None"),
     }
 
-    if !is_perm_perm(&key, pool) || !is_admin_perm(&key, pool) {
-        return Json(vec![]);
+    let emptyPermissions = Permissions {
+        users: false,
+        permissions: false,
+        query: false,
+        images: false,
+        cost: false,
+        admin: false,
+        stock: false,
+        reports: false,
+    };
+
+    if !is_perm_perm(&key, pool) && !is_admin_perm(&key, pool) {
+        return Json(emptyPermissions);
     }
 
     match crate::permissions::get_user_permissions(&username, pool) {
         Ok(permissions) => Json(permissions),
         Err(err) => {
             error!("Error: {}", err);
-            Json(vec![])
+            Json(emptyPermissions)
         }
     }
 }
@@ -47,7 +58,7 @@ pub async fn edit_permissions(
         Some(data) => info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap()),
         None => info!("Token Data: None"),
     }
-    if !is_perm_perm(&key, pool) || !is_admin_perm(&key, pool) {
+    if !is_perm_perm(&key, pool) && !is_admin_perm(&key, pool) {
         return "Permission Denied".to_string();
     }
     match crate::permissions::edit_user_permissions(key, pool, params.pPermissions.clone()) {
