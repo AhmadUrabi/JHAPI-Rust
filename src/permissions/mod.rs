@@ -29,7 +29,6 @@ pub fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions> {
     for row_result in rows {
         let row = row_result?;
         let perm: String = row.get(0)?;
-        println!("Permission: {}", perm);
         match perm.as_str() {
             "users" => permission.users = true,
             "permissions" => permission.permissions = true,
@@ -41,7 +40,7 @@ pub fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions> {
             "reports" => permission.reports = true,
             _ => {}
         }
-        println!("Permission: {:?}", permission.permissions)
+       
     }
 
     Ok(permission)
