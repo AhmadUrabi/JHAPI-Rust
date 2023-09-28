@@ -48,11 +48,12 @@ pub fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions> {
 
 pub fn edit_user_permissions(
     token: ApiKey<'_>,
+    username: String,
     pool: &Pool,
     permissions: Permissions,
 ) -> Result<String> {
     let conn = pool.get()?;
-    let user_id = decode_token_data(token.0).unwrap().USER_ID.unwrap();
+    let user_id = username.to_string();
     let mut stmt = conn
         .statement("DELETE FROM ODBC_JHC.PERMISSIONS_JHC WHERE USERNAME = :user_id")
         .build()?;

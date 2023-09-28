@@ -61,7 +61,7 @@ pub async fn edit_permissions(
     if !is_perm_perm(&key, pool) && !is_admin_perm(&key, pool) {
         return "Permission Denied".to_string();
     }
-    match crate::permissions::edit_user_permissions(key, pool, params.pPermissions.clone()) {
+    match crate::permissions::edit_user_permissions(key, params.pUserName.clone(), pool, params.pPermissions.clone()) {
         Ok(permissions) => {
             info!("Permissions Edited");
             info!("New Permissions: {:?}", permissions);
