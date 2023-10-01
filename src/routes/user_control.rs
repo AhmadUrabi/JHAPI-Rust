@@ -11,7 +11,7 @@ use crate::utils::permissions::{is_admin_perm, is_users_perm};
 // Get User List
 #[get("/UserList")]
 pub async fn get_user_list(pool: &State<Pool>, _key: ApiKey<'_>) -> Json<Vec<User>> {
-    if !is_admin_perm(&_key, pool) || !is_users_perm(&_key, pool) {
+    if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
         return Json(Vec::new());
     }
     Json(get_users(_key, pool).await.unwrap())
@@ -19,7 +19,7 @@ pub async fn get_user_list(pool: &State<Pool>, _key: ApiKey<'_>) -> Json<Vec<Use
 
 #[get("/User/<user_id>")]
 pub async fn get_user_by_id(pool: &State<Pool>, _key: ApiKey<'_>, user_id: String) -> Json<User> {
-    if !is_admin_perm(&_key, pool) || !is_users_perm(&_key, pool) {
+    if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
         return Json(User {
             username: "".to_string(),
             fullname: "".to_string(),
@@ -37,7 +37,7 @@ pub async fn create_user_route(
     _key: ApiKey<'_>,
 ) -> String {
     println!("Create User Request: {:?}", params.0);
-    if !is_admin_perm(&_key, pool) || !is_users_perm(&_key, pool) {
+    if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
         return "Permission Denied".to_string();
     }
     create_user(params.0, pool).await.unwrap();
@@ -51,7 +51,7 @@ pub async fn edit_user_route(
     _key: ApiKey<'_>,
 ) -> String {
     println!("Edit User Request: {:?}", params.0);
-    if !is_admin_perm(&_key, pool) || !is_users_perm(&_key, pool) {
+    if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
         return "Permission Denied".to_string();
     }
     let res = edit_user(params, pool).await.unwrap();
@@ -63,7 +63,7 @@ pub async fn edit_user_route(
 
 #[delete("/DeleteUser/<user_id>")]
 pub async fn delete_user_route(pool: &State<Pool>, _key: ApiKey<'_>, user_id: String) -> String {
-    if !is_admin_perm(&_key, pool) || !is_users_perm(&_key, pool) {
+    if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
         return "Permission Denied".to_string();
     }
     delete_user(&user_id, pool).await.unwrap();

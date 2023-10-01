@@ -14,7 +14,7 @@ pub async fn files(
     _key: ApiKey<'_>,
     pool: &State<Pool>,
 ) -> Result<Option<NamedFile>, Status> {
-    if !is_images_perm(&_key, pool) {
+    if !is_images_perm(&_key, pool) && !is_admin_perm(&_key, pool) {
         return Err(Status::Unauthorized);
     }
     info!("Image Request: {:?}", file);

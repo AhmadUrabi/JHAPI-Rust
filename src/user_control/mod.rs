@@ -1,10 +1,8 @@
-use crate::signing::decode_token_data;
 use crate::ApiKey;
 use oracle::pool::Pool;
 use oracle::Result;
 use rocket::serde::json::Json;
 
-use crate::permissions::get_user_permissions;
 
 use crate::utils::permissions::{is_admin_perm, is_users_perm};
 

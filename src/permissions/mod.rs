@@ -1,7 +1,6 @@
 use oracle::pool::Pool;
 use oracle::Result;
 
-use crate::signing::decode_token_data;
 
 use crate::ApiKey;
 
@@ -47,7 +46,7 @@ pub fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions> {
 }
 
 pub fn edit_user_permissions(
-    token: ApiKey<'_>,
+    _token: ApiKey<'_>,
     username: String,
     pool: &Pool,
     permissions: Permissions,
