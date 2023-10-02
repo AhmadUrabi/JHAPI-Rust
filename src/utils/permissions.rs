@@ -41,3 +41,10 @@ pub fn is_cost_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();
     return permissions.cost;
 }
+
+// Check for Product Query Permissions
+pub fn is_query_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+    let user_id = decode_token_data(_key.0).unwrap().USER_ID.unwrap();
+    let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();
+    return permissions.query;
+}
