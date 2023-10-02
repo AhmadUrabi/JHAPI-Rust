@@ -6,7 +6,51 @@ use std::io::Read;
 use tokio::fs::File;
 use ssh2::Session;
 
+use magick_rust::{MagickWand, magick_wand_genesis, PixelWand, MagickError, GravityType};
+use std::sync::Once;
+
+// Used to make sure MagickWand is initialized exactly once. Note that we
+// do not bother shutting down, we simply exit when we're done.
+static START: Once = Once::new();
+
+
+// Testing image resize function
+fn resize(filename: &str,name: &str)  {
+    START.call_once(|| {
+        magick_wand_genesis();
+    });
+    let mut wand = MagickWand::new();
+
+
+    wand.read_image(&filename).unwrap();
+    
+    let mut pixelwand = PixelWand::new();
+    pixelwand.set_color("white").unwrap();
+    wand.set_background_color(&pixelwand).unwrap();
+    wand.set_format("jpg").unwrap();
+    let temp: Vec<u8> = wand.write_image_blob("jpg").unwrap();
+    let mut newWand = MagickWand::new();
+    
+    newWand.read_image_blob(&temp).unwrap();
+    newWand.set_image_gravity(5).unwrap();
+    newWand.set_gravity(5).unwrap();
+    newWand.fit(640,640);
+    
+    let width = newWand.get_image_width() as isize;
+    println!("Width: {}", width);
+
+    let x_offset: isize = (640 - width) / 2 * -1;
+
+    newWand.extend_image(640,640, x_offset as isize, 0).unwrap();
+    
+    let resFile = "tmp/".to_string() + name + ".jpg";
+
+    newWand.write_image(&resFile).unwrap();
+}
+
+
 pub async fn download_file(file_name: &String) -> bool { 
+
     // Delete temporary file
     // first check if file exists
     let file_path = Path::new("tmp/tmpdownload.jpg");
@@ -65,9 +109,11 @@ pub async fn download_file(file_name: &String) -> bool {
 
 
 
-pub async fn upload_file(item_code: &String) -> bool {
+pub async fn upload_file(item_code: &String, filepath: &String) -> bool {  
+    resize(&filepath, &item_code);
+    let tempFile = "tmp/".to_string() + item_code + ".jpg";
 
-    let mut f = File::open("tmp/test.jpg").await.unwrap();
+    let mut f = File::open(&tempFile).await.unwrap();
     let mut buffer = Vec::new();
     let fileSize = f.metadata().await.unwrap().len();
     f.read_to_end(&mut buffer).await.ok();
@@ -106,13 +152,16 @@ pub async fn upload_file(item_code: &String) -> bool {
         remote_file.wait_eof().unwrap();
         remote_file.close().unwrap();
         remote_file.wait_close().unwrap();
+        std::fs::remove_file(tempFile).unwrap();
         return true
     } else {
         println!("File Send Unsuccessful");
+        std::fs::remove_file(tempFile).unwrap();
         return false;
     }
     } else {
         println!("Session not created");
+        std::fs::remove_file(tempFile).unwrap();
         return false;
     }
 

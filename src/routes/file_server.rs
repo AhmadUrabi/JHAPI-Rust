@@ -56,10 +56,11 @@ pub async fn upload(mut params: Form<ImageUpload<'_>>,_key: ApiKey<'_>, pool:&St
     info!("Image Upload Request: {:?}", params.item_code);
 
     // Save file temporarily
-    params.file.persist_to("tmp/test.jpg").await.unwrap();
+    let fileName = "tmp/".to_string() + params.file.name().unwrap();
+    params.file.persist_to(&fileName).await.unwrap();
 
     // Upload file to server
-    if upload_file(&params.item_code).await {
+    if upload_file(&params.item_code, &fileName).await {
         info!("File Uploaded");
     } else {
         info!("File Not Uploaded");
@@ -67,7 +68,7 @@ pub async fn upload(mut params: Form<ImageUpload<'_>>,_key: ApiKey<'_>, pool:&St
     }
 
     // Delete temporary file
-    std::fs::remove_file("tmp/test.jpg").unwrap();
+    std::fs::remove_file(fileName).unwrap();
 
     Ok("File Uploaded".to_string())
 }
