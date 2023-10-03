@@ -13,7 +13,10 @@ jsonwebtoken = "8"
 log4rs = "1.2"
 chrono = "0.4.26"
 rayon = "1.5"
+ssh2 = "0.9.4"
 dotenv = "0.15.0"
+tokio = { version = "1", features = ["full"] }
+magick_rust = "0.19.1"
 
 [dependencies.rocket]
 version = "0.5.0-rc.3"
