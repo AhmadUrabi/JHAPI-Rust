@@ -37,11 +37,12 @@ fn resize(filename: &str,name: &str)  {
     newWand.fit(640,640);
     
     let width = newWand.get_image_width() as isize;
-    println!("Width: {}", width);
-
     let x_offset: isize = (640 - width) / 2 * -1;
 
-    newWand.extend_image(640,640, x_offset as isize, 0).unwrap();
+    let height = newWand.get_image_height() as isize;
+    let y_offset: isize = (640 - height) / 2 * -1;
+
+    newWand.extend_image(640,640, x_offset, y_offset).unwrap();
     
     let resFile = "tmp/".to_string() + name + ".jpg";
 
