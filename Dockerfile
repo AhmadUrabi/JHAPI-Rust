@@ -9,6 +9,7 @@
 # TODO (maybe): Use a multi-stage build to reduce the size of the final image
 # TODO (maybe): Clean up instantclient installation
 
+
 # Stage 1: Install the Oracle Instant Client
 FROM oraclelinux:7-slim AS instantclient
 
@@ -30,24 +31,49 @@ RUN apt-get update && \
 # Stage 3: Build the Rust application
 FROM rust:latest
 
+ENV MAGICK_VERSION 7.1
+
+RUN curl https://imagemagick.org/archive/ImageMagick.tar.gz | tar xz \
+ && cd ImageMagick-${MAGICK_VERSION}* \
+ && ./configure --with-magick-plus-plus=no --with-perl=no \
+ && make \
+ && make install \
+ && cd .. \
+ && rm -r ImageMagick-${MAGICK_VERSION}*
+
+COPY --from=instantclient /usr/lib/oracle /usr/lib/oracle
+COPY --from=libaio /usr/lib/x86_64-linux-gnu/libaio.so.1 /usr/lib/x86_64-linux-gnu/libaio.so.1
+
 # Set the working directory to /app
 WORKDIR /app
 
 # Copy the current directory contents into the container at /app
 COPY . /app
 
-# Copy the Oracle Instant Client from stage 1 to stage 3
-COPY --from=instantclient /usr/lib/oracle /usr/lib/oracle
 
-# Copy libaio from stage 2 to stage 3
-COPY --from=libaio /usr/lib/x86_64-linux-gnu/libaio.so.1 /usr/lib/x86_64-linux-gnu/libaio.so.1
+# Set environment variables for OpenSSL and pkg-config
+ENV OPENSSL_DIR=/usr/lib/ssl
+ENV OPENSSL_LIB_DIR=/usr/lib/x86_64-linux-gnu
+ENV OPENSSL_INCLUDE_DIR=/usr/include/openssl
 
-# Set the LD_LIBRARY_PATH environment variable
+# Install libssl-dev equivalent package for the Rust image
+RUN apt-get update && \
+    apt-get install -y libssl-dev libjpeg-turbo-progs libpng-dev clang llvm && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV LD_LIBRARY_PATH=/usr/lib/clang:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=/usr/local/lib
+
+RUN ldconfig /usr/local/lib
+RUN rm /usr/lib/x86_64-linux-gnu/libMagick*
+
+ENV IMAGE_MAGICK_DIR=/usr/local
 ENV LD_LIBRARY_PATH=/usr/lib/oracle/12.2/client64/lib:$LD_LIBRARY_PATH
 
-# Install any dependencies required by the program
+# Build the Rust application
 RUN cargo build --release
 
+# Expose port 8000 if needed
 EXPOSE 8000
 
 # Set the entry point to run the program
