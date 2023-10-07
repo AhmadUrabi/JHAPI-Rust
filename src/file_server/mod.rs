@@ -6,7 +6,7 @@ use std::io::Read;
 use tokio::fs::File;
 use ssh2::Session;
 
-use magick_rust::{MagickWand, magick_wand_genesis, PixelWand, MagickError, GravityType};
+use magick_rust::{MagickWand, magick_wand_genesis, PixelWand};
 use std::sync::Once;
 
 // Used to make sure MagickWand is initialized exactly once. Note that we
