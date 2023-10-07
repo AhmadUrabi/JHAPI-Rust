@@ -39,11 +39,11 @@ pub async fn get_permissions(
         reports: None,
     };
 
-    if !is_perm_perm(&key, pool) && !is_admin_perm(&key, pool) && username != userId {
+    if !is_perm_perm(&key, pool) && !is_admin_perm(&key, pool) && username.to_lowercase() != userId.to_lowercase() {
         return Json(emptyPermissions);
     }
 
-    match crate::permissions::get_user_permissions(&username, pool) {
+    match crate::permissions::get_user_permissions(&username.to_lowercase(), pool) {
         Ok(permissions) => Json(permissions),
         Err(err) => {
             error!("Error: {}", err);
