@@ -17,24 +17,29 @@ pub async fn get_permissions(
     pool: &State<Pool>,
     key: ApiKey<'_>,
 ) -> Json<Permissions> {
+
+    let mut userId: String = "".to_string();
     info!("GetUserPermissions Request: {:?}", username);
     match decode_token_data(key.0) {
-        Some(data) => info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap()),
+        Some(data) => {
+            userId = data.USER_ID.unwrap();
+            info!("Token User Id: {:?}", userId);
+        },
         None => info!("Token Data: None"),
     }
 
     let emptyPermissions = Permissions {
-        users: false,
-        permissions: false,
-        query: false,
-        images: false,
-        cost: false,
-        admin: false,
-        stock: false,
-        reports: false,
+        users: None,
+        permissions: None,
+        query: None,
+        images: None,
+        cost: None,
+        admin: None,
+        stock: None,
+        reports: None,
     };
 
-    if !is_perm_perm(&key, pool) && !is_admin_perm(&key, pool) {
+    if !is_perm_perm(&key, pool) && !is_admin_perm(&key, pool) && username != userId {
         return Json(emptyPermissions);
     }
 
@@ -46,6 +51,8 @@ pub async fn get_permissions(
         }
     }
 }
+
+
 
 #[post("/EditUserPermissions", data = "<params>")]
 pub async fn edit_permissions(

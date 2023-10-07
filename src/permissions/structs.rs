@@ -8,14 +8,14 @@ pub struct PermissionEditParams {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Permissions {
-    pub users: bool,
-    pub permissions: bool,
-    pub query: bool,
-    pub images: bool,
-    pub cost: bool,
-    pub admin: bool,
-    pub stock: bool,
-    pub reports: bool,
+    pub users: Option<bool>,
+    pub permissions: Option<bool>,
+    pub query: Option<bool>,
+    pub images: Option<bool>,
+    pub cost: Option<bool>,
+    pub admin: Option<bool>,
+    pub stock: Option<bool>,
+    pub reports: Option<bool>,
 }
 
 

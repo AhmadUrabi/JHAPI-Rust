@@ -16,27 +16,27 @@ pub fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions> {
     let rows = stmt.query(&[&user_id])?;
 
     let mut permission: Permissions = Permissions {
-        users: false,
-        permissions: false,
-        query: false,
-        images: false,
-        cost: false,
-        admin: false,
-        stock: false,
-        reports: false,
+        users: Some(false),
+        permissions: Some(false),
+        query: Some(false),
+        images: Some(false),
+        cost: Some(false),
+        admin: Some(false),
+        stock: Some(false),
+        reports: Some(false),
     };
     for row_result in rows {
         let row = row_result?;
         let perm: String = row.get(0)?;
         match perm.as_str() {
-            "users" => permission.users = true,
-            "permissions" => permission.permissions = true,
-            "query" => permission.query = true,
-            "images" => permission.images = true,
-            "cost" => permission.cost = true,
-            "admin" => permission.admin = true,
-            "stock" => permission.stock = true,
-            "reports" => permission.reports = true,
+            "users" => permission.users = Some(true),
+            "permissions" => permission.permissions = Some(true),
+            "query" => permission.query = Some(true),
+            "images" => permission.images = Some(true),
+            "cost" => permission.cost = Some(true),
+            "admin" => permission.admin = Some(true),
+            "stock" => permission.stock = Some(true),
+            "reports" => permission.reports = Some(true),
             _ => {}
         }
        
@@ -60,28 +60,28 @@ pub fn edit_user_permissions(
 
     let mut stmt = conn.statement("INSERT INTO ODBC_JHC.PERMISSIONS_JHC (USERNAME, PERMISSION) VALUES (:user_id, :permission)").build()?;
 
-    if permissions.users {
+    if permissions.users.unwrap() {
         stmt.execute(&[&user_id, &"users".to_string()])?;
     }
-    if permissions.permissions {
+    if permissions.permissions.unwrap() {
         stmt.execute(&[&user_id, &"permissions".to_string()])?;
     }
-    if permissions.query {
+    if permissions.query.unwrap() {
         stmt.execute(&[&user_id, &"query".to_string()])?;
     }
-    if permissions.images {
+    if permissions.images.unwrap() {
         stmt.execute(&[&user_id, &"images".to_string()])?;
     }
-    if permissions.cost {
+    if permissions.cost.unwrap() {
         stmt.execute(&[&user_id, &"cost".to_string()])?;
     }
-    if permissions.admin {
+    if permissions.admin.unwrap() {
         stmt.execute(&[&user_id, &"admin".to_string()])?;
     }
-    if permissions.stock {
+    if permissions.stock.unwrap() {
         stmt.execute(&[&user_id, &"stock".to_string()])?;
     }
-    if permissions.reports {
+    if permissions.reports.unwrap() {
         stmt.execute(&[&user_id, &"reports".to_string()])?;
     }
 
