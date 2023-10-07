@@ -65,7 +65,7 @@ pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Option<Json<Strin
         mypPassword = pPassword;
     }
 
-    let user = fetch_user_data(mypUsername.to_string(), mypPassword.to_string(), pool);
+    let user = fetch_user_data(mypUsername.to_lowercase(), mypPassword.to_string(), pool);
 
     // If user doesn't exist, return None
     if user.is_none() {
