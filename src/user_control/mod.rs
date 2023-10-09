@@ -148,7 +148,7 @@ pub async fn edit_user(params: Json<EditUserParams>, pool: &Pool, isAdmin: bool)
 
     if paramsUnwrapped.password.is_some() && isAdmin {
         stmt = conn.statement("UPDATE ODBC_JHC.AUTHENTICATION_JHC SET PASSWORD = :1 WHERE USERNAME = :2").build()?;
-        stmt.execute(&[&paramsUnwrapped.password.unwrap(), &new_user.username]).unwrap();
+        stmt.execute(&[&hash(paramsUnwrapped.password.unwrap(),DEFAULT_COST).unwrap(), &new_user.username]).unwrap();
         conn.commit()?;
     }
 
