@@ -63,6 +63,11 @@ impl Fairing for CORS {
     }
 }
 
+#[options("/<path..>")]
+fn cors_preflight_handler(path: std::path::PathBuf) -> rocket::http::Status {
+    rocket::http::Status::Ok
+}
+
 #[launch]
 fn rocket() -> _ {
     // Load .env file
@@ -107,7 +112,8 @@ fn rocket() -> _ {
                 edit_user_route,
                 delete_user_route,
                 get_image,
-                upload
+                upload,
+                cors_preflight_handler
             ],
         )
         .attach(CORS)

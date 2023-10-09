@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::signing::structs::LoginParams;
 use crate::signing::structs::User;
 
-use bcrypt::{DEFAULT_COST, hash, verify};
+use bcrypt::verify;
 
 pub mod structs;
 
