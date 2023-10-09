@@ -54,7 +54,7 @@ pub async fn edit_user_route(
     if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
         return "Permission Denied".to_string();
     }
-    let res = edit_user(params, pool).await.unwrap();
+    let res = edit_user(params, pool, is_admin_perm(&_key, pool)).await.unwrap();
     if res == false {
         return "User Not Found".to_string();
     }

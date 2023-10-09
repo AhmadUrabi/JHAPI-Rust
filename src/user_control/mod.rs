@@ -99,7 +99,7 @@ pub struct EditUserParams {
     pub loginduration: Option<i32>,
 }
 
-pub async fn edit_user(params: Json<EditUserParams>, pool: &Pool) -> Result<bool> {
+pub async fn edit_user(params: Json<EditUserParams>, pool: &Pool, isAdmin: bool) -> Result<bool> {
     let paramsUnwrapped = params.into_inner();
 
     let original_user = get_user(&paramsUnwrapped.username.unwrap(), pool)
@@ -108,6 +108,10 @@ pub async fn edit_user(params: Json<EditUserParams>, pool: &Pool) -> Result<bool
 
     if original_user.username == "" {
         return Ok(false);
+    }
+
+    if paramsUnwrapped.password.is_some() && isAdmin {
+
     }
 
     let mut new_user = User {
@@ -141,6 +145,13 @@ pub async fn edit_user(params: Json<EditUserParams>, pool: &Pool) -> Result<bool
     ])
     .unwrap();
     conn.commit()?;
+
+    if paramsUnwrapped.password.is_some() && isAdmin {
+        stmt = conn.statement("UPDATE ODBC_JHC.AUTHENTICATION_JHC SET PASSWORD = :1 WHERE USERNAME = :2").build()?;
+        stmt.execute(&[&paramsUnwrapped.password.unwrap(), &new_user.username]).unwrap();
+        conn.commit()?;
+    }
+
     Ok(true)
 }
 
