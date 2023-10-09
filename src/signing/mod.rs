@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::signing::structs::LoginParams;
 use crate::signing::structs::User;
 
-use bcrypt::{DEFAULT_COST, hash};
+use bcrypt::{DEFAULT_COST, hash, verify};
 
 pub mod structs;
 
@@ -67,7 +67,7 @@ pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Option<Json<Strin
         mypPassword = pPassword;
     }
 
-    let user = fetch_user_data(mypUsername.to_lowercase(), hash(mypPassword.to_string(), DEFAULT_COST).unwrap(), pool);
+    let user = fetch_user_data(mypUsername.to_lowercase(), mypPassword.to_string(), pool);
 
     // If user doesn't exist, return None
     if user.is_none() {
@@ -90,10 +90,11 @@ pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Option<Json<Strin
 
 fn fetch_user_data(username: String, password: String, pool: &Pool) -> Option<User> {
     let conn = pool.get().unwrap();
+    println!("{:?}", password);
     let mut stmt = conn
-        .statement("SELECT USERNAME, FULLNAME, EMAIL, LOGINDURATION FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1 AND PASSWORD = :2").build()
+        .statement("SELECT USERNAME, PASSWORD, FULLNAME, EMAIL, LOGINDURATION FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1").build()
         .unwrap();
-    let rows = stmt.query(&[&username, &password]).unwrap();
+    let rows = stmt.query(&[&username]).unwrap();
 
     let mut user = User {
         USER_ID: None,
@@ -103,6 +104,9 @@ fn fetch_user_data(username: String, password: String, pool: &Pool) -> Option<Us
     };
     for row_result in rows {
         let row = row_result.unwrap();
+        if !verify(&password, &row.get::<&str, String>("PASSWORD").unwrap()).unwrap() {
+            return None;
+        }
         user.USER_ID = Some(row.get::<&str, String>("USERNAME").unwrap());
         user.USER_NAME = Some(row.get::<&str, String>("FULLNAME").unwrap());
         user.USER_EMAIL = Some(row.get::<&str, String>("EMAIL").unwrap());
