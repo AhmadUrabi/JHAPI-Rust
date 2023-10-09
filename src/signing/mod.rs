@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 use crate::signing::structs::LoginParams;
 use crate::signing::structs::User;
 
+use bcrypt::{DEFAULT_COST, hash};
+
 pub mod structs;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -65,7 +67,7 @@ pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Option<Json<Strin
         mypPassword = pPassword;
     }
 
-    let user = fetch_user_data(mypUsername.to_lowercase(), mypPassword.to_string(), pool);
+    let user = fetch_user_data(mypUsername.to_lowercase(), hash(mypPassword.to_string(), DEFAULT_COST).unwrap(), pool);
 
     // If user doesn't exist, return None
     if user.is_none() {

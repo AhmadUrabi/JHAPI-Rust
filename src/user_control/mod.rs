@@ -3,6 +3,7 @@ use oracle::pool::Pool;
 use oracle::Result;
 use rocket::serde::json::Json;
 
+use bcrypt::{DEFAULT_COST, hash};
 
 use crate::utils::permissions::{is_admin_perm, is_users_perm};
 
@@ -45,7 +46,7 @@ pub async fn get_user(user_id: &str, pool: &Pool) -> Result<User> {
     let mut stmt = conn
         .statement("SELECT USERNAME, FULLNAME, EMAIL, LOGINDURATION FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1")
         .build()?;
-    let rows = stmt.query(&[&user_id]).unwrap();
+    let rows = stmt.query(&[&(user_id.to_lowercase())]).unwrap();
     let mut user = User {
         username: "".to_string(),
         fullname: "".to_string(),
@@ -79,8 +80,8 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<()> {
         .statement("INSERT INTO ODBC_JHC.AUTHENTICATION_JHC (USERNAME, PASSWORD, FULLNAME, EMAIL, LOGINDURATION) VALUES (:1, :2, :3, :4, :5)")
         .build()?;
     stmt.execute(&[
-        &data.username,
-        &data.password,
+        &(data.username).to_lowercase(),
+        &(hash(data.password,DEFAULT_COST).unwrap()),
         &data.fullname,
         &data.email,
         &data.login_duration,
@@ -102,16 +103,15 @@ pub struct EditUserParams {
 pub async fn edit_user(params: Json<EditUserParams>, pool: &Pool, isAdmin: bool) -> Result<bool> {
     let paramsUnwrapped = params.into_inner();
 
-    let original_user = get_user(&paramsUnwrapped.username.unwrap(), pool)
-        .await
-        .unwrap();
+    let original_user = match get_user(&paramsUnwrapped.username.unwrap(), pool)
+        .await {
+            Ok(user) => user,
+            Err(_) => return Ok(false),
+        };
+        
 
     if original_user.username == "" {
         return Ok(false);
-    }
-
-    if paramsUnwrapped.password.is_some() && isAdmin {
-
     }
 
     let mut new_user = User {
@@ -160,7 +160,7 @@ pub async fn delete_user(user_id: &str, pool: &Pool) -> Result<()> {
     let mut stmt = conn
         .statement("DELETE FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1")
         .build()?;
-    stmt.execute(&[&user_id]).unwrap();
+    stmt.execute(&[&(user_id.to_lowercase())]).unwrap();
     conn.commit()?;
     Ok(())
 }

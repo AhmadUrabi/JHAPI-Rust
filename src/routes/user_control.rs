@@ -50,7 +50,7 @@ pub async fn edit_user_route(
     pool: &State<Pool>,
     _key: ApiKey<'_>,
 ) -> String {
-    println!("Edit User Request: {:?}", params.0);
+    println!("Edit User Request: {:?}", params.0.username);
     if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
         return "Permission Denied".to_string();
     }
