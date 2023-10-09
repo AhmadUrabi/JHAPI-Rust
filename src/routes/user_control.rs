@@ -36,7 +36,7 @@ pub async fn create_user_route(
     pool: &State<Pool>,
     _key: ApiKey<'_>,
 ) -> String {
-    println!("Create User Request: {:?}", params.0);
+    println!("Create User Request: {:?}, {:?}", params.0.username, params.0.fullname);
     if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
         return "Permission Denied".to_string();
     }
