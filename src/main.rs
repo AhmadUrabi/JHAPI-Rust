@@ -25,6 +25,7 @@ use rocket::Response;
 use oracle::pool::PoolBuilder;
 
 use routes::fetch_stores::get_store_list;
+use routes::fetch_stores::UpdateStoreList;
 use routes::file_server::get_image;
 use routes::permissions::edit_permissions;
 use routes::permissions::get_permissions;
@@ -103,6 +104,7 @@ fn rocket() -> _ {
             routes![
                 get_products,
                 get_store_list,
+                UpdateStoreList,
                 sign,
                 get_permissions,
                 edit_permissions,
