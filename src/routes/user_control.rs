@@ -1,3 +1,4 @@
+use crate::signing::decode_token_data;
 use crate::user_control::*;
 use crate::ApiKey;
 
@@ -19,7 +20,17 @@ pub async fn get_user_list(pool: &State<Pool>, _key: ApiKey<'_>) -> Json<Vec<Use
 
 #[get("/User/<user_id>")]
 pub async fn get_user_by_id(pool: &State<Pool>, _key: ApiKey<'_>, user_id: String) -> Json<User> {
-    if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
+
+    let mut userId: String = "".to_string();
+
+    match decode_token_data(_key.0) {
+        Some(data) => {
+            userId = data.USER_ID.unwrap();
+        },
+        None => info!("Token Data: None"),
+    }
+
+    if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) && user_id.to_lowercase() != userId.to_lowercase() {
         return Json(User {
             username: "".to_string(),
             fullname: "".to_string(),
