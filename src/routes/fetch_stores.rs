@@ -13,10 +13,16 @@ use crate::fetch_stores::structs::Store;
 #[get("/StoreList")]
 pub async fn get_store_list(pool: &State<Pool>, _key: ApiKey<'_>) -> Json<Vec<Store>> {
     info!("StoreList Request");
+
+    let mut userId: String = "".to_string();
+
     match decode_token_data(_key.0) {
-        Some(data) => info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap()),
+        Some(data) => { 
+            info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap());
+            userId = data.USER_ID.unwrap();
+        },
         None => info!("Token Data: None"),
     }
 
-    Json(fetch_store_list(pool).await)
+    Json(fetch_store_list(pool, userId).await)
 }
