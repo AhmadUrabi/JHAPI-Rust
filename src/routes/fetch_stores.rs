@@ -32,7 +32,7 @@ pub async fn get_store_list(pool: &State<Pool>, _key: ApiKey<'_>) -> Json<Vec<St
 #[derive(serde::Deserialize, Debug)]
 pub struct StoreListUpdateParams {
     pUsername: String,
-    pStores: Vec<i8>,
+    pStores: Option<Vec<i8>>,
     pAllStoresAccess: i8,
 }
 
@@ -59,7 +59,7 @@ pub async fn UpdateStoreList(pool: &State<Pool>, _key: ApiKey<'_>, params: Json<
 
     let conn = pool.get().unwrap();
     // Delete previous values, if all access stores is set to one, just add a single row, else, add a row for each store
-
+    if !params.pStores.is_none() && params.pAllStoresAccess == 0 {
     let mut stmt = conn
         .statement("
             DELETE FROM ODBC_JHC.USER_STORES_JHC
@@ -67,8 +67,11 @@ pub async fn UpdateStoreList(pool: &State<Pool>, _key: ApiKey<'_>, params: Json<
         .build()
         .unwrap();
 
-    stmt.execute(&[&params.pUsername]).unwrap();
-    conn.commit().unwrap();
+        stmt.execute(&[&params.pUsername]).unwrap();
+        conn.commit().unwrap();
+    }
+
+    
 
 
     if params.pAllStoresAccess == 1 {
@@ -82,7 +85,7 @@ pub async fn UpdateStoreList(pool: &State<Pool>, _key: ApiKey<'_>, params: Json<
         stmt.execute(&[&params.pUsername]).unwrap();
         conn.commit().unwrap();
     } else {
-        for store in params.pStores.iter() {
+        for store in params.pStores.as_ref().unwrap().iter() {
             let mut stmt = conn
                 .statement("
                     INSERT INTO ODBC_JHC.USER_STORES_JHC (USERNAME, STORE_ID)
