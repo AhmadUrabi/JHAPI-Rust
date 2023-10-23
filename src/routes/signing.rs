@@ -1,3 +1,5 @@
+use std::net::IpAddr;
+
 use oracle::pool::Pool;
 use rocket::http::Status;
 use rocket::serde::json::Json;
@@ -7,8 +9,10 @@ use crate::signing::signin;
 use crate::signing::structs::LoginParams;
 
 #[post("/Sign", data = "<params>")]
-pub async fn sign(params: Json<LoginParams>, pool: &State<Pool>) -> Result<String, Status> {
+pub async fn sign(params: Json<LoginParams>, pool: &State<Pool>, client_ip: Option<IpAddr>) -> Result<String, Status> {
     info!("Sign Request: {:?}", params.0.pUserName);
+    info!("Client IP: {:?}", client_ip);
+
     match signin(params, pool).await {
         Some(token) => {
             info!("Valid User Data, Token Sent");
