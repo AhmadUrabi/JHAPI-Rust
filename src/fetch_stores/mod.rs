@@ -5,17 +5,8 @@ use crate::fetch_stores::structs::Store;
 
 pub mod structs;
 
-pub async fn fetch_store_list(pool: &Pool, user_id: String) -> Vec<Store> {
-    match get_stores(pool, user_id) {
-        Ok(stores) => stores,
-        Err(err) => {
-            println!("Error: {}", err.to_string());
-            Vec::new()
-        }
-    }
-}
 
-fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>> {
+pub fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>> {
     let conn = pool.get()?;
     let mut stmt = conn
         .statement("

@@ -5,7 +5,8 @@ use rocket::{get, State};
 
 use crate::ApiKey;
 
-use crate::fetch_stores::fetch_store_list;
+use crate::fetch_stores::get_stores;
+
 use crate::signing::decode_token_data;
 
 use crate::utils::permissions::*;
@@ -25,8 +26,22 @@ pub async fn get_store_list(pool: &State<Pool>, _key: ApiKey<'_>) -> Json<Vec<St
         },
         None => info!("Token Data: None"),
     }
-
-    Json(fetch_store_list(pool, userId).await)
+    if is_stock_perm(&_key, &pool) || is_admin_perm(&_key, &pool){
+        match get_stores(pool, "admin".to_string()) {
+            Ok(stores) => return Json(stores),
+            Err(err) => {
+                println!("Error: {}", err.to_string());
+                return Json(Vec::new());
+            }
+        }
+    }
+    match get_stores(pool, userId) {
+        Ok(stores) => Json(stores),
+        Err(err) => {
+            println!("Error: {}", err.to_string());
+            Json(Vec::new())
+        }
+    }
 }
 
 #[derive(serde::Deserialize, Debug)]
@@ -37,7 +52,7 @@ pub struct StoreListUpdateParams {
 }
 
 #[post("/StoreListEdit", data = "<params>")]
-pub async fn UpdateStoreList(pool: &State<Pool>, _key: ApiKey<'_>, params: Json<StoreListUpdateParams>){
+pub async fn UpdateStoreList(pool: &State<Pool>, _key: ApiKey<'_>, params: Json<StoreListUpdateParams>) -> String{
     info!("StoreListEdit Request: {:?}", params);
 
     let mut userId: String = "".to_string();
@@ -54,7 +69,7 @@ pub async fn UpdateStoreList(pool: &State<Pool>, _key: ApiKey<'_>, params: Json<
         info!("User has permissions");
     } else {
         info!("User does not have permissions");
-        return;
+        return "User does not have permissions".to_string();
     }
 
     let conn = pool.get().unwrap();
@@ -98,4 +113,35 @@ pub async fn UpdateStoreList(pool: &State<Pool>, _key: ApiKey<'_>, params: Json<
         }
     }
 
+    return "Success".to_string();
+
+}
+
+
+#[get("/StoreList/<username>")]
+pub async fn get_store_list_for_user(pool: &State<Pool>, _key: ApiKey<'_>, username: String) -> Json<Vec<Store>> {
+    info!("StoreList Request");
+
+    let mut userId: String = "".to_string();
+
+    match decode_token_data(_key.0) {
+        Some(data) => { 
+            info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap());
+            userId = data.USER_ID.unwrap();
+        },
+        None => info!("Token Data: None"),
+    }
+
+    if !is_stock_perm(&_key, &pool) || !is_admin_perm(&_key, &pool) { 
+            info!("Token does not have permissions");
+            return Json(vec![]);
+    }
+
+    match get_stores(pool, username) {
+        Ok(stores) => Json(stores),
+        Err(err) => {
+            println!("Error: {}", err.to_string());
+            Json(Vec::new())
+        }
+    }
 }

@@ -37,6 +37,7 @@ pub async fn get_permissions(
         admin: None,
         stock: None,
         reports: None,
+        stores: None,
     };
 
     if !is_perm_perm(&key, pool) && !is_admin_perm(&key, pool) && username.to_lowercase() != userId.to_lowercase() {

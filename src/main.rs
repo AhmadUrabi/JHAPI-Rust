@@ -26,6 +26,7 @@ use oracle::pool::PoolBuilder;
 
 use routes::fetch_stores::get_store_list;
 use routes::fetch_stores::UpdateStoreList;
+use routes::fetch_stores::get_store_list_for_user;
 use routes::file_server::get_image;
 use routes::permissions::edit_permissions;
 use routes::permissions::get_permissions;
@@ -115,7 +116,8 @@ fn rocket() -> _ {
                 delete_user_route,
                 get_image,
                 upload,
-                cors_preflight_handler
+                cors_preflight_handler,
+                get_store_list_for_user
             ],
         )
         .attach(CORS)

@@ -24,6 +24,7 @@ pub fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions> {
         admin: Some(false),
         stock: Some(false),
         reports: Some(false),
+        stores: Some(false),
     };
     for row_result in rows {
         let row = row_result?;
@@ -37,6 +38,7 @@ pub fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions> {
             "admin" => permission.admin = Some(true),
             "stock" => permission.stock = Some(true),
             "reports" => permission.reports = Some(true),
+            "stores" => permission.stores = Some(true),
             _ => {}
         }
        
@@ -83,6 +85,9 @@ pub fn edit_user_permissions(
     }
     if permissions.reports.unwrap() {
         stmt.execute(&[&user_id, &"reports".to_string()])?;
+    }
+    if permissions.stores.unwrap() {
+        stmt.execute(&[&user_id, &"stores".to_string()])?;
     }
 
 

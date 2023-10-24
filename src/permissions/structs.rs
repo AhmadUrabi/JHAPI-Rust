@@ -16,6 +16,7 @@ pub struct Permissions {
     pub admin: Option<bool>,
     pub stock: Option<bool>,
     pub reports: Option<bool>,
+    pub stores: Option<bool>,
 }
 
 
