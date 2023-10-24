@@ -74,7 +74,7 @@ pub async fn UpdateStoreList(pool: &State<Pool>, _key: ApiKey<'_>, params: Json<
 
     let conn = pool.get().unwrap();
     // Delete previous values, if all access stores is set to one, just add a single row, else, add a row for each store
-    if !params.pStores.is_none() && params.pAllStoresAccess == 0 {
+    if !params.pStores.is_none() || params.pAllStoresAccess == 0 {
     let mut stmt = conn
         .statement("
             DELETE FROM ODBC_JHC.USER_STORES_JHC
