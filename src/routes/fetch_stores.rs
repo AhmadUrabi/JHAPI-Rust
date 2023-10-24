@@ -26,7 +26,7 @@ pub async fn get_store_list(pool: &State<Pool>, _key: ApiKey<'_>) -> Json<Vec<St
         },
         None => info!("Token Data: None"),
     }
-    if is_stock_perm(&_key, &pool) || is_admin_perm(&_key, &pool){
+    if is_stores_perm(&_key, &pool) || is_admin_perm(&_key, &pool){
         match get_stores(pool, "admin".to_string()) {
             Ok(stores) => return Json(stores),
             Err(err) => {
@@ -65,7 +65,7 @@ pub async fn UpdateStoreList(pool: &State<Pool>, _key: ApiKey<'_>, params: Json<
         None => info!("Token Data: None"),
     }
 
-    if is_admin_perm(&_key, pool) || is_perm_perm(&_key, pool) {
+    if is_admin_perm(&_key, pool) || is_stores_perm(&_key, pool) {
         info!("User has permissions");
     } else {
         info!("User does not have permissions");
@@ -132,7 +132,7 @@ pub async fn get_store_list_for_user(pool: &State<Pool>, _key: ApiKey<'_>, usern
         None => info!("Token Data: None"),
     }
 
-    if !is_stock_perm(&_key, &pool) || !is_admin_perm(&_key, &pool) { 
+    if !is_stores_perm(&_key, &pool) || !is_admin_perm(&_key, &pool) { 
             info!("Token does not have permissions");
             return Json(vec![]);
     }

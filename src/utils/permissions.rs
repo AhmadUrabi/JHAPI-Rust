@@ -55,3 +55,17 @@ pub fn is_stock_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();
     return permissions.stock.unwrap();
 }
+
+// Check for Reports Permissions
+pub fn is_reports_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+    let user_id = decode_token_data(_key.0).unwrap().USER_ID.unwrap();
+    let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();
+    return permissions.reports.unwrap();
+}
+
+// Check for Stores Permissions
+pub fn is_stores_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+    let user_id = decode_token_data(_key.0).unwrap().USER_ID.unwrap();
+    let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();
+    return permissions.stores.unwrap();
+}
