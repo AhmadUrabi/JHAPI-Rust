@@ -25,6 +25,7 @@ pub async fn get_products(
 ) -> Json<Vec<Product>> {
     info!("GetProductData Request: {:?}", params);
     info!("Client IP: {:?}", client_ip);
+    #[allow(unused_assignments)]
     let mut username: String = "".to_string();
     match decode_token_data(key.0) {
         Some(data) => {

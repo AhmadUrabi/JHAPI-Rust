@@ -50,6 +50,7 @@ pub fn is_query_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
 }
 
 // Check for Stock Permissions
+#[allow(dead_code)]
 pub fn is_stock_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     let user_id = decode_token_data(_key.0).unwrap().USER_ID.unwrap();
     let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();
@@ -57,6 +58,7 @@ pub fn is_stock_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
 }
 
 // Check for Reports Permissions
+#[allow(dead_code)]
 pub fn is_reports_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     let user_id = decode_token_data(_key.0).unwrap().USER_ID.unwrap();
     let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();

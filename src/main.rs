@@ -63,8 +63,8 @@ impl Fairing for CORS {
     }
 }
 
-#[options("/<path..>")]
-fn cors_preflight_handler(path: std::path::PathBuf) -> rocket::http::Status {
+#[options("/<_path..>")]
+fn cors_preflight_handler(_path: std::path::PathBuf) -> rocket::http::Status {
     rocket::http::Status::Ok
 }
 
