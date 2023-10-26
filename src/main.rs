@@ -96,7 +96,7 @@ fn rocket() -> _ {
     // Pool built
 
     rocket::build()
-        .register("/", catchers![Unauthorized, not_found])
+        .register("/", catchers![Unauthorized, not_found, internal_error])
         .manage(pool)
         .mount(
             "/",
@@ -165,4 +165,9 @@ fn Unauthorized() -> &'static str {
 #[catch(404)]
 fn not_found(req: &Request) -> String {
     format!("I couldn't find '{}'. Try something else?", req.uri())
+}
+
+#[catch(500)]
+fn internal_error() -> &'static str {
+    "Whoops! Looks like we messed up."
 }
