@@ -1,7 +1,6 @@
 use oracle::pool::Pool;
 use oracle::Result;
 
-
 use crate::ApiKey;
 
 use self::structs::Permissions;
@@ -41,7 +40,6 @@ pub fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions> {
             "stores" => permission.stores = Some(true),
             _ => {}
         }
-       
     }
 
     Ok(permission)
@@ -89,7 +87,6 @@ pub fn edit_user_permissions(
     if permissions.stores.unwrap() {
         stmt.execute(&[&user_id, &"stores".to_string()])?;
     }
-
 
     conn.commit()?;
     Ok("Permissions Updated".to_string())

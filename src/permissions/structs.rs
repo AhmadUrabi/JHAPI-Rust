@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct PermissionEditParams {
     pub pUserName: String,
     pub pPermissions: Permissions,
@@ -18,5 +18,3 @@ pub struct Permissions {
     pub reports: Option<bool>,
     pub stores: Option<bool>,
 }
-
-

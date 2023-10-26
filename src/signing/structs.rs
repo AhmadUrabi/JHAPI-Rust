@@ -9,7 +9,7 @@ pub struct User {
     pub LOGIN_DURATION: Option<String>,
 }
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug, Serialize, Clone)]
 pub struct LoginParams {
     pub pUserName: Option<String>,
     pub pPassword: Option<String>,

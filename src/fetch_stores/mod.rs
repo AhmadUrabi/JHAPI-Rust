@@ -5,7 +5,6 @@ use crate::fetch_stores::structs::Store;
 
 pub mod structs;
 
-
 pub fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>> {
     let conn = pool.get()?;
     let mut stmt = conn

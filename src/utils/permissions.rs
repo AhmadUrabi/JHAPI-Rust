@@ -1,5 +1,5 @@
-use oracle::pool::Pool;
 use crate::permissions::structs::Permissions;
+use oracle::pool::Pool;
 
 use crate::ApiKey;
 

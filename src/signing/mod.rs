@@ -90,7 +90,6 @@ pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Option<Json<Strin
 
 fn fetch_user_data(username: String, password: String, pool: &Pool) -> Option<User> {
     let conn = pool.get().unwrap();
-    println!("{:?}", password);
     let mut stmt = conn
         .statement("SELECT USERNAME, PASSWORD, FULLNAME, EMAIL, LOGINDURATION FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1").build()
         .unwrap();

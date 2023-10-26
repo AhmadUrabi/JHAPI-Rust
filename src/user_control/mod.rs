@@ -3,7 +3,7 @@ use oracle::pool::Pool;
 use oracle::Result;
 use rocket::serde::json::Json;
 
-use bcrypt::{DEFAULT_COST, hash};
+use bcrypt::{hash, DEFAULT_COST};
 
 use crate::utils::permissions::{is_admin_perm, is_users_perm};
 
@@ -81,7 +81,7 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<()> {
         .build()?;
     stmt.execute(&[
         &(data.username).to_lowercase(),
-        &(hash(data.password,DEFAULT_COST).unwrap()),
+        &(hash(data.password, DEFAULT_COST).unwrap()),
         &data.fullname,
         &data.email,
         &data.login_duration,
@@ -103,12 +103,10 @@ pub struct EditUserParams {
 pub async fn edit_user(params: Json<EditUserParams>, pool: &Pool, isAdmin: bool) -> Result<bool> {
     let paramsUnwrapped = params.into_inner();
 
-    let original_user = match get_user(&paramsUnwrapped.username.unwrap(), pool)
-        .await {
-            Ok(user) => user,
-            Err(_) => return Ok(false),
-        };
-        
+    let original_user = match get_user(&paramsUnwrapped.username.unwrap(), pool).await {
+        Ok(user) => user,
+        Err(_) => return Ok(false),
+    };
 
     if original_user.username == "" {
         return Ok(false);
@@ -147,8 +145,14 @@ pub async fn edit_user(params: Json<EditUserParams>, pool: &Pool, isAdmin: bool)
     conn.commit()?;
 
     if paramsUnwrapped.password.is_some() && isAdmin {
-        stmt = conn.statement("UPDATE ODBC_JHC.AUTHENTICATION_JHC SET PASSWORD = :1 WHERE USERNAME = :2").build()?;
-        stmt.execute(&[&hash(paramsUnwrapped.password.unwrap(),DEFAULT_COST).unwrap(), &new_user.username]).unwrap();
+        stmt = conn
+            .statement("UPDATE ODBC_JHC.AUTHENTICATION_JHC SET PASSWORD = :1 WHERE USERNAME = :2")
+            .build()?;
+        stmt.execute(&[
+            &hash(paramsUnwrapped.password.unwrap(), DEFAULT_COST).unwrap(),
+            &new_user.username,
+        ])
+        .unwrap();
         conn.commit()?;
     }
 

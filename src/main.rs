@@ -3,15 +3,13 @@
 extern crate rocket;
 
 mod fetch_stores;
+mod file_server;
 mod permissions;
 mod product_data;
 mod routes;
 mod signing;
 mod user_control;
 mod utils;
-mod file_server;
-
-
 
 use dotenv::dotenv;
 
@@ -25,9 +23,10 @@ use rocket::Response;
 use oracle::pool::PoolBuilder;
 
 use routes::fetch_stores::get_store_list;
-use routes::fetch_stores::UpdateStoreList;
 use routes::fetch_stores::get_store_list_for_user;
+use routes::fetch_stores::UpdateStoreList;
 use routes::file_server::get_image;
+use routes::file_server::upload;
 use routes::permissions::edit_permissions;
 use routes::permissions::get_permissions;
 use routes::product_data::get_products;
@@ -37,7 +36,6 @@ use routes::user_control::delete_user_route;
 use routes::user_control::edit_user_route;
 use routes::user_control::get_user_by_id;
 use routes::user_control::get_user_list;
-use routes::file_server::upload;
 // use crate::routes::user_control::edit_user;
 
 use signing::validate_token;
