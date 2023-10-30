@@ -34,14 +34,15 @@ pub fn get_all_logs_fn(pool: &State<Pool>, limit: Option<i32>) -> Result<Json<Ve
     for row_res in rows {
         let row = row_res?;
         logs.push(LogData {
-            id: row.get("LOG_ID")?,
-            username: row.get("USERNAME")?,
-            route: row.get("ROUTE")?,
-            parameters: row.get("PARAMETERS")?,
-            timestamp: row.get("TIMESTAMP")?,
-            result: row.get("RESULT")?,
-            token_used: row.get("TOKEN_USED")?,
-            ip_address: row.get("IP_ADDRESS")?,
+            LOG_ID: row.get("LOG_ID")?,
+            USERNAME: row.get("USERNAME")?,
+            ROUTE: row.get("ROUTE")?,
+            PARAMETERS: row.get("PARAMETERS")?,
+            RESULT: row.get("RESULT")?,
+            TIMESTAMP: row.get("TIMESTAMP")?,
+            TOKEN_USED: row.get("TOKEN_USED")?,
+            IP_ADDRESS: row.get("IP_ADDRESS")?,
+            METHOD: row.get("METHOD")?,
         });
     }
     Ok(Json(logs))
@@ -70,14 +71,15 @@ pub fn get_user_logs_fn(username: String, pool: &State<Pool>, limit: Option<i32>
     for row_res in rows {
         let row = row_res?;
         logs.push(LogData {
-            id: row.get("LOG_ID")?,
-            username: row.get("USERNAME")?,
-            route: row.get("ROUTE")?,
-            parameters: row.get("PARAMETERS")?,
-            timestamp: row.get("TIMESTAMP")?,
-            result: row.get("RESULT")?,
-            token_used: row.get("TOKEN_USED")?,
-            ip_address: row.get("IP_ADDRESS")?,
+            LOG_ID: row.get("LOG_ID")?,
+            USERNAME: row.get("USERNAME")?,
+            ROUTE: row.get("ROUTE")?,
+            PARAMETERS: row.get("PARAMETERS")?,
+            RESULT: row.get("RESULT")?,
+            TIMESTAMP: row.get("TIMESTAMP")?,
+            TOKEN_USED: row.get("TOKEN_USED")?,
+            IP_ADDRESS: row.get("IP_ADDRESS")?,
+            METHOD: row.get("METHOD")?,
         });
     }
     Ok(Json(logs))
@@ -106,14 +108,15 @@ pub fn get_route_logs_fn(route: String, pool: &State<Pool>, limit: Option<i32>) 
     for row_res in rows {
         let row = row_res?;
         logs.push(LogData {
-            id: row.get("LOG_ID")?,
-            username: row.get("USERNAME")?,
-            route: row.get("ROUTE")?,
-            parameters: row.get("PARAMETERS")?,
-            timestamp: row.get("TIMESTAMP")?,
-            result: row.get("RESULT")?,
-            token_used: row.get("TOKEN_USED")?,
-            ip_address: row.get("IP_ADDRESS")?,
+            LOG_ID: row.get("LOG_ID")?,
+            USERNAME: row.get("USERNAME")?,
+            ROUTE: row.get("ROUTE")?,
+            PARAMETERS: row.get("PARAMETERS")?,
+            RESULT: row.get("RESULT")?,
+            TIMESTAMP: row.get("TIMESTAMP")?,
+            TOKEN_USED: row.get("TOKEN_USED")?,
+            IP_ADDRESS: row.get("IP_ADDRESS")?,
+            METHOD: row.get("METHOD")?,
         });
     }
     Ok(Json(logs))

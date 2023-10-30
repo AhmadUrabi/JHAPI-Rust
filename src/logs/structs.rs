@@ -1,11 +1,12 @@
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct LogData {
-    pub id: i32,
-    pub username: Option<String>,
-    pub route: String,
-    pub parameters: Option<String>,
-    pub result: String,
-    pub timestamp: String,
-    pub token_used: String,
-    pub ip_address: Option<String>,
+    pub LOG_ID: i32,
+    pub USERNAME: Option<String>,
+    pub ROUTE: String,
+    pub PARAMETERS: Option<String>,
+    pub RESULT: String,
+    pub TIMESTAMP: String,
+    pub TOKEN_USED: String,
+    pub IP_ADDRESS: Option<String>,
+    pub METHOD: Option<String>,
 }
