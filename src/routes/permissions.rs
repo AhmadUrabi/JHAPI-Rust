@@ -10,7 +10,7 @@ use crate::permissions::structs::{PermissionEditParams, Permissions};
 
 use crate::signing::decode_token_data;
 
-use crate::ApiKey;
+use crate::{ApiKey, LogCheck};
 
 use crate::utils::permissions::{is_admin_perm, is_perm_perm};
 
@@ -20,14 +20,15 @@ use crate::utils::logging::{getTimestamp, log_data};
 pub async fn get_permissions(
     username: String,
     pool: &State<Pool>,
-    key: ApiKey<'_>,
+    _key: ApiKey<'_>,
     client_ip: Option<IpAddr>,
+    log_check: LogCheck,
 ) -> Result<Json<Permissions>, Status> {
-    let tokenUsed = key.0.to_string();
+    let tokenUsed = _key.0.to_string();
 
     let mut userId: String = "".to_string();
     info!("GetUserPermissions Request: {:?}", username);
-    match decode_token_data(key.0) {
+    match decode_token_data(_key.0) {
         Some(data) => {
             userId = data.USER_ID.unwrap();
             info!("Token User Id: {:?}", userId);
@@ -35,10 +36,11 @@ pub async fn get_permissions(
         None => info!("Token Data: None"),
     }
 
-    if !is_perm_perm(&key, pool)
-        && !is_admin_perm(&key, pool)
+    if !is_perm_perm(&_key, pool)
+        && !is_admin_perm(&_key, pool)
         && username.to_lowercase() != userId.to_lowercase()
     {
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
             userId,
@@ -49,11 +51,13 @@ pub async fn get_permissions(
             tokenUsed,
             "Not authorized".to_string(),
         );
+    }
         return Err(Status::Unauthorized);
     }
 
     match crate::permissions::get_user_permissions(&username.to_lowercase(), pool) {
         Ok(permissions) => {
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
                 userId,
@@ -64,9 +68,11 @@ pub async fn get_permissions(
                 tokenUsed,
                 "Success".to_string(),
             );
+        }
             Ok(Json(permissions))
         }
         Err(err) => {
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
                 userId,
@@ -77,6 +83,7 @@ pub async fn get_permissions(
                 tokenUsed,
                 "Error fetching Permissions".to_string(),
             );
+        }
             error!("Error: {}", err);
             Err(Status::InternalServerError)
         }
@@ -87,22 +94,24 @@ pub async fn get_permissions(
 pub async fn edit_permissions(
     params: Json<PermissionEditParams>,
     pool: &State<Pool>,
-    key: ApiKey<'_>,
+    _key: ApiKey<'_>,
     client_ip: Option<IpAddr>,
+    log_check: LogCheck,
 ) -> Result<String, Status> {
-    let tokenUsed = key.0.to_string();
+    let tokenUsed = _key.0.to_string();
 
     let params_clone = params.clone();
     let mut userId: String = "".to_string();
     info!("GetUserPermissions Request: {:?}", params);
-    match decode_token_data(key.0) {
+    match decode_token_data(_key.0) {
         Some(data) => {
             userId = data.USER_ID.unwrap();
             info!("Token User Id: {:?}", &userId)
         }
         None => info!("Token Data: None"),
     }
-    if !is_perm_perm(&key, pool) && !is_admin_perm(&key, pool) {
+    if !is_perm_perm(&_key, pool) && !is_admin_perm(&_key, pool) {
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
             userId,
@@ -113,10 +122,10 @@ pub async fn edit_permissions(
             tokenUsed,
             "Not authorized".to_string(),
         );
+    }
         return Err(Status::Unauthorized);
     }
     match crate::permissions::edit_user_permissions(
-        key,
         (params.pUserName.clone()).to_lowercase(),
         pool,
         params.pPermissions.clone(),
@@ -124,6 +133,7 @@ pub async fn edit_permissions(
         Ok(permissions) => {
             info!("Permissions Edited");
             info!("New Permissions: {:?}", permissions);
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
                 userId,
@@ -134,9 +144,11 @@ pub async fn edit_permissions(
                 tokenUsed,
                 "Success".to_string(),
             );
+        }
             Ok("Permissions Edited".to_string())
         }
         Err(err) => {
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
                 userId,
@@ -147,6 +159,7 @@ pub async fn edit_permissions(
                 tokenUsed,
                 "Error editing permissions".to_string(),
             );
+        }
             error!("Error: {}", err);
             Err(Status::InternalServerError)
         }

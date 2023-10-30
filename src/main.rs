@@ -10,6 +10,7 @@ mod routes;
 mod signing;
 mod user_control;
 mod utils;
+mod logs;
 
 use dotenv::dotenv;
 
@@ -17,7 +18,7 @@ use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::http::Status;
 use rocket::log::private::info;
-use rocket::request::{FromRequest, Outcome, Request};
+use rocket::request::{FromRequest, Outcome, Request, self};
 use rocket::Response;
 
 use oracle::pool::PoolBuilder;
@@ -30,12 +31,14 @@ use routes::file_server::upload;
 use routes::permissions::edit_permissions;
 use routes::permissions::get_permissions;
 use routes::product_data::get_products;
+use routes::product_data::get_products_pi;
 use routes::signing::sign;
 use routes::user_control::create_user_route;
 use routes::user_control::delete_user_route;
 use routes::user_control::edit_user_route;
 use routes::user_control::get_user_by_id;
 use routes::user_control::get_user_list;
+use routes::logs::get_user_logs;
 // use crate::routes::user_control::edit_user;
 
 use signing::validate_token;
@@ -60,6 +63,28 @@ impl Fairing for CORS {
         ));
         response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
         response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
+    }
+}
+
+
+#[derive(Copy, Clone, Debug)]
+pub struct LogCheck(pub bool);
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for LogCheck {
+    type Error = ();
+
+    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, ()> {
+        match request.headers().get_one("X-Log-Request") {
+            Some(key) => {
+                if key == "false" {
+                    Outcome::Success(LogCheck(false))
+                } else {
+                    Outcome::Success(LogCheck(true))
+                }
+            },
+            _ => Outcome::Success(LogCheck(true)),
+        }
     }
 }
 
@@ -115,7 +140,9 @@ fn rocket() -> _ {
                 get_image,
                 upload,
                 cors_preflight_handler,
-                get_store_list_for_user
+                get_store_list_for_user,
+                get_user_logs,
+                get_products_pi
             ],
         )
         .attach(CORS)

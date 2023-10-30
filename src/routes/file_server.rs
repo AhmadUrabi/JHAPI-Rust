@@ -1,3 +1,4 @@
+use crate::LogCheck;
 use crate::signing::decode_token_data;
 use crate::utils::permissions::is_admin_perm;
 use crate::utils::permissions::is_images_perm;
@@ -23,6 +24,7 @@ pub async fn get_image(
     _key: ApiKey<'_>,
     pool: &State<Pool>,
     client_ip: Option<IpAddr>,
+    log_check: LogCheck,
 ) -> Result<Option<NamedFile>, Status> {
     let mut userId: String = "".to_string();
     match decode_token_data(_key.0) {
@@ -35,16 +37,18 @@ pub async fn get_image(
     let userCopy = userId.clone();
 
     if !is_query_perm(&_key, pool) && !is_admin_perm(&_key, pool) {
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
             userId,
             client_ip.unwrap().to_string(),
-            ("/images".to_owned() + file.to_str().unwrap()).to_string(),
+            ("/images/".to_owned() + file.to_str().unwrap()).to_string(),
             None,
             getTimestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
         );
+    }
         return Err(Status::Unauthorized);
     }
     info!("Image Request: {:?}", file);
@@ -55,29 +59,32 @@ pub async fn get_image(
         info!("File Downloaded");
     } else {
         info!("File Not Found");
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
             userId,
             client_ip.unwrap().to_string(),
-            ("/images".to_owned() + file.to_str().unwrap()).to_string(),
+            ("/images/".to_owned() + file.to_str().unwrap()).to_string(),
             None,
             getTimestamp(),
             _key.0.to_string(),
             "File Not Found".to_string(),
         );
+    }
         Err(Status::NotFound)?;
     };
-
+    if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
     log_data(
         pool,
         userCopy,
         client_ip.unwrap().to_string(),
-        ("/images".to_owned() + file.to_str().unwrap()).to_string(),
+        ("/images/".to_owned() + file.to_str().unwrap()).to_string(),
         None,
         getTimestamp(),
         _key.0.to_string(),
         "Success".to_string(),
     );
+}
     Ok(NamedFile::open(Path::new("tmp/tmpdownload.jpg")).await.ok())
 }
 
@@ -96,6 +103,7 @@ pub async fn upload(
     _key: ApiKey<'_>,
     pool: &State<Pool>,
     client_ip: Option<IpAddr>,
+    log_check: LogCheck,
 ) -> Result<String, Status> {
     let mut userId: String = "".to_string();
     match decode_token_data(_key.0) {
@@ -108,6 +116,7 @@ pub async fn upload(
     let userCopy = userId.clone();
 
     if !is_images_perm(&_key, pool) && !is_admin_perm(&_key, pool) {
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
             userId,
@@ -118,6 +127,7 @@ pub async fn upload(
             _key.0.to_string(),
             "Unauthorized".to_string(),
         );
+    }
         return Err(Status::Unauthorized);
     }
 

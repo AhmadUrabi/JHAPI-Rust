@@ -8,13 +8,17 @@ use rocket::{post, State};
 use std::net::IpAddr;
 
 use crate::product_data::get_product;
+use crate::product_data::get_product_pi;
 use crate::signing::decode_token_data;
 use crate::ApiKey;
+use crate::LogCheck;
+
 
 use crate::product_data::structs::FetchParams;
 use crate::product_data::structs::Product;
 use crate::utils::logging::getTimestamp;
 use crate::utils::logging::log_data;
+use crate::utils::permissions::is_admin_perm;
 
 #[post("/GetProductData", data = "<params>")]
 pub async fn get_products(
@@ -22,9 +26,13 @@ pub async fn get_products(
     pool: &State<Pool>,
     key: ApiKey<'_>,
     client_ip: Option<IpAddr>,
+    log_check: LogCheck,
 ) -> Json<Vec<Product>> {
     info!("GetProductData Request: {:?}", params);
     info!("Client IP: {:?}", client_ip);
+
+    info!("log_check: {:?}", log_check.0);
+
     #[allow(unused_assignments)]
     let mut username: String = "".to_string();
     match decode_token_data(key.0) {
@@ -44,8 +52,9 @@ pub async fn get_products(
 
     let params_clone = params.clone();
 
-    match get_product(params, pool, key).await {
+    match get_product(params, pool, &key).await {
         Ok(products) => {
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&key, pool)){
             log_data(
                 pool,
                 username,
@@ -56,10 +65,12 @@ pub async fn get_products(
                 tokenUsed,
                 "Success".to_string(),
             );
+        }
             Json(products)
         }
         Err(err) => {
             error!("Error: {}", err);
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&key, pool)){
             log_data(
                 pool,
                 username,
@@ -70,6 +81,72 @@ pub async fn get_products(
                 tokenUsed,
                 "Error Fetching".to_string(),
             );
+        }
+            Json(vec![])
+        }
+    }
+}
+
+
+#[post("/GetProductDataPI", data = "<params>")]
+pub async fn get_products_pi(
+    params: Json<FetchParams>,
+    pool: &State<Pool>,
+    _key: ApiKey<'_>,
+    client_ip: Option<IpAddr>,
+    log_check: LogCheck,
+) -> Json<Vec<Product>> {
+    info!("GetProductData Request: {:?}", params);
+    info!("Client IP: {:?}", client_ip);
+    #[allow(unused_assignments)]
+    let mut username: String = "".to_string();
+    match decode_token_data(_key.0) {
+        Some(data) => {
+            info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap());
+            username = data.USER_ID.unwrap();
+        }
+        None => {
+            info!("Token Data: None");
+            username = "None".to_string();
+        }
+    }
+
+    let tokenUsed = _key.0.to_string();
+
+    // Convert json to String
+
+    let params_clone = params.clone();
+
+    match get_product_pi(params, pool, &_key).await {
+        Ok(products) => {
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
+            log_data(
+                pool,
+                username,
+                client_ip.unwrap().to_string(),
+                "/GetProductData".to_string(),
+                Some(serde_json::to_string(&params_clone.0).unwrap()),
+                getTimestamp(),
+                tokenUsed,
+                "Success".to_string(),
+            );
+        }
+            Json(products)
+        }
+        Err(err) => {
+            error!("Error: {}", err);
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
+            log_data(
+                pool,
+                username,
+                client_ip.unwrap().to_string(),
+                "/GetProductData".to_string(),
+                Some(serde_json::to_string(&params_clone.0).unwrap()),
+                getTimestamp(),
+                tokenUsed,
+                "Error Fetching".to_string(),
+            );
+        }
             Json(vec![])
         }
     }
