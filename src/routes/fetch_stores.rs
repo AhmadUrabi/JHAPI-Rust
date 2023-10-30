@@ -5,7 +5,7 @@ use rocket::serde::json::Json;
 use rocket::{get, State};
 use serde::Serialize;
 
-use crate::ApiKey;
+use crate::{ApiKey, LogCheck};
 use std::net::IpAddr;
 
 use crate::fetch_stores::get_stores;
@@ -23,6 +23,7 @@ pub async fn get_store_list(
     pool: &State<Pool>,
     _key: ApiKey<'_>,
     client_ip: Option<IpAddr>,
+    log_check: LogCheck,
 ) -> Result<Json<Vec<Store>>, Status> {
     info!("StoreList Request");
 
@@ -40,6 +41,7 @@ pub async fn get_store_list(
     if is_stores_perm(&_key, &pool) || is_admin_perm(&_key, &pool) {
         match get_stores(pool, "admin".to_string()) {
             Ok(stores) => {
+                if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
                 log_data(
                     pool,
                     userId,
@@ -49,7 +51,9 @@ pub async fn get_store_list(
                     getTimestamp(),
                     _key.0.to_string(),
                     "Success as Admin".to_string(),
+                    "GET".to_string()
                 );
+            }
                 return Ok(Json(stores));
             }
             Err(err) => {
@@ -60,6 +64,7 @@ pub async fn get_store_list(
     }
     match get_stores(pool, userId) {
         Ok(stores) => {
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
                 usernameClone,
@@ -69,10 +74,13 @@ pub async fn get_store_list(
                 getTimestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
+                "GET".to_string()
             );
+        }
             Ok(Json(stores))
         }
         Err(err) => {
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
                 usernameClone,
@@ -82,7 +90,9 @@ pub async fn get_store_list(
                 getTimestamp(),
                 _key.0.to_string(),
                 "Error Fetching".to_string(),
+                "GET".to_string()
             );
+        }
             println!("Error: {}", err.to_string());
             Err(Status::InternalServerError)
         }
@@ -102,6 +112,7 @@ pub async fn UpdateStoreList(
     _key: ApiKey<'_>,
     params: Json<StoreListUpdateParams>,
     client_ip: Option<IpAddr>,
+    log_check: LogCheck,
 ) -> Result<String, Status> {
     info!("StoreListEdit Request: {:?}", params);
 
@@ -121,6 +132,7 @@ pub async fn UpdateStoreList(
         info!("User has permissions");
     } else {
         info!("User does not have permissions");
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
             userId,
@@ -130,7 +142,9 @@ pub async fn UpdateStoreList(
             getTimestamp(),
             _key.0.to_string(),
             "Not Authorized".to_string(),
+            "POST".to_string()
         );
+    }
         return Err(Status::Unauthorized);
     }
 
@@ -187,6 +201,7 @@ pub async fn get_store_list_for_user(
     _key: ApiKey<'_>,
     username: String,
     client_ip: Option<IpAddr>,
+    log_check: LogCheck,
 ) -> Result<Json<Vec<Store>>, Status> {
     info!("StoreList Request");
 
@@ -202,6 +217,7 @@ pub async fn get_store_list_for_user(
     }
 
     if !is_stores_perm(&_key, &pool) || !is_admin_perm(&_key, &pool) {
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
             userId,
@@ -211,13 +227,16 @@ pub async fn get_store_list_for_user(
             getTimestamp(),
             _key.0.to_string(),
             "Not Authorized".to_string(),
+            "GET".to_string()
         );
+    }
         info!("Token does not have permissions");
         return Err(Status::Unauthorized);
     }
 
     match get_stores(pool, username) {
         Ok(stores) => {
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
                 userId,
@@ -227,10 +246,13 @@ pub async fn get_store_list_for_user(
                 getTimestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
+                "GET".to_string()
             );
+        }
             Ok(Json(stores))
         }
         Err(err) => {
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
                 userId,
@@ -240,7 +262,9 @@ pub async fn get_store_list_for_user(
                 getTimestamp(),
                 _key.0.to_string(),
                 "Error Fetching".to_string(),
+                "GET".to_string()
             );
+        }
             println!("Error: {}", err.to_string());
             Err(Status::InternalServerError)
         }
