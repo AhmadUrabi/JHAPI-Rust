@@ -50,6 +50,7 @@ pub async fn get_permissions(
             getTimestamp(),
             tokenUsed,
             "Not authorized".to_string(),
+            "GET".to_string()
         );
     }
         return Err(Status::Unauthorized);
@@ -67,6 +68,7 @@ pub async fn get_permissions(
                 getTimestamp(),
                 tokenUsed,
                 "Success".to_string(),
+                "GET".to_string()
             );
         }
             Ok(Json(permissions))
@@ -82,6 +84,7 @@ pub async fn get_permissions(
                 getTimestamp(),
                 tokenUsed,
                 "Error fetching Permissions".to_string(),
+                "GET".to_string()
             );
         }
             error!("Error: {}", err);
@@ -121,6 +124,7 @@ pub async fn edit_permissions(
             getTimestamp(),
             tokenUsed,
             "Not authorized".to_string(),
+            "POST".to_string()
         );
     }
         return Err(Status::Unauthorized);
@@ -143,6 +147,7 @@ pub async fn edit_permissions(
                 getTimestamp(),
                 tokenUsed,
                 "Success".to_string(),
+                "POST".to_string()
             );
         }
             Ok("Permissions Edited".to_string())
@@ -158,6 +163,7 @@ pub async fn edit_permissions(
                 getTimestamp(),
                 tokenUsed,
                 "Error editing permissions".to_string(),
+                "POST".to_string()
             );
         }
             error!("Error: {}", err);

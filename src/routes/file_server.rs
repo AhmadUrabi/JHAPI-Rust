@@ -47,6 +47,7 @@ pub async fn get_image(
             getTimestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
+            "GET".to_string()
         );
     }
         return Err(Status::Unauthorized);
@@ -69,6 +70,7 @@ pub async fn get_image(
             getTimestamp(),
             _key.0.to_string(),
             "File Not Found".to_string(),
+            "GET".to_string()
         );
     }
         Err(Status::NotFound)?;
@@ -83,6 +85,7 @@ pub async fn get_image(
         getTimestamp(),
         _key.0.to_string(),
         "Success".to_string(),
+        "GET".to_string()
     );
 }
     Ok(NamedFile::open(Path::new("tmp/tmpdownload.jpg")).await.ok())
@@ -126,6 +129,7 @@ pub async fn upload(
             getTimestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
+            "POST".to_string()
         );
     }
         return Err(Status::Unauthorized);
@@ -151,6 +155,7 @@ pub async fn upload(
             getTimestamp(),
             _key.0.to_string(),
             "File Not Uploaded".to_string(),
+            "POST".to_string()
         );
         Err(Status::NotFound)?;
     }
@@ -167,6 +172,7 @@ pub async fn upload(
         getTimestamp(),
         _key.0.to_string(),
         "Success".to_string(),
+        "POST".to_string()
     );
 
     Ok("File Uploaded".to_string())

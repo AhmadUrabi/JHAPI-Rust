@@ -64,6 +64,7 @@ pub async fn get_products(
                 getTimestamp(),
                 tokenUsed,
                 "Success".to_string(),
+                "GET".to_string()
             );
         }
             Json(products)
@@ -80,6 +81,7 @@ pub async fn get_products(
                 getTimestamp(),
                 tokenUsed,
                 "Error Fetching".to_string(),
+                "GET".to_string()
             );
         }
             Json(vec![])
@@ -129,6 +131,7 @@ pub async fn get_products_pi(
                 getTimestamp(),
                 tokenUsed,
                 "Success".to_string(),
+                "GET".to_string()
             );
         }
             Json(products)
@@ -145,6 +148,7 @@ pub async fn get_products_pi(
                 getTimestamp(),
                 tokenUsed,
                 "Error Fetching".to_string(),
+                "GET".to_string()
             );
         }
             Json(vec![])

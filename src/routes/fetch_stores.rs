@@ -51,6 +51,7 @@ pub async fn get_store_list(
                     getTimestamp(),
                     _key.0.to_string(),
                     "Success as Admin".to_string(),
+                    "GET".to_string()
                 );
             }
                 return Ok(Json(stores));
@@ -73,6 +74,7 @@ pub async fn get_store_list(
                 getTimestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
+                "GET".to_string()
             );
         }
             Ok(Json(stores))
@@ -88,6 +90,7 @@ pub async fn get_store_list(
                 getTimestamp(),
                 _key.0.to_string(),
                 "Error Fetching".to_string(),
+                "GET".to_string()
             );
         }
             println!("Error: {}", err.to_string());
@@ -139,6 +142,7 @@ pub async fn UpdateStoreList(
             getTimestamp(),
             _key.0.to_string(),
             "Not Authorized".to_string(),
+            "POST".to_string()
         );
     }
         return Err(Status::Unauthorized);
@@ -223,6 +227,7 @@ pub async fn get_store_list_for_user(
             getTimestamp(),
             _key.0.to_string(),
             "Not Authorized".to_string(),
+            "GET".to_string()
         );
     }
         info!("Token does not have permissions");
@@ -241,6 +246,7 @@ pub async fn get_store_list_for_user(
                 getTimestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
+                "GET".to_string()
             );
         }
             Ok(Json(stores))
@@ -256,6 +262,7 @@ pub async fn get_store_list_for_user(
                 getTimestamp(),
                 _key.0.to_string(),
                 "Error Fetching".to_string(),
+                "GET".to_string()
             );
         }
             println!("Error: {}", err.to_string());

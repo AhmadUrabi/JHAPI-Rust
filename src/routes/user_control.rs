@@ -42,6 +42,7 @@ pub async fn get_user_list(
             getTimestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
+            "GET".to_string()
         );
     }
         return Ok(Json(Vec::new()));
@@ -56,6 +57,7 @@ pub async fn get_user_list(
         getTimestamp(),
         _key.0.to_string(),
         "Success".to_string(),
+        "GET".to_string()
     );
 }
     Ok(Json(get_users(_key, pool).await.unwrap()))
@@ -92,6 +94,7 @@ pub async fn get_user_by_id(
             getTimestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
+            "GET".to_string()
         );
     }
         return Err(Status::Unauthorized);
@@ -109,6 +112,7 @@ pub async fn get_user_by_id(
                 getTimestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
+                "GET".to_string()
             );
         }
             Ok(Json(user))
@@ -124,6 +128,7 @@ pub async fn get_user_by_id(
                 getTimestamp(),
                 _key.0.to_string(),
                 error.to_string(),
+                "GET".to_string()
             );
         }
             Err(Status::NotFound)
@@ -162,6 +167,7 @@ pub async fn create_user_route(
             getTimestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
+            "POST".to_string()
         );
     }
         return Err(Status::Unauthorized);
@@ -178,6 +184,7 @@ pub async fn create_user_route(
                 getTimestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
+                "POST".to_string()
             );
         }
             Ok("User Created".to_string())
@@ -193,6 +200,7 @@ pub async fn create_user_route(
                 getTimestamp(),
                 _key.0.to_string(),
                 error.to_string(),
+                "POST".to_string()
             );
         }
             Err(Status::InternalServerError)
@@ -228,6 +236,7 @@ pub async fn edit_user_route(
             getTimestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
+            "PUT".to_string()
         );
     }
         return Err(Status::Unauthorized);
@@ -246,6 +255,7 @@ pub async fn edit_user_route(
             getTimestamp(),
             _key.0.to_string(),
             "User Not Found".to_string(),
+            "PUT".to_string()
         );
     }
         return Err(Status::NotFound);
@@ -260,6 +270,7 @@ pub async fn edit_user_route(
         getTimestamp(),
         _key.0.to_string(),
         "Success".to_string(),
+        "PUT".to_string()
     );
 }
     Ok("User Edited".to_string())
@@ -292,6 +303,7 @@ pub async fn delete_user_route(
             getTimestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
+            "DELETE".to_string()
         );
     }
         return Err(Status::Unauthorized);
@@ -308,6 +320,7 @@ pub async fn delete_user_route(
                 getTimestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
+                "DELETE".to_string()
             );
         }
             Ok("User Deleted".to_string())
@@ -323,6 +336,7 @@ pub async fn delete_user_route(
                 getTimestamp(),
                 _key.0.to_string(),
                 error.to_string(),
+                "DELETE".to_string()
             );
         }
             Err(Status::InternalServerError)

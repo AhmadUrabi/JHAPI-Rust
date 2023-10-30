@@ -39,6 +39,10 @@ use routes::user_control::edit_user_route;
 use routes::user_control::get_user_by_id;
 use routes::user_control::get_user_list;
 use routes::logs::get_user_logs;
+use routes::logs::get_route_logs;
+use routes::logs::get_all_logs;
+use routes::logs::delete_log_logs;
+use routes::logs::delete_user_logs;
 // use crate::routes::user_control::edit_user;
 
 use signing::validate_token;
@@ -142,7 +146,11 @@ fn rocket() -> _ {
                 cors_preflight_handler,
                 get_store_list_for_user,
                 get_user_logs,
-                get_products_pi
+                get_route_logs,
+                get_all_logs,
+                get_products_pi,
+                delete_log_logs,
+                delete_user_logs
             ],
         )
         .attach(CORS)

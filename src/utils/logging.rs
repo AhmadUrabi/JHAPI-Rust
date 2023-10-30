@@ -11,6 +11,7 @@ pub fn log_data(
     timestamp: Timestamp,
     token: String,
     result: String,
+    method: String
 ) {
     let conn = pool.get().unwrap();
     let mut stmt = conn
@@ -23,7 +24,8 @@ pub fn log_data(
             timestamp,
             result,
             token_used,
-            ip_address
+            ip_address,
+            method
         ) VALUES (
             :username,
             :route,
@@ -31,7 +33,8 @@ pub fn log_data(
             :timestamp,
             :result,
             :token_used,
-            :ip_address
+            :ip_address,
+            :method
         )",
         )
         .build()
@@ -45,6 +48,7 @@ pub fn log_data(
         &result,
         &token,
         &ip_addr,
+        &method
     ])
     .unwrap();
     conn.commit().unwrap();
