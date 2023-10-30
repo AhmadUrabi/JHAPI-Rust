@@ -1,7 +1,6 @@
 use oracle::pool::Pool;
 use oracle::Result;
 
-use crate::ApiKey;
 
 use self::structs::Permissions;
 
@@ -46,7 +45,6 @@ pub fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions> {
 }
 
 pub fn edit_user_permissions(
-    _token: ApiKey<'_>,
     username: String,
     pool: &Pool,
     permissions: Permissions,

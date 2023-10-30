@@ -33,6 +33,7 @@ pub async fn sign(
                 getTimestamp(),
                 "None".to_string(),
                 "Token Generated".to_string(),
+                "POST".to_string(),
             );
             Ok(token.to_string())
         }
@@ -46,6 +47,7 @@ pub async fn sign(
                 getTimestamp(),
                 "None".to_string(),
                 "Invalid User Data, Token Not Sent".to_string(),
+                "POST".to_string(),
             );
             error!("Invalid User Data, Token Not Sent");
             Err(Status::Unauthorized)
