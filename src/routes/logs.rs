@@ -14,7 +14,7 @@ use crate::ApiKey;
 
 use crate::utils::permissions::is_admin_perm;
 
-use crate::utils::logging::getTimestamp;
+use crate::utils::logging::get_timestamp;
 use crate::utils::logging::log_data;
 
 use crate::logs::structs::LogData;
@@ -39,7 +39,7 @@ pub async fn get_all_logs(pool: &State<Pool>, _key: ApiKey<'_> , limit: Option<i
             client_ip.unwrap().to_string(),
             ("/logs").to_string(),
             None,
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
             "GET".to_string()
@@ -55,7 +55,7 @@ pub async fn get_all_logs(pool: &State<Pool>, _key: ApiKey<'_> , limit: Option<i
                 client_ip.unwrap().to_string(),
                 ("/logs").to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
                 "GET".to_string()
@@ -92,7 +92,7 @@ pub async fn get_user_logs(pool: &State<Pool>, _key: ApiKey<'_> , username: Stri
             client_ip.unwrap().to_string(),
             ("/logs/user/".to_owned()+&username_clone).to_string(),
             None,
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
             "GET".to_string()
@@ -108,7 +108,7 @@ pub async fn get_user_logs(pool: &State<Pool>, _key: ApiKey<'_> , username: Stri
                 client_ip.unwrap().to_string(),
                 ("/logs/user/".to_owned()+&username_clone).to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
                 "GET".to_string()
@@ -144,7 +144,7 @@ pub async fn get_route_logs(pool: &State<Pool>, _key: ApiKey<'_> , route: String
             client_ip.unwrap().to_string(),
             ("/logs/route/".to_owned()+&route_clone).to_string(),
             None,
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
             "GET".to_string()
@@ -162,7 +162,7 @@ pub async fn get_route_logs(pool: &State<Pool>, _key: ApiKey<'_> , route: String
                 client_ip.unwrap().to_string(),
                 ("/logs/route/".to_owned()+&route_clone).to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
                 "GET".to_string()
@@ -199,7 +199,7 @@ pub async fn delete_user_logs(pool: &State<Pool>, _key: ApiKey<'_> , username: S
             client_ip.unwrap().to_string(),
             ("/logs/user/".to_owned()+&username_clone).to_string(),
             None,
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
             "DELETE".to_string()
@@ -215,7 +215,7 @@ pub async fn delete_user_logs(pool: &State<Pool>, _key: ApiKey<'_> , username: S
                 client_ip.unwrap().to_string(),
                 ("/logs/user/".to_owned()+&username_clone).to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
                 "DELETE".to_string()
@@ -248,7 +248,7 @@ pub async fn delete_log_logs(pool: &State<Pool>, _key: ApiKey<'_> , log_id: i32,
             client_ip.unwrap().to_string(),
             ("/logs/".to_owned()+&log_id.to_string()).to_string(),
             None,
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
             "DELETE".to_string()
@@ -264,7 +264,7 @@ pub async fn delete_log_logs(pool: &State<Pool>, _key: ApiKey<'_> , log_id: i32,
                 client_ip.unwrap().to_string(),
                 ("/logs/".to_owned()+&log_id.to_string()).to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
                 "DELETE".to_string()

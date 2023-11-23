@@ -1,4 +1,3 @@
-#![allow(non_snake_case)]
 #[macro_use]
 extern crate rocket;
 
@@ -25,7 +24,7 @@ use oracle::pool::PoolBuilder;
 
 use routes::fetch_stores::get_store_list;
 use routes::fetch_stores::get_store_list_for_user;
-use routes::fetch_stores::UpdateStoreList;
+use routes::fetch_stores::update_store_list;
 use routes::file_server::get_image;
 use routes::file_server::upload;
 use routes::permissions::edit_permissions;
@@ -125,14 +124,14 @@ fn rocket() -> _ {
     // Pool built
 
     rocket::build()
-        .register("/", catchers![Unauthorized, not_found, internal_error])
+        .register("/", catchers![unauthorized, not_found, internal_error])
         .manage(pool)
         .mount(
             "/",
             routes![
                 get_products,
                 get_store_list,
-                UpdateStoreList,
+                update_store_list,
                 sign,
                 get_permissions,
                 edit_permissions,
@@ -193,7 +192,7 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
 
 // Route catchers
 #[catch(401)]
-fn Unauthorized() -> &'static str {
+fn unauthorized() -> &'static str {
     "Unauthorized, please include a valid Authentication header, or check your request body"
 }
 

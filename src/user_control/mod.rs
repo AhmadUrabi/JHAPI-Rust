@@ -81,8 +81,8 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<()> {
 
 
 
-pub async fn edit_user(params: Json<EditUserParams>, username:& String, pool: &Pool, isAdmin: bool) -> Result<bool> {
-    let paramsUnwrapped = params.into_inner();
+pub async fn edit_user(params: Json<EditUserParams>, username:& String, pool: &Pool, is_admin: bool) -> Result<bool> {
+    let params_unwrapped = params.into_inner();
 
     let original_user = match get_user(&username, pool).await {
         Ok(user) => user,
@@ -100,16 +100,16 @@ pub async fn edit_user(params: Json<EditUserParams>, username:& String, pool: &P
         login_duration: original_user.login_duration,
     };
 
-    if paramsUnwrapped.p_fullname.is_some() {
-        new_user.fullname = paramsUnwrapped.p_fullname.unwrap();
+    if params_unwrapped.p_fullname.is_some() {
+        new_user.fullname = params_unwrapped.p_fullname.unwrap();
     }
 
-    if paramsUnwrapped.p_email.is_some() {
-        new_user.email = paramsUnwrapped.p_email.unwrap();
+    if params_unwrapped.p_email.is_some() {
+        new_user.email = params_unwrapped.p_email.unwrap();
     }
 
-    if paramsUnwrapped.p_loginduration.is_some() {
-        new_user.login_duration = paramsUnwrapped.p_loginduration.unwrap();
+    if params_unwrapped.p_loginduration.is_some() {
+        new_user.login_duration = params_unwrapped.p_loginduration.unwrap();
     }
 
     let conn = pool.get().unwrap();
@@ -125,12 +125,12 @@ pub async fn edit_user(params: Json<EditUserParams>, username:& String, pool: &P
     .unwrap();
     conn.commit()?;
 
-    if paramsUnwrapped.p_password.is_some() && isAdmin {
+    if params_unwrapped.p_password.is_some() && is_admin {
         stmt = conn
             .statement("UPDATE ODBC_JHC.AUTHENTICATION_JHC SET PASSWORD = :1 WHERE USERNAME = :2")
             .build()?;
         stmt.execute(&[
-            &hash(paramsUnwrapped.p_password.unwrap(), DEFAULT_COST).unwrap(),
+            &hash(params_unwrapped.p_password.unwrap(), DEFAULT_COST).unwrap(),
             &new_user.username,
         ])
         .unwrap();

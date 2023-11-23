@@ -8,7 +8,7 @@ use rocket::{post, State};
 use crate::signing::signin;
 use crate::signing::structs::LoginParams;
 
-use crate::utils::logging::{getTimestamp, log_data};
+use crate::utils::logging::{get_timestamp, log_data};
 
 #[post("/login", data = "<params>")]
 pub async fn sign(
@@ -30,7 +30,7 @@ pub async fn sign(
                 client_ip.unwrap().to_string(),
                 "/login".to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 "None".to_string(),
                 "Token Generated".to_string(),
                 "POST".to_string(),
@@ -44,7 +44,7 @@ pub async fn sign(
                 client_ip.unwrap().to_string(),
                 "/login".to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 "None".to_string(),
                 "Invalid User Data, Token Not Sent".to_string(),
                 "POST".to_string(),

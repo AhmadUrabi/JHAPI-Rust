@@ -17,7 +17,7 @@ use crate::utils::permissions::*;
 
 use crate::fetch_stores::structs::Store;
 
-use crate::utils::logging::{getTimestamp, log_data};
+use crate::utils::logging::{get_timestamp, log_data};
 
 #[get("/stores")]
 pub async fn get_store_list(
@@ -28,13 +28,13 @@ pub async fn get_store_list(
 ) -> Result<Json<Vec<Store>>, Status> {
     info!("Stores Get Request");
 
-    let mut userId: String = "".to_string();
-    let usernameClone = userId.clone();
+    let mut user_id: String = "".to_string();
+    let username_clone = user_id.clone();
 
     match decode_token_data(_key.0) {
         Some(data) => {
             info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap());
-            userId = data.USER_ID.unwrap();
+            user_id = data.USER_ID.unwrap();
         }
         None => info!("Token Data: None"),
     }
@@ -45,11 +45,11 @@ pub async fn get_store_list(
                 if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
                 log_data(
                     pool,
-                    userId,
+                    user_id,
                     client_ip.unwrap().to_string(),
                     "/stores".to_string(),
                     None,
-                    getTimestamp(),
+                    get_timestamp(),
                     _key.0.to_string(),
                     "Success as Admin".to_string(),
                     "GET".to_string()
@@ -63,16 +63,16 @@ pub async fn get_store_list(
             }
         }
     }
-    match get_stores(pool, userId) {
+    match get_stores(pool, user_id) {
         Ok(stores) => {
             if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
-                usernameClone,
+                username_clone,
                 client_ip.unwrap().to_string(),
                 "/stores".to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
                 "GET".to_string()
@@ -84,11 +84,11 @@ pub async fn get_store_list(
             if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
-                usernameClone,
+                username_clone,
                 client_ip.unwrap().to_string(),
                 "/stores".to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 _key.0.to_string(),
                 "Error Fetching".to_string(),
                 "GET".to_string()
@@ -103,7 +103,7 @@ pub async fn get_store_list(
 
 
 #[post("/stores", data = "<params>")]
-pub async fn UpdateStoreList(
+pub async fn update_store_list(
     pool: &State<Pool>,
     _key: ApiKey<'_>,
     params: Json<StoreListUpdateParams>,
@@ -112,14 +112,14 @@ pub async fn UpdateStoreList(
 ) -> Result<String, Status> {
     info!("stores Request: {:?}", params);
 
-    let mut userId: String = "".to_string();
+    let mut user_id: String = "".to_string();
 
     let params_clone = params.clone();
 
     match decode_token_data(_key.0) {
         Some(data) => {
             info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap());
-            userId = data.USER_ID.unwrap();
+            user_id = data.USER_ID.unwrap();
         }
         None => info!("Token Data: None"),
     }
@@ -131,11 +131,11 @@ pub async fn UpdateStoreList(
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
-            userId,
+            user_id,
             client_ip.unwrap().to_string(),
             "/stores".to_string(),
             Some(serde_json::to_string(&params_clone.0).unwrap()),
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "Not Authorized".to_string(),
             "POST".to_string()
@@ -201,13 +201,13 @@ pub async fn get_store_list_for_user(
 ) -> Result<Json<Vec<Store>>, Status> {
     info!("User stores Request");
 
-    let mut userId: String = "".to_string();
-    let myUsername = username.to_lowercase();
+    let mut user_id: String = "".to_string();
+    let my_username = username.to_lowercase();
 
     match decode_token_data(_key.0) {
         Some(data) => {
             info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap());
-            userId = data.USER_ID.unwrap();
+            user_id = data.USER_ID.unwrap();
         }
         None => info!("Token Data: None"),
     }
@@ -216,11 +216,11 @@ pub async fn get_store_list_for_user(
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
-            userId,
+            user_id,
             client_ip.unwrap().to_string(),
-            ("/stores/".to_owned() + &myUsername).to_string(),
+            ("/stores/".to_owned() + &my_username).to_string(),
             None,
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "Not Authorized".to_string(),
             "GET".to_string()
@@ -235,11 +235,11 @@ pub async fn get_store_list_for_user(
             if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
-                userId,
+                user_id,
                 client_ip.unwrap().to_string(),
-                ("/stores/".to_owned() + &myUsername).to_string(),
+                ("/stores/".to_owned() + &my_username).to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
                 "GET".to_string()
@@ -251,11 +251,11 @@ pub async fn get_store_list_for_user(
             if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
-                userId,
+                user_id,
                 client_ip.unwrap().to_string(),
-                ("/stores/".to_owned() + &myUsername).to_string(),
+                ("/stores/".to_owned() + &my_username).to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 _key.0.to_string(),
                 "Error Fetching".to_string(),
                 "GET".to_string()

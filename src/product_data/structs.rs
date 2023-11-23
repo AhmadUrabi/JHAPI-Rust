@@ -1,6 +1,7 @@
 use rocket::serde::Deserialize;
 use rocket::serde::Serialize;
 
+#[allow(non_snake_case)]
 #[derive(Serialize, Deserialize)]
 pub struct Product {
     pub ITEM_ID: Option<String>,

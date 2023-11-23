@@ -14,7 +14,7 @@ use crate::{ApiKey, LogCheck};
 
 use crate::utils::permissions::{is_admin_perm, is_perm_perm};
 
-use crate::utils::logging::{getTimestamp, log_data};
+use crate::utils::logging::{get_timestamp, log_data};
 
 #[get("/permissions/<username>")]
 pub async fn get_permissions(
@@ -24,31 +24,31 @@ pub async fn get_permissions(
     client_ip: Option<IpAddr>,
     log_check: LogCheck,
 ) -> Result<Json<Permissions>, Status> {
-    let tokenUsed = _key.0.to_string();
+    let token_used = _key.0.to_string();
 
-    let mut userId: String = "".to_string();
+    let mut user_id: String = "".to_string();
     info!("/permissions/<username> Get Request: {:?}", username);
     match decode_token_data(_key.0) {
         Some(data) => {
-            userId = data.USER_ID.unwrap();
-            info!("Token User Id: {:?}", userId);
+            user_id = data.USER_ID.unwrap();
+            info!("Token User Id: {:?}", user_id);
         }
         None => info!("Token Data: None"),
     }
 
     if !is_perm_perm(&_key, pool)
         && !is_admin_perm(&_key, pool)
-        && username.to_lowercase() != userId.to_lowercase()
+        && username.to_lowercase() != user_id.to_lowercase()
     {
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
-            userId,
+            user_id,
             client_ip.unwrap().to_string(),
             ("/permissions/".to_owned() + &username).to_string(),
             None,
-            getTimestamp(),
-            tokenUsed,
+            get_timestamp(),
+            token_used,
             "Not authorized".to_string(),
             "GET".to_string()
         );
@@ -61,12 +61,12 @@ pub async fn get_permissions(
             if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
-                userId,
+                user_id,
                 client_ip.unwrap().to_string(),
                 ("/permissions/".to_owned() + &username).to_string(),
                 None,
-                getTimestamp(),
-                tokenUsed,
+                get_timestamp(),
+                token_used,
                 "Success".to_string(),
                 "GET".to_string()
             );
@@ -77,12 +77,12 @@ pub async fn get_permissions(
             if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
-                userId,
+                user_id,
                 client_ip.unwrap().to_string(),
                 ("/permissions/".to_owned() + &username).to_string(),
                 None,
-                getTimestamp(),
-                tokenUsed,
+                get_timestamp(),
+                token_used,
                 "Error fetching Permissions".to_string(),
                 "GET".to_string()
             );
@@ -102,15 +102,15 @@ pub async fn edit_permissions(
     client_ip: Option<IpAddr>,
     log_check: LogCheck,
 ) -> Result<String, Status> {
-    let tokenUsed = _key.0.to_string();
+    let token_used = _key.0.to_string();
 
     let params_clone = params.clone();
-    let mut userId: String = "".to_string();
+    let mut user_id: String = "".to_string();
     info!("/permissions/{:?} Request: {:?}", username.clone() ,params);
     match decode_token_data(_key.0) {
         Some(data) => {
-            userId = data.USER_ID.unwrap();
-            info!("Token User Id: {:?}", &userId)
+            user_id = data.USER_ID.unwrap();
+            info!("Token User Id: {:?}", &user_id)
         }
         None => info!("Token Data: None"),
     }
@@ -118,12 +118,12 @@ pub async fn edit_permissions(
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
-            userId,
+            user_id,
             client_ip.unwrap().to_string(),
             ("/permissions/".to_owned() + &username).to_string(),
             Some(serde_json::to_string(&params_clone.0).unwrap()),
-            getTimestamp(),
-            tokenUsed,
+            get_timestamp(),
+            token_used,
             "Not authorized".to_string(),
             "POST".to_string()
         );
@@ -141,12 +141,12 @@ pub async fn edit_permissions(
             if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
-                userId,
+                user_id,
                 client_ip.unwrap().to_string(),
                 ("/permissions/".to_owned() + &username).to_string(),
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
-                getTimestamp(),
-                tokenUsed,
+                get_timestamp(),
+                token_used,
                 "Success".to_string(),
                 "POST".to_string()
             );
@@ -157,12 +157,12 @@ pub async fn edit_permissions(
             if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
-                userId,
+                user_id,
                 client_ip.unwrap().to_string(),
                 ("/permissions/".to_owned() + &username).to_string(),
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
-                getTimestamp(),
-                tokenUsed,
+                get_timestamp(),
+                token_used,
                 "Error editing permissions".to_string(),
                 "POST".to_string()
             );

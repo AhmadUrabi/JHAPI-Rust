@@ -54,7 +54,7 @@ pub fn log_data(
     conn.commit().unwrap();
 }
 
-pub fn getTimestamp() -> Timestamp {
+pub fn get_timestamp() -> Timestamp {
     // Get Current timestamp and convert to year, month, day
 
     let now = Local::now();

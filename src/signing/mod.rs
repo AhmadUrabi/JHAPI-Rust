@@ -56,18 +56,18 @@ pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Option<Json<Strin
         return None;
     }
 
-    let mut mypUsername = "%";
-    let mut mypPassword = "%";
+    let mut my_p_username = "%";
+    let mut my_p_password = "%";
 
-    if let Some(pUserName) = &params.p_username {
-        mypUsername = pUserName;
+    if let Some(p_username) = &params.p_username {
+        my_p_username = p_username;
     }
 
-    if let Some(pPassword) = &params.p_password {
-        mypPassword = pPassword;
+    if let Some(p_password) = &params.p_password {
+        my_p_password = p_password;
     }
 
-    let user = fetch_user_data(mypUsername.to_lowercase(), mypPassword.to_string(), pool);
+    let user = fetch_user_data(my_p_username.to_lowercase(), my_p_password.to_string(), pool);
 
     // If user doesn't exist, return None
     if user.is_none() {
@@ -139,13 +139,13 @@ fn generate_token(user: &User) -> String {
 }
 
 pub fn validate_token(token: &str) -> bool {
-    let DecodedToken = decode::<Claims>(
+    let decoded_token = decode::<Claims>(
         &token,
         &DecodingKey::from_secret(SECRET.as_ref()),
         &Validation::default(),
     );
 
-    match DecodedToken {
+    match decoded_token {
         Ok(token) => {
             return token.claims.exp
                 > SystemTime::now()
@@ -161,7 +161,7 @@ pub fn validate_token(token: &str) -> bool {
 }
 
 pub fn decode_token_data(token: &str) -> Option<User> {
-    let DecodedToken = decode::<Claims>(
+    let decoded_token = decode::<Claims>(
         &token,
         &DecodingKey::from_secret(SECRET.as_ref()),
         &Validation::default(),
@@ -170,7 +170,7 @@ pub fn decode_token_data(token: &str) -> Option<User> {
     let name;
     let email;
     let duration;
-    match DecodedToken {
+    match decoded_token {
         Ok(token) => {
             username = token.claims.id;
             name = token.claims.name;

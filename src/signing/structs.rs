@@ -1,6 +1,8 @@
 use rocket::serde::Deserialize;
 use rocket::serde::Serialize;
 
+
+#[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Debug)]
 pub struct User {
     pub USER_ID: Option<String>,

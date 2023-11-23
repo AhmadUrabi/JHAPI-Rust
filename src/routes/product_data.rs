@@ -16,7 +16,7 @@ use crate::LogCheck;
 
 use crate::product_data::structs::FetchParams;
 use crate::product_data::structs::Product;
-use crate::utils::logging::getTimestamp;
+use crate::utils::logging::get_timestamp;
 use crate::utils::logging::log_data;
 use crate::utils::permissions::is_admin_perm;
 
@@ -61,7 +61,7 @@ pub async fn get_products(
                 client_ip.unwrap().to_string(),
                 "/GetProductData".to_string(),
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
-                getTimestamp(),
+                get_timestamp(),
                 tokenUsed,
                 "Success".to_string(),
                 "GET".to_string()
@@ -78,7 +78,7 @@ pub async fn get_products(
                 client_ip.unwrap().to_string(),
                 "/GetProductData".to_string(),
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
-                getTimestamp(),
+                get_timestamp(),
                 tokenUsed,
                 "Error Fetching".to_string(),
                 "GET".to_string()
@@ -128,7 +128,7 @@ pub async fn get_products_pi(
                 client_ip.unwrap().to_string(),
                 "/GetProductData".to_string(),
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
-                getTimestamp(),
+                get_timestamp(),
                 tokenUsed,
                 "Success".to_string(),
                 "GET".to_string()
@@ -145,7 +145,7 @@ pub async fn get_products_pi(
                 client_ip.unwrap().to_string(),
                 "/GetProductData".to_string(),
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
-                getTimestamp(),
+                get_timestamp(),
                 tokenUsed,
                 "Error Fetching".to_string(),
                 "GET".to_string()
