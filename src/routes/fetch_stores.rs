@@ -18,14 +18,14 @@ use crate::fetch_stores::structs::Store;
 
 use crate::utils::logging::{getTimestamp, log_data};
 
-#[get("/StoreList")]
+#[get("/stores")]
 pub async fn get_store_list(
     pool: &State<Pool>,
     _key: ApiKey<'_>,
     client_ip: Option<IpAddr>,
     log_check: LogCheck,
 ) -> Result<Json<Vec<Store>>, Status> {
-    info!("StoreList Request");
+    info!("Stores Get Request");
 
     let mut userId: String = "".to_string();
     let usernameClone = userId.clone();
@@ -46,7 +46,7 @@ pub async fn get_store_list(
                     pool,
                     userId,
                     client_ip.unwrap().to_string(),
-                    "/StoreList".to_string(),
+                    "/stores".to_string(),
                     None,
                     getTimestamp(),
                     _key.0.to_string(),
@@ -69,7 +69,7 @@ pub async fn get_store_list(
                 pool,
                 usernameClone,
                 client_ip.unwrap().to_string(),
-                "/StoreList".to_string(),
+                "/stores".to_string(),
                 None,
                 getTimestamp(),
                 _key.0.to_string(),
@@ -85,7 +85,7 @@ pub async fn get_store_list(
                 pool,
                 usernameClone,
                 client_ip.unwrap().to_string(),
-                "/StoreList".to_string(),
+                "/stores".to_string(),
                 None,
                 getTimestamp(),
                 _key.0.to_string(),
@@ -106,7 +106,7 @@ pub struct StoreListUpdateParams {
     pAllStoresAccess: i8,
 }
 
-#[post("/StoreListEdit", data = "<params>")]
+#[post("/stores", data = "<params>")]
 pub async fn UpdateStoreList(
     pool: &State<Pool>,
     _key: ApiKey<'_>,
@@ -114,7 +114,7 @@ pub async fn UpdateStoreList(
     client_ip: Option<IpAddr>,
     log_check: LogCheck,
 ) -> Result<String, Status> {
-    info!("StoreListEdit Request: {:?}", params);
+    info!("stores Request: {:?}", params);
 
     let mut userId: String = "".to_string();
 
@@ -137,7 +137,7 @@ pub async fn UpdateStoreList(
             pool,
             userId,
             client_ip.unwrap().to_string(),
-            "/StoreListEdit".to_string(),
+            "/stores".to_string(),
             Some(serde_json::to_string(&params_clone.0).unwrap()),
             getTimestamp(),
             _key.0.to_string(),
@@ -195,7 +195,7 @@ pub async fn UpdateStoreList(
     return Ok("Success".to_string());
 }
 
-#[get("/StoreList/<username>")]
+#[get("/stores/<username>")]
 pub async fn get_store_list_for_user(
     pool: &State<Pool>,
     _key: ApiKey<'_>,
@@ -203,7 +203,7 @@ pub async fn get_store_list_for_user(
     client_ip: Option<IpAddr>,
     log_check: LogCheck,
 ) -> Result<Json<Vec<Store>>, Status> {
-    info!("StoreList Request");
+    info!("User stores Request");
 
     let mut userId: String = "".to_string();
     let myUsername = username.to_lowercase();
@@ -222,7 +222,7 @@ pub async fn get_store_list_for_user(
             pool,
             userId,
             client_ip.unwrap().to_string(),
-            ("/StoreList/".to_owned() + &myUsername).to_string(),
+            ("/stores/".to_owned() + &myUsername).to_string(),
             None,
             getTimestamp(),
             _key.0.to_string(),
@@ -241,7 +241,7 @@ pub async fn get_store_list_for_user(
                 pool,
                 userId,
                 client_ip.unwrap().to_string(),
-                ("/StoreList/".to_owned() + &myUsername).to_string(),
+                ("/stores/".to_owned() + &myUsername).to_string(),
                 None,
                 getTimestamp(),
                 _key.0.to_string(),
@@ -257,7 +257,7 @@ pub async fn get_store_list_for_user(
                 pool,
                 userId,
                 client_ip.unwrap().to_string(),
-                ("/StoreList/".to_owned() + &myUsername).to_string(),
+                ("/stores/".to_owned() + &myUsername).to_string(),
                 None,
                 getTimestamp(),
                 _key.0.to_string(),

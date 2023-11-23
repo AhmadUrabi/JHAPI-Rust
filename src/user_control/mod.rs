@@ -93,17 +93,16 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<()> {
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct EditUserParams {
-    pub username: Option<String>,
     pub password: Option<String>,
     pub fullname: Option<String>,
     pub email: Option<String>,
     pub loginduration: Option<i32>,
 }
 
-pub async fn edit_user(params: Json<EditUserParams>, pool: &Pool, isAdmin: bool) -> Result<bool> {
+pub async fn edit_user(params: Json<EditUserParams>, username:& String, pool: &Pool, isAdmin: bool) -> Result<bool> {
     let paramsUnwrapped = params.into_inner();
 
-    let original_user = match get_user(&paramsUnwrapped.username.unwrap(), pool).await {
+    let original_user = match get_user(&username, pool).await {
         Ok(user) => user,
         Err(_) => return Ok(false),
     };

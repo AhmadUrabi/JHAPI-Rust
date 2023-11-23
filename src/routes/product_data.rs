@@ -20,7 +20,7 @@ use crate::utils::logging::getTimestamp;
 use crate::utils::logging::log_data;
 use crate::utils::permissions::is_admin_perm;
 
-#[post("/GetProductData", data = "<params>")]
+#[post("/products", data = "<params>")]
 pub async fn get_products(
     params: Json<FetchParams>,
     pool: &State<Pool>,

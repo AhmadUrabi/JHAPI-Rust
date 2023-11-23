@@ -15,7 +15,7 @@ use crate::utils::logging::{getTimestamp, log_data};
 use crate::utils::permissions::{is_admin_perm, is_users_perm};
 
 // Get User List
-#[get("/UserList")]
+#[get("/users")]
 pub async fn get_user_list(
     pool: &State<Pool>,
     _key: ApiKey<'_>,
@@ -37,7 +37,7 @@ pub async fn get_user_list(
             pool,
             userId,
             client_ip.unwrap().to_string(),
-            "/UserList".to_string(),
+            "/users".to_string(),
             None,
             getTimestamp(),
             _key.0.to_string(),
@@ -52,7 +52,7 @@ pub async fn get_user_list(
         pool,
         userId,
         client_ip.unwrap().to_string(),
-        "/UserList".to_string(),
+        "/users".to_string(),
         None,
         getTimestamp(),
         _key.0.to_string(),
@@ -63,7 +63,7 @@ pub async fn get_user_list(
     Ok(Json(get_users(_key, pool).await.unwrap()))
 }
 
-#[get("/User/<user_id>")]
+#[get("/user/<user_id>")]
 pub async fn get_user_by_id(
     pool: &State<Pool>,
     _key: ApiKey<'_>,
@@ -89,7 +89,7 @@ pub async fn get_user_by_id(
             pool,
             userId,
             client_ip.unwrap().to_string(),
-            ("/User/".to_owned() + &user_id).to_string(),
+            ("/user/".to_owned() + &user_id).to_string(),
             None,
             getTimestamp(),
             _key.0.to_string(),
@@ -107,7 +107,7 @@ pub async fn get_user_by_id(
                 pool,
                 userId,
                 client_ip.unwrap().to_string(),
-                ("/User/".to_owned() + &user_id).to_string(),
+                ("/user/".to_owned() + &user_id).to_string(),
                 None,
                 getTimestamp(),
                 _key.0.to_string(),
@@ -123,7 +123,7 @@ pub async fn get_user_by_id(
                 pool,
                 userId,
                 client_ip.unwrap().to_string(),
-                ("/User/".to_owned() + &user_id).to_string(),
+                ("/user/".to_owned() + &user_id).to_string(),
                 None,
                 getTimestamp(),
                 _key.0.to_string(),
@@ -136,7 +136,7 @@ pub async fn get_user_by_id(
     }
 }
 
-#[post("/CreateUser", data = "<params>")]
+#[post("/user", data = "<params>")]
 pub async fn create_user_route(
     params: Json<NewUser>,
     pool: &State<Pool>,
@@ -162,7 +162,7 @@ pub async fn create_user_route(
             pool,
             userId,
             client_ip.unwrap().to_string(),
-            "/CreateUser".to_string(),
+            "/user".to_string(),
             None,
             getTimestamp(),
             _key.0.to_string(),
@@ -179,7 +179,7 @@ pub async fn create_user_route(
                 pool,
                 userId,
                 client_ip.unwrap().to_string(),
-                "/CreateUser".to_string(),
+                "/user".to_string(),
                 None,
                 getTimestamp(),
                 _key.0.to_string(),
@@ -195,7 +195,7 @@ pub async fn create_user_route(
                 pool,
                 userId,
                 client_ip.unwrap().to_string(),
-                "/CreateUser".to_string(),
+                "/user".to_string(),
                 None,
                 getTimestamp(),
                 _key.0.to_string(),
@@ -208,8 +208,9 @@ pub async fn create_user_route(
     }
 }
 
-#[put("/EditUser", data = "<params>")]
+#[put("/user/<username>", data = "<params>")]
 pub async fn edit_user_route(
+    username: String,
     params: Json<EditUserParams>,
     pool: &State<Pool>,
     _key: ApiKey<'_>,
@@ -224,14 +225,14 @@ pub async fn edit_user_route(
         None => info!("Token Data: None"),
     }
 
-    println!("Edit User Request: {:?}", params.0.username);
+    println!("Edit User Request: {:?}", username);
     if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
             userId,
             client_ip.unwrap().to_string(),
-            "/EditUser".to_string(),
+            ("/user/".to_owned()+&username).to_string(),
             None,
             getTimestamp(),
             _key.0.to_string(),
@@ -241,7 +242,7 @@ pub async fn edit_user_route(
     }
         return Err(Status::Unauthorized);
     }
-    let res = edit_user(params, pool, is_admin_perm(&_key, pool))
+    let res = edit_user(params, &username, pool, is_admin_perm(&_key, pool))
         .await
         .unwrap();
     if res == false {
@@ -250,7 +251,7 @@ pub async fn edit_user_route(
             pool,
             userId,
             client_ip.unwrap().to_string(),
-            "/EditUser".to_string(),
+            ("/user/".to_owned()+&username).to_string(),
             None,
             getTimestamp(),
             _key.0.to_string(),
@@ -265,7 +266,7 @@ pub async fn edit_user_route(
         pool,
         userId,
         client_ip.unwrap().to_string(),
-        "/EditUser".to_string(),
+        ("/user/".to_owned()+&username).to_string(),
         None,
         getTimestamp(),
         _key.0.to_string(),
@@ -276,7 +277,7 @@ pub async fn edit_user_route(
     Ok("User Edited".to_string())
 }
 
-#[delete("/DeleteUser/<user_id>")]
+#[delete("/user/<user_id>")]
 pub async fn delete_user_route(
     pool: &State<Pool>,
     _key: ApiKey<'_>,
@@ -298,7 +299,7 @@ pub async fn delete_user_route(
             pool,
             userId,
             client_ip.unwrap().to_string(),
-            ("/DeleteUser/".to_owned() + &user_id).to_string(),
+            ("/user/".to_owned() + &user_id).to_string(),
             None,
             getTimestamp(),
             _key.0.to_string(),
@@ -315,7 +316,7 @@ pub async fn delete_user_route(
                 pool,
                 userId,
                 client_ip.unwrap().to_string(),
-                ("/DeleteUser/".to_owned() + &user_id).to_string(),
+                ("/user/".to_owned() + &user_id).to_string(),
                 None,
                 getTimestamp(),
                 _key.0.to_string(),
@@ -331,7 +332,7 @@ pub async fn delete_user_route(
                 pool,
                 userId,
                 client_ip.unwrap().to_string(),
-                ("/DeleteUser/".to_owned() + &user_id).to_string(),
+                ("/user/".to_owned() + &user_id).to_string(),
                 None,
                 getTimestamp(),
                 _key.0.to_string(),

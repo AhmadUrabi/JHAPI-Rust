@@ -16,7 +16,7 @@ use crate::utils::permissions::{is_admin_perm, is_perm_perm};
 
 use crate::utils::logging::{getTimestamp, log_data};
 
-#[get("/GetUserPermissions/<username>")]
+#[get("/permissions/<username>")]
 pub async fn get_permissions(
     username: String,
     pool: &State<Pool>,
@@ -27,7 +27,7 @@ pub async fn get_permissions(
     let tokenUsed = _key.0.to_string();
 
     let mut userId: String = "".to_string();
-    info!("GetUserPermissions Request: {:?}", username);
+    info!("/permissions/<username> Get Request: {:?}", username);
     match decode_token_data(_key.0) {
         Some(data) => {
             userId = data.USER_ID.unwrap();
@@ -45,7 +45,7 @@ pub async fn get_permissions(
             pool,
             userId,
             client_ip.unwrap().to_string(),
-            ("/GetUserPermissions/".to_owned() + &username).to_string(),
+            ("/permissions/".to_owned() + &username).to_string(),
             None,
             getTimestamp(),
             tokenUsed,
@@ -63,7 +63,7 @@ pub async fn get_permissions(
                 pool,
                 userId,
                 client_ip.unwrap().to_string(),
-                ("/GetUserPermissions/".to_owned() + &username).to_string(),
+                ("/permissions/".to_owned() + &username).to_string(),
                 None,
                 getTimestamp(),
                 tokenUsed,
@@ -79,7 +79,7 @@ pub async fn get_permissions(
                 pool,
                 userId,
                 client_ip.unwrap().to_string(),
-                ("/GetUserPermissions/".to_owned() + &username).to_string(),
+                ("/permissions/".to_owned() + &username).to_string(),
                 None,
                 getTimestamp(),
                 tokenUsed,
@@ -93,8 +93,9 @@ pub async fn get_permissions(
     }
 }
 
-#[post("/EditUserPermissions", data = "<params>")]
+#[post("/permissions/<username>", data = "<params>")]
 pub async fn edit_permissions(
+    username: String,
     params: Json<PermissionEditParams>,
     pool: &State<Pool>,
     _key: ApiKey<'_>,
@@ -105,7 +106,7 @@ pub async fn edit_permissions(
 
     let params_clone = params.clone();
     let mut userId: String = "".to_string();
-    info!("GetUserPermissions Request: {:?}", params);
+    info!("/permissions/{:?} Request: {:?}", username.clone() ,params);
     match decode_token_data(_key.0) {
         Some(data) => {
             userId = data.USER_ID.unwrap();
@@ -119,7 +120,7 @@ pub async fn edit_permissions(
             pool,
             userId,
             client_ip.unwrap().to_string(),
-            "/EditUserPermissions/".to_string(),
+            ("/permissions/".to_owned() + &username).to_string(),
             Some(serde_json::to_string(&params_clone.0).unwrap()),
             getTimestamp(),
             tokenUsed,
@@ -130,7 +131,7 @@ pub async fn edit_permissions(
         return Err(Status::Unauthorized);
     }
     match crate::permissions::edit_user_permissions(
-        (params.pUserName.clone()).to_lowercase(),
+        (username.clone()).to_lowercase(),
         pool,
         params.pPermissions.clone(),
     ) {
@@ -142,7 +143,7 @@ pub async fn edit_permissions(
                 pool,
                 userId,
                 client_ip.unwrap().to_string(),
-                "/EditUserPermissions/".to_string(),
+                ("/permissions/".to_owned() + &username).to_string(),
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
                 getTimestamp(),
                 tokenUsed,
@@ -158,7 +159,7 @@ pub async fn edit_permissions(
                 pool,
                 userId,
                 client_ip.unwrap().to_string(),
-                "/EditUserPermissions/".to_string(),
+                ("/permissions/".to_owned() + &username).to_string(),
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
                 getTimestamp(),
                 tokenUsed,

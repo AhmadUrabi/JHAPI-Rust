@@ -167,7 +167,7 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         // Returns true if `key` is a valid JWT Token.
 
-        match req.headers().get_one("Authentication") {
+        match req.headers().get_one("Authorization") {
             None => {
                 error!("No Authentication header found");
                 Outcome::Failure((

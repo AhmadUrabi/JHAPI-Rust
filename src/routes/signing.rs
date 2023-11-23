@@ -10,7 +10,7 @@ use crate::signing::structs::LoginParams;
 
 use crate::utils::logging::{getTimestamp, log_data};
 
-#[post("/Sign", data = "<params>")]
+#[post("/login", data = "<params>")]
 pub async fn sign(
     params: Json<LoginParams>,
     pool: &State<Pool>,
@@ -28,7 +28,7 @@ pub async fn sign(
                 pool,
                 username,
                 client_ip.unwrap().to_string(),
-                "/Sign".to_string(),
+                "/login".to_string(),
                 None,
                 getTimestamp(),
                 "None".to_string(),
@@ -42,7 +42,7 @@ pub async fn sign(
                 pool,
                 username,
                 client_ip.unwrap().to_string(),
-                "/Sign".to_string(),
+                "/login".to_string(),
                 None,
                 getTimestamp(),
                 "None".to_string(),
