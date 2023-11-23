@@ -11,6 +11,6 @@ pub struct User {
 
 #[derive(serde::Deserialize, Debug, Serialize, Clone)]
 pub struct LoginParams {
-    pub pUserName: Option<String>,
-    pub pPassword: Option<String>,
+    pub p_username: Option<String>,
+    pub p_password: Option<String>,
 }

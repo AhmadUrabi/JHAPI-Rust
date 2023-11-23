@@ -3,7 +3,8 @@ use rocket::http::Status;
 use rocket::log::private::info;
 use rocket::serde::json::Json;
 use rocket::{get, State};
-use serde::Serialize;
+
+use crate::fetch_stores::structs::*;
 
 use crate::{ApiKey, LogCheck};
 use std::net::IpAddr;
@@ -99,12 +100,7 @@ pub async fn get_store_list(
     }
 }
 
-#[derive(serde::Deserialize, Debug, Serialize, Clone)]
-pub struct StoreListUpdateParams {
-    pUsername: String,
-    pStores: Option<Vec<i8>>,
-    pAllStoresAccess: i8,
-}
+
 
 #[post("/stores", data = "<params>")]
 pub async fn UpdateStoreList(
@@ -150,7 +146,7 @@ pub async fn UpdateStoreList(
 
     let conn = pool.get().unwrap();
     // Delete previous values, if all access stores is set to one, just add a single row, else, add a row for each store
-    if !params.pStores.is_none() || params.pAllStoresAccess == 0 {
+    if !params.p_stores.is_none() || params.p_allstoresaccess == 0 {
         let mut stmt = conn
             .statement(
                 "
@@ -160,11 +156,11 @@ pub async fn UpdateStoreList(
             .build()
             .unwrap();
 
-        stmt.execute(&[&params.pUsername]).unwrap();
+        stmt.execute(&[&params.p_username]).unwrap();
         conn.commit().unwrap();
     }
 
-    if params.pAllStoresAccess == 1 {
+    if params.p_allstoresaccess == 1 {
         let mut stmt = conn
             .statement(
                 "
@@ -174,10 +170,10 @@ pub async fn UpdateStoreList(
             .build()
             .unwrap();
 
-        stmt.execute(&[&params.pUsername]).unwrap();
+        stmt.execute(&[&params.p_username]).unwrap();
         conn.commit().unwrap();
     } else {
-        for store in params.pStores.as_ref().unwrap().iter() {
+        for store in params.p_stores.as_ref().unwrap().iter() {
             let mut stmt = conn
                 .statement(
                     "
@@ -187,7 +183,7 @@ pub async fn UpdateStoreList(
                 .build()
                 .unwrap();
 
-            stmt.execute(&[&params.pUsername, store]).unwrap();
+            stmt.execute(&[&params.p_username, store]).unwrap();
             conn.commit().unwrap();
         }
     }

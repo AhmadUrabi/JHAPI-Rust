@@ -49,9 +49,9 @@ const SECRET: &str = "SecretKey";
 
 pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Option<Json<String>> {
     // Check for empty username and password
-    info!("Login Attempt: {:?}", params.0.pUserName);
+    info!("Login Attempt: {:?}", params.0.p_username);
 
-    if params.pUserName.is_none() || params.pPassword.is_none() {
+    if params.p_username.is_none() || params.p_password.is_none() {
         error!("Empty username or password");
         return None;
     }
@@ -59,11 +59,11 @@ pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Option<Json<Strin
     let mut mypUsername = "%";
     let mut mypPassword = "%";
 
-    if let Some(pUserName) = &params.pUserName {
+    if let Some(pUserName) = &params.p_username {
         mypUsername = pUserName;
     }
 
-    if let Some(pPassword) = &params.pPassword {
+    if let Some(pPassword) = &params.p_password {
         mypPassword = pPassword;
     }
 

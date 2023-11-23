@@ -1,6 +1,7 @@
 use crate::LogCheck;
 use crate::signing::decode_token_data;
 use crate::user_control::*;
+use crate::user_control::structs::*;
 use crate::ApiKey;
 
 use oracle::pool::Pool;
@@ -154,7 +155,7 @@ pub async fn create_user_route(
 
     println!(
         "Create User Request: {:?}, {:?}",
-        params.0.username, params.0.fullname
+        params.0.p_username, params.0.p_fullname
     );
     if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){

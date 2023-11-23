@@ -16,10 +16,10 @@ pub async fn sign(
     pool: &State<Pool>,
     client_ip: Option<IpAddr>,
 ) -> Result<String, Status> {
-    info!("Sign Request: {:?}", params.0.pUserName);
+    info!("Sign Request: {:?}", params.0.p_username);
     info!("Client IP: {:?}", client_ip);
 
-    let username = params.0.pUserName.clone().unwrap();
+    let username = params.0.p_username.clone().unwrap();
 
     match signin(params, pool).await {
         Some(token) => {

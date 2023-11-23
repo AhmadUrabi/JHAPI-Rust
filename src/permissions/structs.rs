@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct PermissionEditParams {
-    pub pPermissions: Permissions,
+    pub p_permissions: Permissions,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]

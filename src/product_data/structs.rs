@@ -84,7 +84,7 @@ pub struct Product {
 
 #[derive(serde::Deserialize, Debug, Serialize, Clone)]
 pub struct FetchParams {
-    pub pRef: Option<String>,
-    pub pBarcode: Option<String>,
-    pub pId: Option<String>,
+    pub p_ref: Option<String>,
+    pub p_barcode: Option<String>,
+    pub p_id: Option<String>,
 }

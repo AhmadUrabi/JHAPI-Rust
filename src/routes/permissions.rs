@@ -133,7 +133,7 @@ pub async fn edit_permissions(
     match crate::permissions::edit_user_permissions(
         (username.clone()).to_lowercase(),
         pool,
-        params.pPermissions.clone(),
+        params.p_permissions.clone(),
     ) {
         Ok(permissions) => {
             info!("Permissions Edited");

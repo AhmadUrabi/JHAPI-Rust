@@ -21,7 +21,7 @@ pub async fn get_product(
     pool: &Pool,
     key: &ApiKey<'_>,
 ) -> Result<Vec<Product>> {
-    if params.pRef.is_none() && params.pBarcode.is_none() && params.pId.is_none() {
+    if params.p_ref.is_none() && params.p_barcode.is_none() && params.p_id.is_none() {
         return Ok(vec![]);
     }
 
@@ -29,15 +29,15 @@ pub async fn get_product(
     let mut mypBarcode = "%";
     let mut mypId = "%";
 
-    if let Some(pRef) = &params.pRef {
+    if let Some(pRef) = &params.p_ref {
         mypRef = pRef;
     }
 
-    if let Some(pBarcode) = &params.pBarcode {
+    if let Some(pBarcode) = &params.p_barcode {
         mypBarcode = pBarcode;
     }
 
-    if let Some(pId) = &params.pId {
+    if let Some(pId) = &params.p_id {
         mypId = pId;
     }
 
@@ -174,7 +174,7 @@ pub async fn get_product_pi(
     pool: &Pool,
     _key: &ApiKey<'_>,
 ) -> Result<Vec<Product>> {
-    if params.pRef.is_none() && params.pBarcode.is_none() && params.pId.is_none() {
+    if params.p_ref.is_none() && params.p_barcode.is_none() && params.p_id.is_none() {
         return Ok(vec![]);
     }
 
@@ -182,15 +182,15 @@ pub async fn get_product_pi(
     let mut mypBarcode = "%";
     let mut mypId = "%";
 
-    if let Some(pRef) = &params.pRef {
+    if let Some(pRef) = &params.p_ref {
         mypRef = pRef;
     }
 
-    if let Some(pBarcode) = &params.pBarcode {
+    if let Some(pBarcode) = &params.p_barcode {
         mypBarcode = pBarcode;
     }
 
-    if let Some(pId) = &params.pId {
+    if let Some(pId) = &params.p_id {
         mypId = pId;
     }
 
