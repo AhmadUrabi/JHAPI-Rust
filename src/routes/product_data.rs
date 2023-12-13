@@ -8,7 +8,7 @@ use rocket::{post, State};
 use std::net::IpAddr;
 
 use crate::product_data::get_product;
-use crate::product_data::get_product_pi;
+// use crate::product_data::get_product_pi;
 use crate::signing::decode_token_data;
 use crate::ApiKey;
 use crate::LogCheck;
@@ -89,7 +89,7 @@ pub async fn get_products(
     }
 }
 
-
+/*
 #[post("/GetProductDataPI", data = "<params>")]
 pub async fn get_products_pi(
     params: Json<FetchParams>,
@@ -155,3 +155,4 @@ pub async fn get_products_pi(
         }
     }
 }
+*/

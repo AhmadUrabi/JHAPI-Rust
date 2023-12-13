@@ -30,7 +30,7 @@ use routes::file_server::upload;
 use routes::permissions::edit_permissions;
 use routes::permissions::get_permissions;
 use routes::product_data::get_products;
-use routes::product_data::get_products_pi;
+// use routes::product_data::get_products_pi;
 use routes::signing::sign;
 use routes::user_control::create_user_route;
 use routes::user_control::delete_user_route;
@@ -131,7 +131,7 @@ fn rocket() -> _ {
                 get_user_logs,
                 get_route_logs,
                 get_all_logs,
-                get_products_pi,
+                //get_products_pi,
                 delete_log_logs,
                 delete_user_logs
             ],
