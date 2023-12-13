@@ -11,42 +11,60 @@ use crate::signing::decode_token_data;
 pub fn is_admin_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     let user_id = decode_token_data(_key.0).unwrap().USER_ID.unwrap();
     let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();
-    return permissions.admin.unwrap();
+    match permissions.admin {
+        Some(x) => return x,
+        None => return false,
+    }
 }
 
 // Check for Permissions Permissions
 pub fn is_perm_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     let user_id = decode_token_data(_key.0).unwrap().USER_ID.unwrap();
     let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();
-    return permissions.permissions.unwrap();
+    match permissions.permissions {
+        Some(x) => return x,
+        None => return false,
+    }
 }
 
 // Check for Users Control Permissions
 pub fn is_users_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     let user_id = decode_token_data(_key.0).unwrap().USER_ID.unwrap();
     let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();
-    return permissions.users.unwrap();
+    match permissions.users {
+        Some(x) => return x,
+        None => return false,
+    }
 }
 
 // Check for Image Fetching Permissions
 pub fn is_images_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     let user_id = decode_token_data(_key.0).unwrap().USER_ID.unwrap();
     let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();
-    return permissions.images.unwrap();
+    match permissions.images {
+        Some(x) => return x,
+        None => return false,
+    }
 }
 
 // Check for Product Cost Permissions
 pub fn is_cost_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     let user_id = decode_token_data(_key.0).unwrap().USER_ID.unwrap();
     let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();
-    return permissions.cost.unwrap();
+    match permissions.cost {
+        Some(x) => return x,
+        None => return false,
+    }
 }
 
 // Check for Product Query Permissions
 pub fn is_query_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     let user_id = decode_token_data(_key.0).unwrap().USER_ID.unwrap();
     let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();
-    return permissions.query.unwrap();
+    match permissions.query {
+        Some(x) => return x,
+        None => return false,
+    }
 }
 
 // Check for Stock Permissions
@@ -54,7 +72,10 @@ pub fn is_query_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
 pub fn is_stock_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     let user_id = decode_token_data(_key.0).unwrap().USER_ID.unwrap();
     let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();
-    return permissions.stock.unwrap();
+    match permissions.stock {
+        Some(x) => return x,
+        None => return false,
+    }
 }
 
 // Check for Reports Permissions
@@ -62,12 +83,18 @@ pub fn is_stock_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
 pub fn is_reports_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     let user_id = decode_token_data(_key.0).unwrap().USER_ID.unwrap();
     let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();
-    return permissions.reports.unwrap();
+    match permissions.reports {
+        Some(x) => return x,
+        None => return false,
+    }
 }
 
 // Check for Stores Permissions
 pub fn is_stores_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     let user_id = decode_token_data(_key.0).unwrap().USER_ID.unwrap();
     let permissions: Permissions = get_user_permissions(&user_id, pool).unwrap();
-    return permissions.stores.unwrap();
+    match permissions.stores {
+        Some(x) => return x,
+        None => return false,
+    }
 }

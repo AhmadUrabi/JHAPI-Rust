@@ -73,6 +73,8 @@ impl Fairing for CORS {
 #[derive(Copy, Clone, Debug)]
 pub struct LogCheck(pub bool);
 
+
+// Used to check for X-Log-Request header
 #[rocket::async_trait]
 impl<'r> FromRequest<'r> for LogCheck {
     type Error = ();
@@ -91,6 +93,7 @@ impl<'r> FromRequest<'r> for LogCheck {
     }
 }
 
+// Hack: To handle Options request on firefox
 #[options("/<_path..>")]
 fn cors_preflight_handler(_path: std::path::PathBuf) -> rocket::http::Status {
     rocket::http::Status::Ok
@@ -113,8 +116,8 @@ fn rocket() -> _ {
     let database = std::env::var("DB_CONNECTION").expect("DB_CONNECTION must be set.");
 
     let pool = PoolBuilder::new(username, password, database)
-        .min_connections(10) // Had to specify, would otherwise cause error: Invalid number of sessions
-        .max_connections(10) // min and max must be the same for it to work on linux? TODO: Test with new values
+        .min_connections(8) // Min == Max always
+        .max_connections(8) 
         .build();
 
     let pool = match pool {
