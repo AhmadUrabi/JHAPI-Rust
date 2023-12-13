@@ -1,4 +1,4 @@
-use std::time::Instant;
+// use std::time::Instant;
 
 use oracle::Row;
 use oracle::pool::Pool;
@@ -45,7 +45,7 @@ pub async fn get_product(
         }
     }
 
-
+    // Helper function to get value from row and check if store is in store_ids
     fn get_value(store_ids: &Vec<String>, row: &Row, store_id: &str, column_name: &str) -> Option<String> {
         if store_ids.contains(&store_id.to_string()) {
             row.get(column_name).ok()
