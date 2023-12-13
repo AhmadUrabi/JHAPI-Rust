@@ -74,25 +74,6 @@ impl Fairing for CORS {
 pub struct LogCheck(pub bool);
 
 
-// Used to check for X-Log-Request header
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for LogCheck {
-    type Error = ();
-
-    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, ()> {
-        match request.headers().get_one("X-Log-Request") {
-            Some(key) => {
-                if key == "false" {
-                    Outcome::Success(LogCheck(false))
-                } else {
-                    Outcome::Success(LogCheck(true))
-                }
-            },
-            _ => Outcome::Success(LogCheck(true)),
-        }
-    }
-}
-
 // Hack: To handle Options request on firefox
 #[options("/<_path..>")]
 fn cors_preflight_handler(_path: std::path::PathBuf) -> rocket::http::Status {
@@ -172,7 +153,7 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
         match req.headers().get_one("Authorization") {
             None => {
                 error!("No Authentication header found");
-                Outcome::Failure((
+                Outcome::Error((
                     Status::Unauthorized,
                     "Please include an Authentication header".to_string(),
                 ))
@@ -183,11 +164,30 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
             }
             Some(_) => {
                 error!("Invalid Token Found");
-                Outcome::Failure((
+                Outcome::Error((
                     Status::Unauthorized,
                     "Please include a valid Authentication header".to_string(),
                 ))
             }
+        }
+    }
+}
+
+// Used to check for X-Log-Request header
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for LogCheck {
+    type Error = ();
+
+    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, ()> {
+        match request.headers().get_one("X-Log-Request") {
+            Some(key) => {
+                if key == "false" {
+                    Outcome::Success(LogCheck(false))
+                } else {
+                    Outcome::Success(LogCheck(true))
+                }
+            },
+            _ => Outcome::Success(LogCheck(true)),
         }
     }
 }
