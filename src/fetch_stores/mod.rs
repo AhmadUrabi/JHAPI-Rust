@@ -23,7 +23,7 @@ pub fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>> {
                     ON
                         usa.username = u.username
                     WHERE
-                        (u.username = :user_id AND usa.all_stores_access = 1) -- Replace 'User2' with the desired username
+                        (u.username = :user_id AND usa.all_stores_access = 1)
                         OR (u.username = :user_id AND usa.store_id = s.store_id)
                 )")
         .build()?;

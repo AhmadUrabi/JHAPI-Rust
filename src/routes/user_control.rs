@@ -1,6 +1,7 @@
 use crate::LogCheck;
 use crate::signing::decode_token_data;
 use crate::user_control::*;
+use crate::user_control::structs::*;
 use crate::ApiKey;
 
 use oracle::pool::Pool;
@@ -11,22 +12,22 @@ use rocket::State;
 
 use std::net::IpAddr;
 
-use crate::utils::logging::{getTimestamp, log_data};
+use crate::utils::logging::{get_timestamp, log_data};
 use crate::utils::permissions::{is_admin_perm, is_users_perm};
 
 // Get User List
-#[get("/UserList")]
+#[get("/users")]
 pub async fn get_user_list(
     pool: &State<Pool>,
     _key: ApiKey<'_>,
     client_ip: Option<IpAddr>,
     log_check: LogCheck,
 ) -> Result<Json<Vec<User>>, Status> {
-    let mut userId = "".to_string();
+    let mut user_id = "".to_string();
 
     match decode_token_data(_key.0) {
         Some(data) => {
-            userId = data.USER_ID.unwrap();
+            user_id = data.USER_ID.unwrap();
         }
         None => info!("Token Data: None"),
     }
@@ -35,11 +36,11 @@ pub async fn get_user_list(
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
-            userId,
+            user_id,
             client_ip.unwrap().to_string(),
-            "/UserList".to_string(),
+            "/users".to_string(),
             None,
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
             "GET".to_string()
@@ -50,11 +51,11 @@ pub async fn get_user_list(
     if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
     log_data(
         pool,
-        userId,
+        user_id,
         client_ip.unwrap().to_string(),
-        "/UserList".to_string(),
+        "/users".to_string(),
         None,
-        getTimestamp(),
+        get_timestamp(),
         _key.0.to_string(),
         "Success".to_string(),
         "GET".to_string()
@@ -63,7 +64,7 @@ pub async fn get_user_list(
     Ok(Json(get_users(_key, pool).await.unwrap()))
 }
 
-#[get("/User/<user_id>")]
+#[get("/user/<user_id>")]
 pub async fn get_user_by_id(
     pool: &State<Pool>,
     _key: ApiKey<'_>,
@@ -71,27 +72,27 @@ pub async fn get_user_by_id(
     client_ip: Option<IpAddr>,
     log_check: LogCheck,
 ) -> Result<Json<User>, Status> {
-    let mut userId: String = "".to_string();
+    let mut my_user_id: String = "".to_string();
 
     match decode_token_data(_key.0) {
         Some(data) => {
-            userId = data.USER_ID.unwrap();
+            my_user_id = data.USER_ID.unwrap();
         }
         None => info!("Token Data: None"),
     }
 
     if !is_admin_perm(&_key, pool)
         && !is_users_perm(&_key, pool)
-        && user_id.to_lowercase() != userId.to_lowercase()
+        && my_user_id.to_lowercase() != user_id.to_lowercase()
     {
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
-            userId,
+            my_user_id,
             client_ip.unwrap().to_string(),
-            ("/User/".to_owned() + &user_id).to_string(),
+            ("/user/".to_owned() + &user_id).to_string(),
             None,
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
             "GET".to_string()
@@ -105,11 +106,11 @@ pub async fn get_user_by_id(
             if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
-                userId,
+                my_user_id,
                 client_ip.unwrap().to_string(),
-                ("/User/".to_owned() + &user_id).to_string(),
+                ("/user/".to_owned() + &user_id).to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
                 "GET".to_string()
@@ -121,11 +122,11 @@ pub async fn get_user_by_id(
             if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
-                userId,
+                my_user_id,
                 client_ip.unwrap().to_string(),
-                ("/User/".to_owned() + &user_id).to_string(),
+                ("/user/".to_owned() + &user_id).to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 _key.0.to_string(),
                 error.to_string(),
                 "GET".to_string()
@@ -136,7 +137,7 @@ pub async fn get_user_by_id(
     }
 }
 
-#[post("/CreateUser", data = "<params>")]
+#[post("/user", data = "<params>")]
 pub async fn create_user_route(
     params: Json<NewUser>,
     pool: &State<Pool>,
@@ -144,27 +145,27 @@ pub async fn create_user_route(
     client_ip: Option<IpAddr>,
     log_check: LogCheck,
 ) -> Result<String, Status> {
-    let mut userId: String = "".to_string();
+    let mut user_id: String = "".to_string();
     match decode_token_data(_key.0) {
         Some(data) => {
-            userId = data.USER_ID.unwrap();
+            user_id = data.USER_ID.unwrap();
         }
         None => info!("Token Data: None"),
     }
 
     println!(
         "Create User Request: {:?}, {:?}",
-        params.0.username, params.0.fullname
+        params.0.p_username, params.0.p_fullname
     );
     if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
-            userId,
+            user_id,
             client_ip.unwrap().to_string(),
-            "/CreateUser".to_string(),
+            "/user".to_string(),
             None,
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
             "POST".to_string()
@@ -177,11 +178,11 @@ pub async fn create_user_route(
             if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
-                userId,
+                user_id,
                 client_ip.unwrap().to_string(),
-                "/CreateUser".to_string(),
+                "/user".to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
                 "POST".to_string()
@@ -193,11 +194,11 @@ pub async fn create_user_route(
             if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
-                userId,
+                user_id,
                 client_ip.unwrap().to_string(),
-                "/CreateUser".to_string(),
+                "/user".to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 _key.0.to_string(),
                 error.to_string(),
                 "POST".to_string()
@@ -208,32 +209,33 @@ pub async fn create_user_route(
     }
 }
 
-#[put("/EditUser", data = "<params>")]
+#[put("/user/<username>", data = "<params>")]
 pub async fn edit_user_route(
+    username: String,
     params: Json<EditUserParams>,
     pool: &State<Pool>,
     _key: ApiKey<'_>,
     client_ip: Option<IpAddr>,
     log_check: LogCheck,
 ) -> Result<String, Status> {
-    let mut userId: String = "".to_string();
+    let mut user_id: String = "".to_string();
     match decode_token_data(_key.0) {
         Some(data) => {
-            userId = data.USER_ID.unwrap();
+            user_id = data.USER_ID.unwrap();
         }
         None => info!("Token Data: None"),
     }
 
-    println!("Edit User Request: {:?}", params.0.username);
+    println!("Edit User Request: {:?}", username);
     if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
-            userId,
+            user_id,
             client_ip.unwrap().to_string(),
-            "/EditUser".to_string(),
+            ("/user/".to_owned()+&username).to_string(),
             None,
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
             "PUT".to_string()
@@ -241,18 +243,18 @@ pub async fn edit_user_route(
     }
         return Err(Status::Unauthorized);
     }
-    let res = edit_user(params, pool, is_admin_perm(&_key, pool))
+    let res = edit_user(params, &username, pool, is_admin_perm(&_key, pool))
         .await
         .unwrap();
     if res == false {
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
-            userId,
+            user_id,
             client_ip.unwrap().to_string(),
-            "/EditUser".to_string(),
+            ("/user/".to_owned()+&username).to_string(),
             None,
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "User Not Found".to_string(),
             "PUT".to_string()
@@ -263,11 +265,11 @@ pub async fn edit_user_route(
     if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
     log_data(
         pool,
-        userId,
+        user_id,
         client_ip.unwrap().to_string(),
-        "/EditUser".to_string(),
+        ("/user/".to_owned()+&username).to_string(),
         None,
-        getTimestamp(),
+        get_timestamp(),
         _key.0.to_string(),
         "Success".to_string(),
         "PUT".to_string()
@@ -276,7 +278,7 @@ pub async fn edit_user_route(
     Ok("User Edited".to_string())
 }
 
-#[delete("/DeleteUser/<user_id>")]
+#[delete("/user/<user_id>")]
 pub async fn delete_user_route(
     pool: &State<Pool>,
     _key: ApiKey<'_>,
@@ -284,10 +286,10 @@ pub async fn delete_user_route(
     client_ip: Option<IpAddr>,
     log_check: LogCheck,
 ) -> Result<String, Status> {
-    let mut userId: String = "".to_string();
+    let mut my_user_id: String = "".to_string();
     match decode_token_data(_key.0) {
         Some(data) => {
-            userId = data.USER_ID.unwrap();
+            my_user_id = data.USER_ID.unwrap();
         }
         None => info!("Token Data: None"),
     }
@@ -296,11 +298,11 @@ pub async fn delete_user_route(
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
-            userId,
+            my_user_id,
             client_ip.unwrap().to_string(),
-            ("/DeleteUser/".to_owned() + &user_id).to_string(),
+            ("/user/".to_owned() + &user_id).to_string(),
             None,
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
             "DELETE".to_string()
@@ -313,11 +315,11 @@ pub async fn delete_user_route(
             if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
-                userId,
+                my_user_id,
                 client_ip.unwrap().to_string(),
-                ("/DeleteUser/".to_owned() + &user_id).to_string(),
+                ("/user/".to_owned() + &user_id).to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
                 "DELETE".to_string()
@@ -329,11 +331,11 @@ pub async fn delete_user_route(
             if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
             log_data(
                 pool,
-                userId,
+                my_user_id,
                 client_ip.unwrap().to_string(),
-                ("/DeleteUser/".to_owned() + &user_id).to_string(),
+                ("/user/".to_owned() + &user_id).to_string(),
                 None,
-                getTimestamp(),
+                get_timestamp(),
                 _key.0.to_string(),
                 error.to_string(),
                 "DELETE".to_string()

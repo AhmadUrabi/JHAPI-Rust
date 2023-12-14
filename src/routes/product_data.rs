@@ -8,7 +8,7 @@ use rocket::{post, State};
 use std::net::IpAddr;
 
 use crate::product_data::get_product;
-use crate::product_data::get_product_pi;
+// use crate::product_data::get_product_pi;
 use crate::signing::decode_token_data;
 use crate::ApiKey;
 use crate::LogCheck;
@@ -16,11 +16,11 @@ use crate::LogCheck;
 
 use crate::product_data::structs::FetchParams;
 use crate::product_data::structs::Product;
-use crate::utils::logging::getTimestamp;
+use crate::utils::logging::get_timestamp;
 use crate::utils::logging::log_data;
 use crate::utils::permissions::is_admin_perm;
 
-#[post("/GetProductData", data = "<params>")]
+#[post("/products", data = "<params>")]
 pub async fn get_products(
     params: Json<FetchParams>,
     pool: &State<Pool>,
@@ -61,7 +61,7 @@ pub async fn get_products(
                 client_ip.unwrap().to_string(),
                 "/GetProductData".to_string(),
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
-                getTimestamp(),
+                get_timestamp(),
                 tokenUsed,
                 "Success".to_string(),
                 "GET".to_string()
@@ -78,7 +78,7 @@ pub async fn get_products(
                 client_ip.unwrap().to_string(),
                 "/GetProductData".to_string(),
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
-                getTimestamp(),
+                get_timestamp(),
                 tokenUsed,
                 "Error Fetching".to_string(),
                 "GET".to_string()
@@ -89,7 +89,7 @@ pub async fn get_products(
     }
 }
 
-
+/*
 #[post("/GetProductDataPI", data = "<params>")]
 pub async fn get_products_pi(
     params: Json<FetchParams>,
@@ -128,7 +128,7 @@ pub async fn get_products_pi(
                 client_ip.unwrap().to_string(),
                 "/GetProductData".to_string(),
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
-                getTimestamp(),
+                get_timestamp(),
                 tokenUsed,
                 "Success".to_string(),
                 "GET".to_string()
@@ -145,7 +145,7 @@ pub async fn get_products_pi(
                 client_ip.unwrap().to_string(),
                 "/GetProductData".to_string(),
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
-                getTimestamp(),
+                get_timestamp(),
                 tokenUsed,
                 "Error Fetching".to_string(),
                 "GET".to_string()
@@ -155,3 +155,4 @@ pub async fn get_products_pi(
         }
     }
 }
+*/

@@ -1,4 +1,3 @@
-#![allow(non_snake_case)]
 #[macro_use]
 extern crate rocket;
 
@@ -25,13 +24,13 @@ use oracle::pool::PoolBuilder;
 
 use routes::fetch_stores::get_store_list;
 use routes::fetch_stores::get_store_list_for_user;
-use routes::fetch_stores::UpdateStoreList;
+use routes::fetch_stores::update_store_list;
 use routes::file_server::get_image;
 use routes::file_server::upload;
 use routes::permissions::edit_permissions;
 use routes::permissions::get_permissions;
 use routes::product_data::get_products;
-use routes::product_data::get_products_pi;
+// use routes::product_data::get_products_pi;
 use routes::signing::sign;
 use routes::user_control::create_user_route;
 use routes::user_control::delete_user_route;
@@ -74,24 +73,8 @@ impl Fairing for CORS {
 #[derive(Copy, Clone, Debug)]
 pub struct LogCheck(pub bool);
 
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for LogCheck {
-    type Error = ();
 
-    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, ()> {
-        match request.headers().get_one("X-Log-Request") {
-            Some(key) => {
-                if key == "false" {
-                    Outcome::Success(LogCheck(false))
-                } else {
-                    Outcome::Success(LogCheck(true))
-                }
-            },
-            _ => Outcome::Success(LogCheck(true)),
-        }
-    }
-}
-
+// Hack: To handle Options request on firefox
 #[options("/<_path..>")]
 fn cors_preflight_handler(_path: std::path::PathBuf) -> rocket::http::Status {
     rocket::http::Status::Ok
@@ -114,8 +97,8 @@ fn rocket() -> _ {
     let database = std::env::var("DB_CONNECTION").expect("DB_CONNECTION must be set.");
 
     let pool = PoolBuilder::new(username, password, database)
-        .min_connections(10) // Had to specify, would otherwise cause error: Invalid number of sessions
-        .max_connections(10) // min and max must be the same for it to work on linux? TODO: Test with new values
+        .min_connections(8) // Min == Max always
+        .max_connections(8) 
         .build();
 
     let pool = match pool {
@@ -125,14 +108,14 @@ fn rocket() -> _ {
     // Pool built
 
     rocket::build()
-        .register("/", catchers![Unauthorized, not_found, internal_error])
+        .register("/", catchers![unauthorized, not_found, internal_error])
         .manage(pool)
         .mount(
-            "/",
+            "/api",
             routes![
                 get_products,
                 get_store_list,
-                UpdateStoreList,
+                update_store_list,
                 sign,
                 get_permissions,
                 edit_permissions,
@@ -148,7 +131,7 @@ fn rocket() -> _ {
                 get_user_logs,
                 get_route_logs,
                 get_all_logs,
-                get_products_pi,
+                //get_products_pi,
                 delete_log_logs,
                 delete_user_logs
             ],
@@ -167,10 +150,10 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         // Returns true if `key` is a valid JWT Token.
 
-        match req.headers().get_one("Authentication") {
+        match req.headers().get_one("Authorization") {
             None => {
                 error!("No Authentication header found");
-                Outcome::Failure((
+                Outcome::Error((
                     Status::Unauthorized,
                     "Please include an Authentication header".to_string(),
                 ))
@@ -181,7 +164,7 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
             }
             Some(_) => {
                 error!("Invalid Token Found");
-                Outcome::Failure((
+                Outcome::Error((
                     Status::Unauthorized,
                     "Please include a valid Authentication header".to_string(),
                 ))
@@ -189,11 +172,30 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
         }
     }
 }
+
+// Used to check for X-Log-Request header
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for LogCheck {
+    type Error = ();
+
+    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, ()> {
+        match request.headers().get_one("X-Log-Request") {
+            Some(key) => {
+                if key == "false" {
+                    Outcome::Success(LogCheck(false))
+                } else {
+                    Outcome::Success(LogCheck(true))
+                }
+            },
+            _ => Outcome::Success(LogCheck(true)),
+        }
+    }
+}
 // End Request Guard Functions
 
 // Route catchers
 #[catch(401)]
-fn Unauthorized() -> &'static str {
+fn unauthorized() -> &'static str {
     "Unauthorized, please include a valid Authentication header, or check your request body"
 }
 

@@ -27,24 +27,24 @@ fn resize(filename: &str, name: &str) {
     wand.set_background_color(&pixelwand).unwrap();
     wand.set_format("jpg").unwrap();
     let temp: Vec<u8> = wand.write_image_blob("jpg").unwrap();
-    let mut newWand = MagickWand::new();
+    let mut new_wand = MagickWand::new();
 
-    newWand.read_image_blob(&temp).unwrap();
-    newWand.set_image_gravity(5).unwrap();
-    newWand.set_gravity(5).unwrap();
-    newWand.fit(640, 640);
+    new_wand.read_image_blob(&temp).unwrap();
+    new_wand.set_image_gravity(5).unwrap();
+    new_wand.set_gravity(5).unwrap();
+    new_wand.fit(640, 640);
 
-    let width = newWand.get_image_width() as isize;
+    let width = new_wand.get_image_width() as isize;
     let x_offset: isize = (640 - width) / 2 * -1;
 
-    let height = newWand.get_image_height() as isize;
+    let height = new_wand.get_image_height() as isize;
     let y_offset: isize = (640 - height) / 2 * -1;
 
-    newWand.extend_image(640, 640, x_offset, y_offset).unwrap();
+    new_wand.extend_image(640, 640, x_offset, y_offset).unwrap();
 
-    let resFile = "tmp/".to_string() + name + ".jpg";
+    let res_file = "tmp/".to_string() + name + ".jpg";
 
-    newWand.write_image(&resFile).unwrap();
+    new_wand.write_image(&res_file).unwrap();
 }
 
 pub async fn download_file(file_name: &String) -> bool {
@@ -106,11 +106,11 @@ pub async fn download_file(file_name: &String) -> bool {
 
 pub async fn upload_file(item_code: &String, filepath: &String) -> bool {
     resize(&filepath, &item_code);
-    let tempFile = "tmp/".to_string() + item_code + ".jpg";
+    let temp_file = "tmp/".to_string() + item_code + ".jpg";
 
-    let mut f = File::open(&tempFile).await.unwrap();
+    let mut f = File::open(&temp_file).await.unwrap();
     let mut buffer = Vec::new();
-    let fileSize = f.metadata().await.unwrap().len();
+    let file_size = f.metadata().await.unwrap().len();
     f.read_to_end(&mut buffer).await.ok();
 
     let tcp =
@@ -138,27 +138,27 @@ pub async fn upload_file(item_code: &String, filepath: &String) -> bool {
             }
         };
 
-        let fileName = "/u02/forms/erp/images/".to_string() + item_code + ".jpg";
+        let file_name = "/u02/forms/erp/images/".to_string() + item_code + ".jpg";
 
-        if let Ok(mut remote_file) = sess.scp_send(Path::new(&fileName), 0o644, fileSize, None) {
+        if let Ok(mut remote_file) = sess.scp_send(Path::new(&file_name), 0o644, file_size, None) {
             println!("File Send successful");
-            println!("remote file size: {}", fileSize);
+            println!("remote file size: {}", file_size);
             remote_file.write_all(&buffer).unwrap();
             // Close the channel and wait for the whole content to be tranferred
             remote_file.send_eof().unwrap();
             remote_file.wait_eof().unwrap();
             remote_file.close().unwrap();
             remote_file.wait_close().unwrap();
-            std::fs::remove_file(tempFile).unwrap();
+            std::fs::remove_file(temp_file).unwrap();
             return true;
         } else {
             println!("File Send Unsuccessful");
-            std::fs::remove_file(tempFile).unwrap();
+            std::fs::remove_file(temp_file).unwrap();
             return false;
         }
     } else {
         println!("Session not created");
-        std::fs::remove_file(tempFile).unwrap();
+        std::fs::remove_file(temp_file).unwrap();
         return false;
     }
 }

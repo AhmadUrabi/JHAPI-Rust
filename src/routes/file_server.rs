@@ -14,7 +14,7 @@ use crate::file_server::upload_file;
 
 use std::net::IpAddr;
 
-use crate::utils::logging::{getTimestamp, log_data};
+use crate::utils::logging::{get_timestamp, log_data};
 
 use std::path::*;
 
@@ -26,25 +26,25 @@ pub async fn get_image(
     client_ip: Option<IpAddr>,
     log_check: LogCheck,
 ) -> Result<Option<NamedFile>, Status> {
-    let mut userId: String = "".to_string();
+    let mut user_id: String = "".to_string();
     match decode_token_data(_key.0) {
         Some(data) => {
             info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap());
-            userId = data.USER_ID.unwrap();
+            user_id = data.USER_ID.unwrap();
         }
         None => info!("Token Data: None"),
     }
-    let userCopy = userId.clone();
+    let user_copy = user_id.clone();
 
     if !is_query_perm(&_key, pool) && !is_admin_perm(&_key, pool) {
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
-            userId,
+            user_id,
             client_ip.unwrap().to_string(),
             ("/images/".to_owned() + file.to_str().unwrap()).to_string(),
             None,
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
             "GET".to_string()
@@ -54,20 +54,20 @@ pub async fn get_image(
     }
     info!("Image Request: {:?}", file);
 
-    let fileName = file.to_str().unwrap().to_string();
+    let filename = file.to_str().unwrap().to_string();
 
-    if download_file(&fileName).await {
+    if download_file(&filename).await {
         info!("File Downloaded");
     } else {
         info!("File Not Found");
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
-            userId,
+            user_id,
             client_ip.unwrap().to_string(),
             ("/images/".to_owned() + file.to_str().unwrap()).to_string(),
             None,
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "File Not Found".to_string(),
             "GET".to_string()
@@ -78,11 +78,11 @@ pub async fn get_image(
     if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
     log_data(
         pool,
-        userCopy,
+        user_copy,
         client_ip.unwrap().to_string(),
         ("/images/".to_owned() + file.to_str().unwrap()).to_string(),
         None,
-        getTimestamp(),
+        get_timestamp(),
         _key.0.to_string(),
         "Success".to_string(),
         "GET".to_string()
@@ -108,25 +108,25 @@ pub async fn upload(
     client_ip: Option<IpAddr>,
     log_check: LogCheck,
 ) -> Result<String, Status> {
-    let mut userId: String = "".to_string();
+    let mut user_id: String = "".to_string();
     match decode_token_data(_key.0) {
         Some(data) => {
             info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap());
-            userId = data.USER_ID.unwrap();
+            user_id = data.USER_ID.unwrap();
         }
         None => info!("Token Data: None"),
     }
-    let userCopy = userId.clone();
+    let user_copy = user_id.clone();
 
     if !is_images_perm(&_key, pool) && !is_admin_perm(&_key, pool) {
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
-            userId,
+            user_id,
             client_ip.unwrap().to_string(),
             "/upload".to_string(),
             Some(params.item_code.clone()),
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
             "POST".to_string()
@@ -138,21 +138,21 @@ pub async fn upload(
     info!("Image Upload Request: {:?}", params.item_code);
 
     // Save file temporarily
-    let fileName = "tmp/".to_string() + params.file.name().unwrap();
-    params.file.persist_to(&fileName).await.unwrap();
+    let filename = "tmp/".to_string() + params.file.name().unwrap();
+    params.file.persist_to(&filename).await.unwrap();
 
     // Upload file to server
-    if upload_file(&params.item_code, &fileName).await {
+    if upload_file(&params.item_code, &filename).await {
         info!("File Uploaded");
     } else {
         info!("File Not Uploaded");
         log_data(
             pool,
-            userId,
+            user_id,
             client_ip.unwrap().to_string(),
             "/upload".to_string(),
             Some(params.item_code.clone()),
-            getTimestamp(),
+            get_timestamp(),
             _key.0.to_string(),
             "File Not Uploaded".to_string(),
             "POST".to_string()
@@ -161,15 +161,15 @@ pub async fn upload(
     }
 
     // Delete temporary file
-    std::fs::remove_file(fileName).unwrap();
+    std::fs::remove_file(filename).unwrap();
 
     log_data(
         pool,
-        userCopy,
+        user_copy,
         client_ip.unwrap().to_string(),
         "/upload".to_string(),
         Some(params.item_code.clone()),
-        getTimestamp(),
+        get_timestamp(),
         _key.0.to_string(),
         "Success".to_string(),
         "POST".to_string()

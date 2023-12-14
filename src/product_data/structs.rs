@@ -1,6 +1,7 @@
 use rocket::serde::Deserialize;
 use rocket::serde::Serialize;
 
+#[allow(non_snake_case)]
 #[derive(Serialize, Deserialize)]
 pub struct Product {
     pub ITEM_ID: Option<String>,
@@ -84,7 +85,7 @@ pub struct Product {
 
 #[derive(serde::Deserialize, Debug, Serialize, Clone)]
 pub struct FetchParams {
-    pub pRef: Option<String>,
-    pub pBarcode: Option<String>,
-    pub pId: Option<String>,
+    pub p_ref: Option<String>,
+    pub p_barcode: Option<String>,
+    pub p_id: Option<String>,
 }

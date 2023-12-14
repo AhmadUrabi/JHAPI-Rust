@@ -1,6 +1,13 @@
 [global]
 address = "0.0.0.0"
 
+[default.limits]
+data-form = "5 MiB"
+file = "5 MiB"
+"file/jpg" = "5 MiB"
+"file/jpeg" = "5 MiB"
+
+
 [debug]
 address = "localhost"
 

@@ -1,6 +1,6 @@
 [package]
 name = "jhapi"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -20,5 +20,5 @@ magick_rust = "0.19.1"
 bcrypt = "0.15.0"
 
 [dependencies.rocket]
-version = "0.5.0-rc.3"
+version = "0.5.0"
 features = ["json"]

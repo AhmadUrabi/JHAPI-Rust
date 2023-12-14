@@ -45,29 +45,29 @@ impl Claims {
     }
 }
 
-const SECRET: &str = "SecretKey";
+
 
 pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Option<Json<String>> {
     // Check for empty username and password
-    info!("Login Attempt: {:?}", params.0.pUserName);
+    info!("Login Attempt: {:?}", params.0.p_username);
 
-    if params.pUserName.is_none() || params.pPassword.is_none() {
+    if params.p_username.is_none() || params.p_password.is_none() {
         error!("Empty username or password");
         return None;
     }
 
-    let mut mypUsername = "%";
-    let mut mypPassword = "%";
+    let mut my_p_username = "%";
+    let mut my_p_password = "%";
 
-    if let Some(pUserName) = &params.pUserName {
-        mypUsername = pUserName;
+    if let Some(p_username) = &params.p_username {
+        my_p_username = p_username;
     }
 
-    if let Some(pPassword) = &params.pPassword {
-        mypPassword = pPassword;
+    if let Some(p_password) = &params.p_password {
+        my_p_password = p_password;
     }
 
-    let user = fetch_user_data(mypUsername.to_lowercase(), mypPassword.to_string(), pool);
+    let user = fetch_user_data(my_p_username.to_lowercase(), my_p_password.to_string(), pool);
 
     // If user doesn't exist, return None
     if user.is_none() {
@@ -115,6 +115,7 @@ fn fetch_user_data(username: String, password: String, pool: &Pool) -> Option<Us
 }
 
 fn generate_token(user: &User) -> String {
+    let secret: String = std::env::var("SECRET_KEY").expect("SECRET_KEY must be set.");
     if user.USER_ID.is_none()
         || user.USER_NAME.is_none()
         || user.USER_EMAIL.is_none()
@@ -133,19 +134,20 @@ fn generate_token(user: &User) -> String {
     let token = encode(
         &Header::default(),
         &claims,
-        &EncodingKey::from_secret(SECRET.to_string().as_ref()),
+        &EncodingKey::from_secret(secret.to_string().as_ref()),
     );
     return token.unwrap();
 }
 
 pub fn validate_token(token: &str) -> bool {
-    let DecodedToken = decode::<Claims>(
+    let secret: String = std::env::var("SECRET_KEY").expect("SECRET_KEY must be set.");
+    let decoded_token = decode::<Claims>(
         &token,
-        &DecodingKey::from_secret(SECRET.as_ref()),
+        &DecodingKey::from_secret(secret.as_ref()),
         &Validation::default(),
     );
 
-    match DecodedToken {
+    match decoded_token {
         Ok(token) => {
             return token.claims.exp
                 > SystemTime::now()
@@ -161,16 +163,17 @@ pub fn validate_token(token: &str) -> bool {
 }
 
 pub fn decode_token_data(token: &str) -> Option<User> {
-    let DecodedToken = decode::<Claims>(
+    let secret: String = std::env::var("SECRET_KEY").expect("SECRET_KEY must be set.");
+    let decoded_token = decode::<Claims>(
         &token,
-        &DecodingKey::from_secret(SECRET.as_ref()),
+        &DecodingKey::from_secret(secret.as_ref()),
         &Validation::default(),
     );
     let username;
     let name;
     let email;
     let duration;
-    match DecodedToken {
+    match decoded_token {
         Ok(token) => {
             username = token.claims.id;
             name = token.claims.name;
