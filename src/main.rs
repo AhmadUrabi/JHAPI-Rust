@@ -111,7 +111,7 @@ fn rocket() -> _ {
         .register("/", catchers![unauthorized, not_found, internal_error])
         .manage(pool)
         .mount(
-            "/",
+            "/api",
             routes![
                 get_products,
                 get_store_list,
