@@ -10,6 +10,7 @@ mod signing;
 mod user_control;
 mod utils;
 mod logs;
+mod version_check;
 
 use dotenv::dotenv;
 
@@ -42,6 +43,7 @@ use routes::logs::get_route_logs;
 use routes::logs::get_all_logs;
 use routes::logs::delete_log_logs;
 use routes::logs::delete_user_logs;
+use routes::version_check::route_version_check;
 // use crate::routes::user_control::edit_user;
 
 use signing::validate_token;
@@ -108,7 +110,7 @@ fn rocket() -> _ {
     // Pool built
 
     rocket::build()
-        .register("/", catchers![unauthorized, not_found, internal_error])
+        .register("/", catchers![unauthorized, not_found, internal_error, bad_request])
         .manage(pool)
         .mount(
             "/api",
@@ -133,7 +135,8 @@ fn rocket() -> _ {
                 get_all_logs,
                 //get_products_pi,
                 delete_log_logs,
-                delete_user_logs
+                delete_user_logs,
+                route_version_check,
             ],
         )
         .attach(CORS)
@@ -194,6 +197,13 @@ impl<'r> FromRequest<'r> for LogCheck {
 // End Request Guard Functions
 
 // Route catchers
+
+#[catch(400)]
+fn bad_request() -> &'static str {
+    "Bad Request, please make sure your request body is valid"
+}
+
+
 #[catch(401)]
 fn unauthorized() -> &'static str {
     "Unauthorized, please include a valid Authentication header, or check your request body"
