@@ -10,6 +10,7 @@ mod signing;
 mod user_control;
 mod utils;
 mod logs;
+mod version_check;
 
 use dotenv::dotenv;
 
@@ -42,6 +43,7 @@ use routes::logs::get_route_logs;
 use routes::logs::get_all_logs;
 use routes::logs::delete_log_logs;
 use routes::logs::delete_user_logs;
+use routes::version_check::route_version_check;
 // use crate::routes::user_control::edit_user;
 
 use signing::validate_token;
@@ -133,7 +135,8 @@ fn rocket() -> _ {
                 get_all_logs,
                 //get_products_pi,
                 delete_log_logs,
-                delete_user_logs
+                delete_user_logs,
+                route_version_check,
             ],
         )
         .attach(CORS)
