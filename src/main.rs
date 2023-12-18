@@ -110,7 +110,7 @@ fn rocket() -> _ {
     // Pool built
 
     rocket::build()
-        .register("/", catchers![unauthorized, not_found, internal_error])
+        .register("/", catchers![unauthorized, not_found, internal_error, bad_request])
         .manage(pool)
         .mount(
             "/api",
@@ -197,6 +197,13 @@ impl<'r> FromRequest<'r> for LogCheck {
 // End Request Guard Functions
 
 // Route catchers
+
+#[catch(400)]
+fn bad_request() -> &'static str {
+    "Bad Request, please make sure your request body is valid"
+}
+
+
 #[catch(401)]
 fn unauthorized() -> &'static str {
     "Unauthorized, please include a valid Authentication header, or check your request body"

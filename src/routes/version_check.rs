@@ -17,8 +17,6 @@ pub async fn route_version_check(
     client_ip: Option<IpAddr>,
 ) -> Result<Json<Version>, Status> {
     println!("Version Check Requested");
-    println!("User Data: {}", params.0.p_current_version);
-    println!("Platform: {}", params.0.p_platform);
     match get_latest_version(&params.0.p_platform, pool) {
         Ok(version) => {
             info!("Valid User Data, Version Sent");
