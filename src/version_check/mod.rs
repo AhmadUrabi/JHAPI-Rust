@@ -11,8 +11,14 @@ pub fn get_latest_version(platform: &str, pool: &State<Pool>) -> Result<Json<Ver
         return Err(Error::InternalError("Error Getting Connection".to_string()));
     }
     let conn = conn.unwrap();
-    let mut stmt = conn
-        .statement("SELECT * FROM ODBC_JHC.VERSION_CHECK WHERE PLATFORM = :1 ORDER BY RELEASE_DATE DESC FETCH NEXT 1 ROWS ONLY").build()?;
+
+    let stmt = conn.statement("SELECT * FROM ODBC_JHC.VERSION_CHECK WHERE PLATFORM = :1 ORDER BY RELEASE_DATE DESC FETCH NEXT 1 ROWS ONLY").build();
+    if stmt.is_err() {
+        error!("Error: {}", stmt.err().unwrap());
+        return Err(Error::InternalError("Error Building Statement".to_string()));
+    }
+    let mut stmt = stmt.unwrap();
+
     let rows_query = stmt.query(&[&platform]);
     match rows_query {
         Ok(rows) => {

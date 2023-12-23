@@ -56,7 +56,7 @@ pub async fn get_image(
 
     let filename = file.to_str().unwrap().to_string();
 
-    if download_file(&filename).await {
+    if download_file(&filename).await.is_ok() {
         info!("File Downloaded");
     } else {
         info!("File Not Found");
@@ -142,7 +142,7 @@ pub async fn upload(
     params.file.persist_to(&filename).await.unwrap();
 
     // Upload file to server
-    if upload_file(&params.item_code, &filename).await {
+    if upload_file(&params.item_code, &filename).await.is_ok() {
         info!("File Uploaded");
     } else {
         info!("File Not Uploaded");

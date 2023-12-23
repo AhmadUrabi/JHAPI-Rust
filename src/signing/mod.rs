@@ -1,4 +1,5 @@
 use rocket::serde::json::Json;
+
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use oracle::pool::Pool;
@@ -47,13 +48,13 @@ impl Claims {
 
 
 
-pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Option<Json<String>> {
+pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Result<String, String> {
     // Check for empty username and password
     info!("Login Attempt: {:?}", params.0.p_username);
 
     if params.p_username.is_none() || params.p_password.is_none() {
         error!("Empty username or password");
-        return None;
+        return Err("Empty username or password".to_string());
     }
 
     let mut my_p_username = "%";
@@ -68,60 +69,76 @@ pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Option<Json<Strin
     }
 
     let user = fetch_user_data(my_p_username.to_lowercase(), my_p_password.to_string(), pool);
-
-    // If user doesn't exist, return None
-    if user.is_none() {
-        error!("User not found");
-        println!("User not found");
-        return None;
+    if user.is_err() {
+        error!("Error fetching user data: {}", user.err().unwrap());
+        return Err("Error fetching user data".to_string());
     }
+    let user = user.unwrap();
 
-    let token = generate_token(&user.unwrap());
 
-    if token == "" {
-        error!("Token generation failed");
-        println!("Token generation failed");
-        return None;
+    let token = generate_token(&user);
+    if token.is_err() {
+        error!("Error generating token: {}", token.err().unwrap());
+        return Err("Error generating token".to_string());
     }
+    let token = token.unwrap();
 
     info!("Token generated successfully");
-    return Some(Json(token));
+    Ok(token)
 }
 
-fn fetch_user_data(username: String, password: String, pool: &Pool) -> Option<User> {
-    let conn = pool.get().unwrap();
-    let mut stmt = conn
-        .statement("SELECT USERNAME, PASSWORD, FULLNAME, EMAIL, LOGINDURATION FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1").build()
-        .unwrap();
-    let rows = stmt.query(&[&username]).unwrap();
+fn fetch_user_data(username: String, password: String, pool: &Pool) -> Result<User, String> {
+    let conn = pool.get();
+    if conn.is_err() {
+        error!("Error connecting to DB");
+        return Err(conn.err().unwrap().to_string());
+    }
+    let conn = conn.unwrap();
 
-    let mut user = User {
-        USER_ID: None,
-        USER_NAME: None,
-        USER_EMAIL: None,
-        LOGIN_DURATION: None,
-    };
+    let stmt = conn.statement("SELECT USERNAME, PASSWORD, FULLNAME, EMAIL, LOGINDURATION FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1").build();
+    if stmt.is_err() {
+        error!("Error building statement");
+        return Err(stmt.err().unwrap().to_string());
+    }
+    let mut stmt = stmt.unwrap();
+
+    let rows = stmt.query(&[&username]);
+    if rows.is_err() {
+        error!("Error executing query");
+        return Err(rows.err().unwrap().to_string());
+    }
+    let rows = rows.unwrap();
+
+    let mut user = User::new();
+
     for row_result in rows {
-        let row = row_result.unwrap();
+        let row = row_result;
+        if row.is_err() {
+            error!("Error fetching row");
+            return Err(row.err().unwrap().to_string());
+        }
+        let row = row.unwrap();
+
         if !verify(&password, &row.get::<&str, String>("PASSWORD").unwrap()).unwrap() {
-            return None;
+            return Err("Password incorrect".to_string());
         }
         user.USER_ID = Some(row.get::<&str, String>("USERNAME").unwrap());
         user.USER_NAME = Some(row.get::<&str, String>("FULLNAME").unwrap());
         user.USER_EMAIL = Some(row.get::<&str, String>("EMAIL").unwrap());
         user.LOGIN_DURATION = Some(row.get::<&str, String>("LOGINDURATION").unwrap());
     }
-    return Some(user);
+    Ok(user)
 }
 
-fn generate_token(user: &User) -> String {
+fn generate_token(user: &User) -> Result<String,String> {
     let secret: String = std::env::var("SECRET_KEY").expect("SECRET_KEY must be set.");
     if user.USER_ID.is_none()
         || user.USER_NAME.is_none()
         || user.USER_EMAIL.is_none()
         || user.LOGIN_DURATION.is_none()
     {
-        return String::from("");
+        error!("User data incomplete");
+        return Err("User data incomplete".to_string());
     }
 
     let claims = Claims::new(
@@ -136,7 +153,14 @@ fn generate_token(user: &User) -> String {
         &claims,
         &EncodingKey::from_secret(secret.to_string().as_ref()),
     );
-    return token.unwrap();
+
+    match token {
+        Ok(token) => Ok(token),
+        Err(err) => {
+            error!("Error generating token: {}", err);
+            Err(err.to_string())
+        }
+    }
 }
 
 pub fn validate_token(token: &str) -> bool {

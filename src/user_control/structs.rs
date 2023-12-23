@@ -6,6 +6,17 @@ pub struct User {
     pub login_duration: i32,
 }
 
+impl User {
+    pub fn new() -> User {
+        User {
+            username: "".to_string(),
+            fullname: "".to_string(),
+            email: "".to_string(),
+            login_duration: 0,
+        }
+    }
+}
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct NewUser {
     pub p_username: String,

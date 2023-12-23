@@ -22,7 +22,7 @@ pub async fn sign(
     let username = params.0.p_username.clone().unwrap();
 
     match signin(params, pool).await {
-        Some(token) => {
+        Ok(token) => {
             info!("Valid User Data, Token Sent");
             log_data(
                 pool,
@@ -37,7 +37,7 @@ pub async fn sign(
             );
             Ok(token.to_string())
         }
-        None => {
+        Err(_e) => {
             log_data(
                 pool,
                 username,

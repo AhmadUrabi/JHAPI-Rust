@@ -17,3 +17,19 @@ pub struct Permissions {
     pub reports: Option<bool>,
     pub stores: Option<bool>,
 }
+
+impl Permissions {
+    pub fn new() -> Permissions {
+        Permissions {
+            users: None,
+            permissions: None,
+            query: None,
+            images: None,
+            cost: None,
+            admin: None,
+            stock: None,
+            reports: None,
+            stores: None,
+        }
+    }
+}

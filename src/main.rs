@@ -87,13 +87,13 @@ fn rocket() -> _ {
     // Load .env file
     dotenv().ok();
 
-    // Logging Setup
+    // Logging Setup, Unwrapping is fine here, if it fails, the program should crash
     log4rs::init_file("config/log4rs.yaml", Default::default()).unwrap();
     // Logging Setup End
 
     //let routes = routes![get_products, get_store_list, sign, files, get_permissions, edit_permissions, get_user_list];
 
-    // Build Connection Pool
+    // Build Connection Pool, program should crash if it fails
     let username = std::env::var("LOGIN_USERNAME").expect("LOGIN_USERNAME must be set.");
     let password = std::env::var("LOGIN_PASSWORD").expect("LOGIN_PASSWORD must be set.");
     let database = std::env::var("DB_CONNECTION").expect("DB_CONNECTION must be set.");
@@ -103,10 +103,12 @@ fn rocket() -> _ {
         .max_connections(8) 
         .build();
 
-    let pool = match pool {
-        Ok(pool) => pool,
-        Err(err) => panic!("Error Creating Pool: {}", err.to_string()),
-    };
+    // If pool is an error, log and exit
+    if pool.is_err() {
+        error!("Failed to build connection pool");
+        std::process::exit(1);
+    }
+    let pool = pool.unwrap();
     // Pool built
 
     rocket::build()

@@ -13,8 +13,14 @@ pub fn log_data(
     result: String,
     method: String
 ) {
-    let conn = pool.get().unwrap();
-    let mut stmt = conn
+    let conn = pool.get();
+    if conn.is_err() {
+        error!("Error: {}", conn.err().unwrap());
+        return;
+    }
+    let conn = conn.unwrap();
+
+    let stmt = conn
         .statement(
             "
         INSERT INTO odbc_jhc.API_LOGS (
@@ -37,10 +43,14 @@ pub fn log_data(
             :method
         )",
         )
-        .build()
-        .unwrap();
+        .build();
+    if stmt.is_err() {
+        error!("Error building statement: {}", stmt.err().unwrap());
+        return;
+    }
+    let mut stmt = stmt.unwrap();
 
-    stmt.execute(&[
+    match stmt.execute(&[
         &username,
         &route,
         &parameters,
@@ -49,31 +59,34 @@ pub fn log_data(
         &token,
         &ip_addr,
         &method
-    ])
-    .unwrap();
-    conn.commit().unwrap();
+    ]) {
+        Ok(_) => (),
+        Err(err) => {
+            error!("Error executing query: {}", err);
+            return;
+        }
+    };
+    match conn.commit() {
+        Ok(_) => (),
+        Err(err) => {
+            error!("Error: {}", err);
+            return;
+        }
+    }
 }
 
 pub fn get_timestamp() -> Timestamp {
     // Get Current timestamp and convert to year, month, day
-
     let now = Local::now();
-    let year = now.year();
-    let month = now.month();
-    let day = now.day();
-    let hour = now.hour();
-    let minute = now.minute();
-    let second = now.second();
-    let nanosecond = now.nanosecond();
 
     let timestamp = Timestamp::new(
-        year as i32,
-        month as u32,
-        day as u32,
-        hour as u32,
-        minute as u32,
-        second as u32,
-        nanosecond as u32,
+        now.year(),
+        now.month(),
+        now.day(),
+        now.hour(),
+        now.minute(),
+        now.second(),
+        now.nanosecond(),
     );
 
     timestamp
