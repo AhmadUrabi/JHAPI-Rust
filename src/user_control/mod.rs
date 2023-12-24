@@ -1,5 +1,8 @@
 use crate::ApiKey;
 
+use crate::utils::check_user_exists;
+use crate::utils::structs::APIErrors;
+
 use oracle::pool::Pool;
 
 use rocket::serde::json::Json;
@@ -12,14 +15,14 @@ pub mod structs;
 
 use crate::user_control::structs::*;
 
-pub async fn get_users(_key: &ApiKey<'_>, pool: &Pool) -> Result<Vec<User>, UserFunctionErrors> {
+pub async fn get_users(_key: &ApiKey<'_>, pool: &Pool) -> Result<Vec<User>, APIErrors> {
     let mut users: Vec<User> = Vec::new();
     if is_admin_perm(_key, pool) || is_users_perm(_key, pool) {
         println!("Admin Permissions Found");
         let conn = pool.get();
         if conn.is_err() {
             error!("Error connecting to DB");
-            return Err(UserFunctionErrors::DBError);
+            return Err(APIErrors::DBError);
         }
         let conn = conn.unwrap();
 
@@ -30,14 +33,14 @@ pub async fn get_users(_key: &ApiKey<'_>, pool: &Pool) -> Result<Vec<User>, User
             .build();
         if stmt.is_err() {
             error!("Error building statement");
-            return Err(UserFunctionErrors::DBError);
+            return Err(APIErrors::DBError);
         }
         let mut stmt = stmt.unwrap();
 
         let rows = stmt.query(&[]);
         if rows.is_err() {
             error!("Error executing query");
-            return Err(UserFunctionErrors::DBError);
+            return Err(APIErrors::DBError);
         }
         let rows = rows.unwrap();
 
@@ -45,7 +48,7 @@ pub async fn get_users(_key: &ApiKey<'_>, pool: &Pool) -> Result<Vec<User>, User
             let row = row_result;
             if row.is_err() {
                 error!("Error fetching row");
-                return Err(UserFunctionErrors::DBError);
+                return Err(APIErrors::DBError);
             }
             let row = row.unwrap();
 
@@ -61,11 +64,11 @@ pub async fn get_users(_key: &ApiKey<'_>, pool: &Pool) -> Result<Vec<User>, User
     Ok(users)
 }
 
-pub async fn get_user(user_id: &str, pool: &Pool) -> Result<User, UserFunctionErrors> {
+pub async fn get_user(user_id: &str, pool: &Pool) -> Result<User, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
-        return Err(UserFunctionErrors::DBError);
+        return Err(APIErrors::DBError);
     }
     let conn = conn.unwrap();
 
@@ -74,14 +77,14 @@ pub async fn get_user(user_id: &str, pool: &Pool) -> Result<User, UserFunctionEr
         .build();
     if stmt.is_err() {
         error!("Error building statement");
-        return Err(UserFunctionErrors::DBError);
+        return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
 
     let rows = stmt.query(&[&(user_id.to_lowercase())]);
     if rows.is_err() {
         error!("Error executing query");
-        return Err(UserFunctionErrors::DBError);
+        return Err(APIErrors::DBError);
     }
     let rows = rows.unwrap();
 
@@ -91,7 +94,7 @@ pub async fn get_user(user_id: &str, pool: &Pool) -> Result<User, UserFunctionEr
         let row = row_result;
         if row.is_err() {
             error!("Error fetching row");
-            return Err(UserFunctionErrors::DBError);
+            return Err(APIErrors::DBError);
         }
         let row = row.unwrap();
         user = User {
@@ -103,48 +106,19 @@ pub async fn get_user(user_id: &str, pool: &Pool) -> Result<User, UserFunctionEr
     }
     if user.is_empty() {
         error!("User not found");
-        Err(UserFunctionErrors::UserNotFound)
+        return Err(APIErrors::UserNotFound);
     } else {
         Ok(user)
     }
 }
 
 
-fn check_user_exists(username: String, pool: &Pool) -> Result<bool, UserFunctionErrors> {
+
+pub async fn create_user(data: NewUser, pool: &Pool) -> Result<(), APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error Connecting to DB");
-        return Err(UserFunctionErrors::DBError);
-    }
-    let conn = conn.unwrap();
-
-    let stmt = conn
-        .statement("SELECT USERNAME FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1")
-        .build();
-    if stmt.is_err() {
-        error!("Error building statement");
-        return Err(UserFunctionErrors::DBError);
-    }
-    let mut stmt = stmt.unwrap();
-
-    let rows = stmt.query(&[&(username).to_lowercase()]);
-    if rows.is_err() {
-        error!("Error executing query");
-        return Err(UserFunctionErrors::DBError);
-    }
-    let rows = rows.unwrap();
-    if rows.count() > 0 {
-        return Ok(true);
-    }
-    Ok(false)
-}
-
-
-pub async fn create_user(data: NewUser, pool: &Pool) -> Result<(), UserFunctionErrors> {
-    let conn = pool.get();
-    if conn.is_err() {
-        error!("Error Connecting to DB");
-        return Err(UserFunctionErrors::DBError);
+        return Err(APIErrors::DBError);
     }
     let conn = conn.unwrap();
 
@@ -153,12 +127,12 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<(), UserFunctionE
         Ok(exists) => {
             if exists {
                 error!("User already exists");
-                return Err(UserFunctionErrors::UserAlreadyExists);
+                return Err(APIErrors::UserExists);
             }
         }
         Err(_err) => {
             error!("Error checking for duplicate user");
-            return Err(UserFunctionErrors::DBError);
+            return Err(APIErrors::DBError);
         }
     }
 
@@ -167,7 +141,7 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<(), UserFunctionE
         .build();
     if stmt.is_err() {
         error!("Error building statement");
-        return Err(UserFunctionErrors::DBError);
+        return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
 
@@ -181,7 +155,7 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<(), UserFunctionE
         Ok(_) => (),
         Err(_err) => {
             error!("Error executing query");
-            return Err(UserFunctionErrors::DBError);
+            return Err(APIErrors::DBError);
         }
     }
     
@@ -189,27 +163,27 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<(), UserFunctionE
         Ok(_) => Ok(()),
         Err(_err) => {
             error!("Error commiting");
-            Err(UserFunctionErrors::DBError)
+            Err(APIErrors::DBError)
         }
     }
 }
 
 
 
-pub async fn edit_user(params: Json<EditUserParams>, username: &str, pool: &Pool, is_admin: bool) -> Result<(), UserFunctionErrors> {
+pub async fn edit_user(params: Json<EditUserParams>, username: &str, pool: &Pool, is_admin: bool) -> Result<(), APIErrors> {
     let params_unwrapped = params.into_inner();
 
     let original_user = match get_user(&username, pool).await {
         Ok(user) => user,
         Err(_) => {
             error!("Error getting user");
-            return Err(UserFunctionErrors::DBError);
+            return Err(APIErrors::DBError);
         },
     };
 
     if original_user.username == "" {
         error!("User not found");
-        return Err(UserFunctionErrors::UserNotFound);
+        return Err(APIErrors::UserNotFound);
     }
 
     let mut new_user = original_user.clone();
@@ -229,7 +203,7 @@ pub async fn edit_user(params: Json<EditUserParams>, username: &str, pool: &Pool
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
-        return Err(UserFunctionErrors::DBError);
+        return Err(APIErrors::DBError);
     }
     let conn = conn.unwrap();
 
@@ -238,7 +212,7 @@ pub async fn edit_user(params: Json<EditUserParams>, username: &str, pool: &Pool
         .build();
     if stmt.is_err() {
         error!("Error building statement");
-        return Err(UserFunctionErrors::DBError);
+        return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
 
@@ -251,7 +225,7 @@ pub async fn edit_user(params: Json<EditUserParams>, username: &str, pool: &Pool
         Ok(_) => (),
         Err(err) => {
             error!("Error executing query: {}", err);
-            return Err(UserFunctionErrors::DBError);
+            return Err(APIErrors::DBError);
         }
     }
 
@@ -260,7 +234,7 @@ pub async fn edit_user(params: Json<EditUserParams>, username: &str, pool: &Pool
         Ok(_) => (),
         Err(err) => {
             error!("Error commiting to DB: {}", err);
-            return Err(UserFunctionErrors::DBError);
+            return Err(APIErrors::DBError);
         }
     }
 
@@ -271,7 +245,7 @@ pub async fn edit_user(params: Json<EditUserParams>, username: &str, pool: &Pool
                     Ok(data) => stmt = data,
                     Err(err) => {
                         error!("Error building statement: {}", err);
-                        return Err(UserFunctionErrors::DBError);
+                        return Err(APIErrors::DBError);
                     }
                 }
         
@@ -283,7 +257,7 @@ pub async fn edit_user(params: Json<EditUserParams>, username: &str, pool: &Pool
             Ok(_) => (),
             Err(err) => {
                 error!("Error executing query: {}", err);
-                return Err(UserFunctionErrors::DBError);
+                return Err(APIErrors::DBError);
             }
         }
 
@@ -291,7 +265,7 @@ pub async fn edit_user(params: Json<EditUserParams>, username: &str, pool: &Pool
             Ok(_) => (),
             Err(err) => {
                 error!("Error commiting to DB: {}", err);
-                return Err(UserFunctionErrors::DBError);
+                return Err(APIErrors::DBError);
             }
         }
     }
@@ -299,25 +273,25 @@ pub async fn edit_user(params: Json<EditUserParams>, username: &str, pool: &Pool
     Ok(())
 }
 
-pub async fn delete_user(user_id: &str, pool: &Pool) -> Result<(), UserFunctionErrors> {
+pub async fn delete_user(user_id: &str, pool: &Pool) -> Result<(), APIErrors> {
 
     match check_user_exists(user_id.to_string(), pool) {
         Ok(exists) => {
             if !exists {
                 error!("User does not exist");
-                return Err(UserFunctionErrors::UserNotFound);
+                return Err(APIErrors::UserNotFound);
             }
         }
         Err(_err) => {
             error!("Error checking for duplicate user");
-            return Err(UserFunctionErrors::DBError);
+            return Err(APIErrors::DBError);
         }
     }
 
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
-        return Err(UserFunctionErrors::DBError);
+        return Err(APIErrors::DBError);
     }
     let conn = conn.unwrap();
 
@@ -326,7 +300,7 @@ pub async fn delete_user(user_id: &str, pool: &Pool) -> Result<(), UserFunctionE
         .build();
     if stmt.is_err() {
         error!("Error building statement");
-        return Err(UserFunctionErrors::DBError);
+        return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
 
@@ -334,7 +308,7 @@ pub async fn delete_user(user_id: &str, pool: &Pool) -> Result<(), UserFunctionE
         Ok(_) => (),
         Err(err) => {
             error!("Error executing query: {}", err);
-            return Err(UserFunctionErrors::DBError);
+            return Err(APIErrors::DBError);
         }
     }
 
@@ -342,7 +316,7 @@ pub async fn delete_user(user_id: &str, pool: &Pool) -> Result<(), UserFunctionE
         Ok(_) => (),
         Err(err) => {
             error!("Error commiting to DB: {}", err);
-            return Err(UserFunctionErrors::DBError);
+            return Err(APIErrors::DBError);
         }
     }
     Ok(())

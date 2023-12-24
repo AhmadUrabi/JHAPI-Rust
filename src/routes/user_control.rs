@@ -3,6 +3,7 @@ use crate::signing::decode_token_data;
 use crate::user_control::*;
 use crate::user_control::structs::*;
 use crate::ApiKey;
+use crate::utils::structs::APIErrors;
 
 use oracle::pool::Pool;
 
@@ -79,8 +80,8 @@ pub async fn get_user_list(
                 get_timestamp(),
                 _key.clone().0.to_string(),
                 match error {
-                    UserFunctionErrors::UserNotFound => "User Not Found".to_string(),
-                    UserFunctionErrors::DBError => "DB Error".to_string(),
+                    APIErrors::UserNotFound => "User Not Found".to_string(),
+                    APIErrors::DBError => "DB Error".to_string(),
                     _ => "Unknown Error".to_string(),
                 },
                 "GET".to_string()
@@ -156,8 +157,8 @@ pub async fn get_user_by_id(
                 get_timestamp(),
                 _key.0.to_string(),
                 match error {
-                    UserFunctionErrors::UserNotFound => "User Not Found".to_string(),
-                    UserFunctionErrors::DBError => "DB Error".to_string(),
+                    APIErrors::UserNotFound => "User Not Found".to_string(),
+                    APIErrors::DBError => "DB Error".to_string(),
                     _ => "Unknown Error".to_string(),
                 },
                 "GET".to_string()
@@ -232,16 +233,16 @@ pub async fn create_user_route(
                             get_timestamp(),
                             _key.0.to_string(),
                             match error {
-                                UserFunctionErrors::UserNotFound => "User Not Found".to_string(),
-                                UserFunctionErrors::DBError => "DB Error".to_string(),
+                                APIErrors::UserNotFound => "User Not Found".to_string(),
+                                APIErrors::DBError => "DB Error".to_string(),
                                 _ => "Unknown Error".to_string(),
                             },
                             "POST".to_string()
                         );
                 }
             match error {
-                UserFunctionErrors::UserAlreadyExists => Err(Status::Conflict),
-                UserFunctionErrors::DBError => Err(Status::InternalServerError),                   
+                APIErrors::UserExists => Err(Status::Conflict),
+                APIErrors::DBError => Err(Status::InternalServerError),                   
                 _ => Err(Status::InternalServerError),
                 }
             
@@ -307,16 +308,16 @@ pub async fn edit_user_route(
             get_timestamp(),
             _key.0.to_string(),
             match error {
-                UserFunctionErrors::UserNotFound => "User Not Found".to_string(),
-                UserFunctionErrors::DBError => "DB Error".to_string(),
+                APIErrors::UserNotFound => "User Not Found".to_string(),
+                APIErrors::DBError => "DB Error".to_string(),
                 _ => "Unknown Error".to_string(),
             },
             "PUT".to_string()
         );
     }
         match error {
-            UserFunctionErrors::UserNotFound => return Err(Status::NotFound),
-            UserFunctionErrors::DBError => return Err(Status::InternalServerError),
+            APIErrors::UserNotFound => return Err(Status::NotFound),
+            APIErrors::DBError => return Err(Status::InternalServerError),
             _ => return Err(Status::InternalServerError),
         }
     }
@@ -396,16 +397,16 @@ pub async fn delete_user_route(
                 get_timestamp(),
                 _key.0.to_string(),
                 match error {
-                    UserFunctionErrors::UserNotFound => "User Not Found".to_string(),
-                    UserFunctionErrors::DBError => "DB Error".to_string(),
+                    APIErrors::UserNotFound => "User Not Found".to_string(),
+                    APIErrors::DBError => "DB Error".to_string(),
                     _ => "Unknown Error".to_string(),
                 },
                 "DELETE".to_string()
             );
         }
             match error {
-                UserFunctionErrors::UserNotFound => Err(Status::NotFound),
-                UserFunctionErrors::DBError => Err(Status::InternalServerError),
+                APIErrors::UserNotFound => Err(Status::NotFound),
+                APIErrors::DBError => Err(Status::InternalServerError),
                 _ => Err(Status::InternalServerError),
             }
         }
