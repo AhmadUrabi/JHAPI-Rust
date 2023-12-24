@@ -112,7 +112,7 @@ fn rocket() -> _ {
     // Pool built
 
     rocket::build()
-        .register("/", catchers![unauthorized, not_found, internal_error, bad_request])
+        .register("/", catchers![unauthorized, not_found, internal_error, bad_request, unprocessable_entity, conflict])
         .manage(pool)
         .mount(
             "/api",
@@ -145,7 +145,7 @@ fn rocket() -> _ {
 }
 
 // Start Request Guard Functions
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ApiKey<'r>(&'r str);
 
 #[rocket::async_trait]
@@ -214,6 +214,16 @@ fn unauthorized() -> &'static str {
 #[catch(404)]
 fn not_found(req: &Request) -> String {
     format!("I couldn't find '{}'. Try something else?", req.uri())
+}
+
+#[catch(409)]
+fn conflict(req: &Request) -> String {
+    format!("Data Conflict, please make sure you are not trying to insert duplicate data")
+}
+
+#[catch(422)]
+fn unprocessable_entity(req: &Request) -> String {
+    format!("The body data is invalid, please make sure you are following the correct structure")
 }
 
 #[catch(500)]

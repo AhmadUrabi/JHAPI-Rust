@@ -2,6 +2,8 @@ use chrono::{Datelike, Local, Timelike};
 use oracle::pool::Pool;
 use oracle::sql_type::Timestamp;
 
+
+// TODO: fix this mess
 pub fn log_data(
     pool: &Pool,
     username: String,

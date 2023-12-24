@@ -9,6 +9,7 @@ use oracle::pool::Pool;
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::State;
+// use serde_json::error;
 
 use std::net::IpAddr;
 
@@ -23,45 +24,71 @@ pub async fn get_user_list(
     client_ip: Option<IpAddr>,
     log_check: LogCheck,
 ) -> Result<Json<Vec<User>>, Status> {
-    let mut user_id = "".to_string();
+    let user_id;
 
     match decode_token_data(_key.0) {
         Some(data) => {
             user_id = data.USER_ID.unwrap();
         }
-        None => info!("Token Data: None"),
+        None => {
+            user_id = "".to_string();
+            info!("Token Data: None")
+        },
     }
 
     if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
-            user_id,
+            user_id.clone(),
             client_ip.unwrap().to_string(),
             "/users".to_string(),
             None,
             get_timestamp(),
-            _key.0.to_string(),
+            _key.clone().0.to_string(),
             "Unauthorized".to_string(),
             "GET".to_string()
         );
     }
-        return Ok(Json(Vec::new()));
+        return Err(Status::Unauthorized);
     }
     if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
     log_data(
         pool,
-        user_id,
+        user_id.clone(),
         client_ip.unwrap().to_string(),
         "/users".to_string(),
         None,
         get_timestamp(),
-        _key.0.to_string(),
+        _key.clone().0.to_string(),
         "Success".to_string(),
         "GET".to_string()
     );
 }
-    Ok(Json(get_users(_key, pool).await.unwrap()))
+
+    match get_users(&_key, &pool).await {
+        Ok(users) => Ok(Json(users)),
+        Err(error) => {
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
+            log_data(
+                pool,
+                user_id.clone(),
+                client_ip.unwrap().to_string(),
+                "/users".to_string(),
+                None,
+                get_timestamp(),
+                _key.clone().0.to_string(),
+                match error {
+                    UserFunctionErrors::UserNotFound => "User Not Found".to_string(),
+                    UserFunctionErrors::DBError => "DB Error".to_string(),
+                    _ => "Unknown Error".to_string(),
+                },
+                "GET".to_string()
+            );
+        }
+            Err(Status::InternalServerError)
+        }
+    }
 }
 
 #[get("/user/<user_id>")]
@@ -128,7 +155,11 @@ pub async fn get_user_by_id(
                 None,
                 get_timestamp(),
                 _key.0.to_string(),
-                error.to_string(),
+                match error {
+                    UserFunctionErrors::UserNotFound => "User Not Found".to_string(),
+                    UserFunctionErrors::DBError => "DB Error".to_string(),
+                    _ => "Unknown Error".to_string(),
+                },
                 "GET".to_string()
             );
         }
@@ -192,26 +223,37 @@ pub async fn create_user_route(
         }
         Err(error) => {
             if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-            log_data(
-                pool,
-                user_id,
-                client_ip.unwrap().to_string(),
-                "/user".to_string(),
-                None,
-                get_timestamp(),
-                _key.0.to_string(),
-                error.to_string(),
-                "POST".to_string()
-            );
-        }
-            Err(Status::InternalServerError)
+                        log_data(
+                            pool,
+                            user_id,
+                            client_ip.unwrap().to_string(),
+                            "/user".to_string(),
+                            None,
+                            get_timestamp(),
+                            _key.0.to_string(),
+                            match error {
+                                UserFunctionErrors::UserNotFound => "User Not Found".to_string(),
+                                UserFunctionErrors::DBError => "DB Error".to_string(),
+                                _ => "Unknown Error".to_string(),
+                            },
+                            "POST".to_string()
+                        );
+                }
+            match error {
+                UserFunctionErrors::UserAlreadyExists => Err(Status::Conflict),
+                UserFunctionErrors::DBError => Err(Status::InternalServerError),                   
+                _ => Err(Status::InternalServerError),
+                }
+            
+            
         }
     }
 }
 
+
 #[put("/user/<username>", data = "<params>")]
 pub async fn edit_user_route(
-    username: String,
+    username: &str,
     params: Json<EditUserParams>,
     pool: &State<Pool>,
     _key: ApiKey<'_>,
@@ -225,6 +267,13 @@ pub async fn edit_user_route(
         }
         None => info!("Token Data: None"),
     }
+
+    // Check deserialization
+    // TODO: Check if this happens on other routes
+    if params.0.p_password.is_none() && params.0.p_fullname.is_none() && params.0.p_email.is_none() && params.0.p_loginduration.is_none()  {
+        return Err(Status::BadRequest);
+    }
+
 
     println!("Edit User Request: {:?}", username);
     if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
@@ -243,10 +292,11 @@ pub async fn edit_user_route(
     }
         return Err(Status::Unauthorized);
     }
-    let res = edit_user(params, &username, pool, is_admin_perm(&_key, pool))
-        .await
-        .unwrap();
-    if res == false {
+    let res = edit_user(params, username, pool, is_admin_perm(&_key, pool))
+        .await;
+
+    if res.is_err() {
+        let error = res.err().unwrap();
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
         log_data(
             pool,
@@ -256,11 +306,19 @@ pub async fn edit_user_route(
             None,
             get_timestamp(),
             _key.0.to_string(),
-            "User Not Found".to_string(),
+            match error {
+                UserFunctionErrors::UserNotFound => "User Not Found".to_string(),
+                UserFunctionErrors::DBError => "DB Error".to_string(),
+                _ => "Unknown Error".to_string(),
+            },
             "PUT".to_string()
         );
     }
-        return Err(Status::NotFound);
+        match error {
+            UserFunctionErrors::UserNotFound => return Err(Status::NotFound),
+            UserFunctionErrors::DBError => return Err(Status::InternalServerError),
+            _ => return Err(Status::InternalServerError),
+        }
     }
     if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
     log_data(
@@ -337,11 +395,19 @@ pub async fn delete_user_route(
                 None,
                 get_timestamp(),
                 _key.0.to_string(),
-                error.to_string(),
+                match error {
+                    UserFunctionErrors::UserNotFound => "User Not Found".to_string(),
+                    UserFunctionErrors::DBError => "DB Error".to_string(),
+                    _ => "Unknown Error".to_string(),
+                },
                 "DELETE".to_string()
             );
         }
-            Err(Status::InternalServerError)
+            match error {
+                UserFunctionErrors::UserNotFound => Err(Status::NotFound),
+                UserFunctionErrors::DBError => Err(Status::InternalServerError),
+                _ => Err(Status::InternalServerError),
+            }
         }
     }
 }
