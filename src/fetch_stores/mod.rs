@@ -1,15 +1,31 @@
 use oracle::pool::Pool;
 
-use crate::fetch_stores::structs::Store;
+use crate::utils::check_user_exists;
+use crate::{fetch_stores::structs::Store, utils::structs::APIErrors};
 
 pub mod structs;
 
-pub fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, String> {
+pub fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
-        return Err(format!("Error getting connection: {}", conn.err().unwrap()));
+        error!("Error connecting to DB");
+        return Err(APIErrors::DBError);
     }
     let conn = conn.unwrap();
+
+    match check_user_exists(user_id.clone(), pool) {
+        Ok(b) => {
+            if !b {
+                error!("User does not exist");
+                return Err(APIErrors::UserNotFound);
+            }
+        },
+        Err(_err) => {
+            error!("Error checking for duplicate user");
+            return Err(APIErrors::DBError);
+        }
+    }
+
     let stmt = conn
         .statement("
         SELECT
@@ -32,14 +48,16 @@ pub fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, String> {
         .build();
 
     if stmt.is_err() {
-        return Err(format!("Error preparing statement: {}", stmt.err().unwrap()));
+        error!("Error building statement");
+        return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
 
     let rows = stmt.query(&[&user_id]);
 
     if rows.is_err() {
-        return Err(format!("Error executing query: {}", rows.err().unwrap()));
+        error!("Error executing query");
+        return Err(APIErrors::DBError);
     }
     let rows = rows.unwrap();
 
@@ -47,7 +65,8 @@ pub fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, String> {
     for row_result in rows {
         let row = row_result;
         if row.is_err() {
-            return Err(format!("Error getting row: {}", row.err().unwrap()));
+            error!("Error fetching row");
+            return Err(APIErrors::DBError);
         }
         let row = row.unwrap();
 

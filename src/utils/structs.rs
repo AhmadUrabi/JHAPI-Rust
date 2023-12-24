@@ -3,5 +3,6 @@ pub enum APIErrors {
     DBError,
     UserNotFound,
     UserExists,
-    InvalidData
+    InvalidData,
+    InvalideToken,
 }
