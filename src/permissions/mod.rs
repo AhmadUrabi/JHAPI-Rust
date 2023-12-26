@@ -52,19 +52,18 @@ pub fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions, A
         // Unsafe Unwrap Here
         let perm: String = row.get(0).unwrap();
         match perm.as_str() {
-            "users" => permission.users = Some(true),
-            "permissions" => permission.permissions = Some(true),
-            "query" => permission.query = Some(true),
-            "images" => permission.images = Some(true),
-            "cost" => permission.cost = Some(true),
-            "admin" => permission.admin = Some(true),
-            "stock" => permission.stock = Some(true),
-            "reports" => permission.reports = Some(true),
-            "stores" => permission.stores = Some(true),
+            "users" => permission.users = true,
+            "permissions" => permission.permissions = true,
+            "query" => permission.query = true,
+            "images" => permission.images = true,
+            "cost" => permission.cost = true,
+            "admin" => permission.admin = true,
+            "stock" => permission.stock = true,
+            "reports" => permission.reports = true,
+            "stores" => permission.stores = true,
             _ => {}
         }
     }
-
     Ok(permission)
 }
 
@@ -115,31 +114,31 @@ pub fn edit_user_permissions(
 
 
     
-    if permissions.users.unwrap_or(false) {
+    if permissions.users {
         stmt.execute(&[&user_id, &"users".to_string()]).unwrap();
     }
-    if permissions.permissions.unwrap_or(false) {
+    if permissions.permissions {
         stmt.execute(&[&user_id, &"permissions".to_string()]).unwrap();
     }
-    if permissions.query.unwrap_or(false) {
+    if permissions.query {
         stmt.execute(&[&user_id, &"query".to_string()]).unwrap();
     }
-    if permissions.images.unwrap_or(false) {
+    if permissions.images {
         stmt.execute(&[&user_id, &"images".to_string()]).unwrap();
     }
-    if permissions.cost.unwrap_or(false) {
+    if permissions.cost {
         stmt.execute(&[&user_id, &"cost".to_string()]).unwrap();
     }
-    if permissions.admin.unwrap_or(false) {
+    if permissions.admin {
         stmt.execute(&[&user_id, &"admin".to_string()]).unwrap();
     }
-    if permissions.stock.unwrap_or(false) {
+    if permissions.stock {
         stmt.execute(&[&user_id, &"stock".to_string()]).unwrap();
     }
-    if permissions.reports.unwrap_or(false) {
+    if permissions.reports {
         stmt.execute(&[&user_id, &"reports".to_string()]).unwrap();
     }
-    if permissions.stores.unwrap_or(false) {
+    if permissions.stores {
         stmt.execute(&[&user_id, &"stores".to_string()]).unwrap();
     }
 

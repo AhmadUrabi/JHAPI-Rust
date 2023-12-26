@@ -7,29 +7,29 @@ pub struct PermissionEditParams {
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Permissions {
-    pub users: Option<bool>,
-    pub permissions: Option<bool>,
-    pub query: Option<bool>,
-    pub images: Option<bool>,
-    pub cost: Option<bool>,
-    pub admin: Option<bool>,
-    pub stock: Option<bool>,
-    pub reports: Option<bool>,
-    pub stores: Option<bool>,
+    pub users: bool,
+    pub permissions: bool,
+    pub query: bool,
+    pub images: bool,
+    pub cost: bool,
+    pub admin: bool,
+    pub stock: bool,
+    pub reports: bool,
+    pub stores: bool,
 }
 
 impl Permissions {
     pub fn new() -> Permissions {
         Permissions {
-            users: None,
-            permissions: None,
-            query: None,
-            images: None,
-            cost: None,
-            admin: None,
-            stock: None,
-            reports: None,
-            stores: None,
+            users: false,
+            permissions: false,
+            query: false,
+            images: false,
+            cost: false,
+            admin: false,
+            stock: false,
+            reports: false,
+            stores: false,
         }
     }
 }
