@@ -11,8 +11,20 @@ pub struct User {
     pub LOGIN_DURATION: Option<String>,
 }
 
+impl User {
+    pub fn new() -> User {
+        User {
+            USER_ID: None,
+            USER_NAME: None,
+            USER_EMAIL: None,
+            LOGIN_DURATION: None,
+        }
+    }
+}
+
+// These shouldn't be options, both values are required
 #[derive(serde::Deserialize, Debug, Serialize, Clone)]
 pub struct LoginParams {
-    pub p_username: Option<String>,
-    pub p_password: Option<String>,
+    pub p_username: String,
+    pub p_password: String,
 }

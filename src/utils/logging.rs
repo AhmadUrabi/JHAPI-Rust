@@ -2,19 +2,58 @@ use chrono::{Datelike, Local, Timelike};
 use oracle::pool::Pool;
 use oracle::sql_type::Timestamp;
 
+
+// TODO: fix this mess
 pub fn log_data(
     pool: &Pool,
-    username: String,
-    ip_addr: String,
-    route: String,
-    parameters: Option<String>,
+    mut username: String,
+    mut ip_addr: String,
+    mut route: String,
+    mut parameters: Option<String>,
     timestamp: Timestamp,
-    token: String,
-    result: String,
-    method: String
+    mut token: String,
+    mut result: String,
+    mut method: String
 ) {
-    let conn = pool.get().unwrap();
-    let mut stmt = conn
+    let conn = pool.get();
+    if conn.is_err() {
+        error!("Error: {}", conn.err().unwrap());
+        return;
+    }
+    let conn = conn.unwrap();
+
+
+    // Chop long VALUES
+    // Only really applies for extra long parameters and routes (User Input)
+    // TODO: Add a flag for chopped values
+    if username.len() > 64 {
+        username = username[..64].to_string();
+    }
+    if ip_addr.len() > 60 {
+        ip_addr = ip_addr[..60].to_string();
+    }
+    if route.len() > 64 {
+        route = route[..64].to_string();
+    }
+    if token.len() > 255 {
+        token = token[..255].to_string();
+    }
+    if result.len() > 200 {
+        result = result[..200].to_string();
+    }
+    if method.len() > 64 {
+        method = method[..64].to_string();
+    }
+    if parameters.is_some() {
+        if parameters.as_ref().unwrap().len() > 2000 {
+            parameters = Some(parameters.as_ref().unwrap()[..2000].to_string());
+        }
+    }
+
+    
+
+
+    let stmt = conn
         .statement(
             "
         INSERT INTO odbc_jhc.API_LOGS (
@@ -37,10 +76,14 @@ pub fn log_data(
             :method
         )",
         )
-        .build()
-        .unwrap();
+        .build();
+    if stmt.is_err() {
+        error!("Error building statement: {}", stmt.err().unwrap());
+        return;
+    }
+    let mut stmt = stmt.unwrap();
 
-    stmt.execute(&[
+    match stmt.execute(&[
         &username,
         &route,
         &parameters,
@@ -49,31 +92,34 @@ pub fn log_data(
         &token,
         &ip_addr,
         &method
-    ])
-    .unwrap();
-    conn.commit().unwrap();
+    ]) {
+        Ok(_) => (),
+        Err(err) => {
+            error!("Error executing query: {}", err);
+            return;
+        }
+    };
+    match conn.commit() {
+        Ok(_) => (),
+        Err(err) => {
+            error!("Error: {}", err);
+            return;
+        }
+    }
 }
 
 pub fn get_timestamp() -> Timestamp {
     // Get Current timestamp and convert to year, month, day
-
     let now = Local::now();
-    let year = now.year();
-    let month = now.month();
-    let day = now.day();
-    let hour = now.hour();
-    let minute = now.minute();
-    let second = now.second();
-    let nanosecond = now.nanosecond();
 
     let timestamp = Timestamp::new(
-        year as i32,
-        month as u32,
-        day as u32,
-        hour as u32,
-        minute as u32,
-        second as u32,
-        nanosecond as u32,
+        now.year(),
+        now.month(),
+        now.day(),
+        now.hour(),
+        now.minute(),
+        now.second(),
+        now.nanosecond(),
     );
 
     timestamp

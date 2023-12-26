@@ -83,7 +83,7 @@ pub struct Product {
     pub T_AVE_COST: Option<String>,
 }
 
-#[derive(serde::Deserialize, Debug, Serialize, Clone)]
+#[derive(serde::Deserialize, Debug, Serialize, Clone, PartialEq)]
 pub struct FetchParams {
     pub p_ref: Option<String>,
     pub p_barcode: Option<String>,

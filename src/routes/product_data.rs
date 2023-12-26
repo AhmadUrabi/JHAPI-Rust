@@ -29,9 +29,6 @@ pub async fn get_products(
     log_check: LogCheck,
 ) -> Json<Vec<Product>> {
     info!("GetProductData Request: {:?}", params);
-    info!("Client IP: {:?}", client_ip);
-
-    info!("log_check: {:?}", log_check.0);
 
     #[allow(unused_assignments)]
     let mut username: String = "".to_string();
@@ -46,7 +43,7 @@ pub async fn get_products(
         }
     }
 
-    let tokenUsed = key.0.to_string();
+    
 
     // Convert json to String
 
@@ -62,15 +59,15 @@ pub async fn get_products(
                 "/GetProductData".to_string(),
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
                 get_timestamp(),
-                tokenUsed,
+                key.clone().0.to_string(),
                 "Success".to_string(),
                 "GET".to_string()
             );
         }
             Json(products)
         }
-        Err(err) => {
-            error!("Error: {}", err);
+        Err(_err) => {
+            error!("Error");
             if log_check.0 || (!log_check.0 && !is_admin_perm(&key, pool)){
             log_data(
                 pool,
@@ -79,7 +76,7 @@ pub async fn get_products(
                 "/GetProductData".to_string(),
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
                 get_timestamp(),
-                tokenUsed,
+                key.clone().0.to_string(),
                 "Error Fetching".to_string(),
                 "GET".to_string()
             );

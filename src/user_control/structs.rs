@@ -6,6 +6,31 @@ pub struct User {
     pub login_duration: i32,
 }
 
+impl User {
+    pub fn new() -> User {
+        User {
+            username: "".to_string(),
+            fullname: "".to_string(),
+            email: "".to_string(),
+            login_duration: 0,
+        }
+    }
+    pub fn is_empty(&self) -> bool {
+        self.username == ""
+    }
+}
+
+impl Clone for User {
+    fn clone(&self) -> User {
+        User {
+            username: self.username.clone(),
+            fullname: self.fullname.clone(),
+            email: self.email.clone(),
+            login_duration: self.login_duration.clone(),
+        }
+    }
+}
+
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct NewUser {
     pub p_username: String,

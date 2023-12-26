@@ -13,6 +13,7 @@ use crate::signing::decode_token_data;
 use crate::{ApiKey, LogCheck};
 
 use crate::utils::permissions::{is_admin_perm, is_perm_perm};
+use crate::utils::structs::APIErrors;
 
 use crate::utils::logging::{get_timestamp, log_data};
 
@@ -83,12 +84,19 @@ pub async fn get_permissions(
                 None,
                 get_timestamp(),
                 token_used,
-                "Error fetching Permissions".to_string(),
+                match err {
+                    APIErrors::UserNotFound => "User not found".to_string(),
+                    APIErrors::DBError => "Error connecting to DB".to_string(),
+                    _ => "Error getting permissions".to_string(),
+                },
                 "GET".to_string()
             );
         }
-            error!("Error: {}", err);
-            Err(Status::InternalServerError)
+            match err {
+                APIErrors::UserNotFound => Err(Status::NotFound),
+                APIErrors::DBError => Err(Status::InternalServerError),
+                _ => Err(Status::InternalServerError),
+            }
         }
     }
 }
@@ -163,12 +171,19 @@ pub async fn edit_permissions(
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
                 get_timestamp(),
                 token_used,
-                "Error editing permissions".to_string(),
+                match err {
+                    APIErrors::UserNotFound => "User not found".to_string(),
+                    APIErrors::DBError => "Error connecting to DB".to_string(),
+                    _ => "Error editing permissions".to_string(),
+                },
                 "POST".to_string()
             );
         }
-            error!("Error: {}", err);
-            Err(Status::InternalServerError)
+            match err {
+                APIErrors::UserNotFound => Err(Status::NotFound),
+                APIErrors::DBError => Err(Status::InternalServerError),
+                _ => Err(Status::InternalServerError),
+            }
         }
     }
 }

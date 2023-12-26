@@ -9,6 +9,7 @@ use crate::signing::signin;
 use crate::signing::structs::LoginParams;
 
 use crate::utils::logging::{get_timestamp, log_data};
+use crate::utils::structs::APIErrors;
 
 #[post("/login", data = "<params>")]
 pub async fn sign(
@@ -19,10 +20,10 @@ pub async fn sign(
     info!("Sign Request: {:?}", params.0.p_username);
     info!("Client IP: {:?}", client_ip);
 
-    let username = params.0.p_username.clone().unwrap();
-
+    let username = params.0.p_username.clone();
+    
     match signin(params, pool).await {
-        Some(token) => {
+        Ok(token) => {
             info!("Valid User Data, Token Sent");
             log_data(
                 pool,
@@ -37,7 +38,7 @@ pub async fn sign(
             );
             Ok(token.to_string())
         }
-        None => {
+        Err(e) => {
             log_data(
                 pool,
                 username,
@@ -46,11 +47,22 @@ pub async fn sign(
                 None,
                 get_timestamp(),
                 "None".to_string(),
-                "Invalid User Data, Token Not Sent".to_string(),
+                match e {
+                    APIErrors::InvalidData => "Invalid User Data, Token Not Sent".to_string(),
+                    APIErrors::DBError => "Database Error".to_string(),
+                    APIErrors::UserNotFound => "User Not Found".to_string(),
+                    _ => "Error, Token Not Sent".to_string(),
+                },
                 "POST".to_string(),
             );
-            error!("Invalid User Data, Token Not Sent");
-            Err(Status::Unauthorized)
+            error!("Error authorizing, Token Not Sent");
+            match e {
+                APIErrors::InvalidData => Err(Status::Unauthorized),
+                APIErrors::DBError => Err(Status::InternalServerError),
+                APIErrors::UserNotFound => Err(Status::Unauthorized),
+                APIErrors::InvalidCredentials => Err(Status::Unauthorized),
+                _ => Err(Status::InternalServerError),
+            }
         }
     }
 }

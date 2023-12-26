@@ -39,7 +39,7 @@ use routes::user_control::edit_user_route;
 use routes::user_control::get_user_by_id;
 use routes::user_control::get_user_list;
 use routes::logs::get_user_logs;
-use routes::logs::get_route_logs;
+/*use routes::logs::get_route_logs;*/
 use routes::logs::get_all_logs;
 use routes::logs::delete_log_logs;
 use routes::logs::delete_user_logs;
@@ -87,13 +87,13 @@ fn rocket() -> _ {
     // Load .env file
     dotenv().ok();
 
-    // Logging Setup
+    // Logging Setup, Unwrapping is fine here, if it fails, the program should crash
     log4rs::init_file("config/log4rs.yaml", Default::default()).unwrap();
     // Logging Setup End
 
     //let routes = routes![get_products, get_store_list, sign, files, get_permissions, edit_permissions, get_user_list];
 
-    // Build Connection Pool
+    // Build Connection Pool, program should crash if it fails
     let username = std::env::var("LOGIN_USERNAME").expect("LOGIN_USERNAME must be set.");
     let password = std::env::var("LOGIN_PASSWORD").expect("LOGIN_PASSWORD must be set.");
     let database = std::env::var("DB_CONNECTION").expect("DB_CONNECTION must be set.");
@@ -103,14 +103,16 @@ fn rocket() -> _ {
         .max_connections(8) 
         .build();
 
-    let pool = match pool {
-        Ok(pool) => pool,
-        Err(err) => panic!("Error Creating Pool: {}", err.to_string()),
-    };
+    // If pool is an error, log and exit
+    if pool.is_err() {
+        error!("Failed to build connection pool");
+        std::process::exit(1);
+    }
+    let pool = pool.unwrap();
     // Pool built
 
     rocket::build()
-        .register("/", catchers![unauthorized, not_found, internal_error, bad_request])
+        .register("/", catchers![unauthorized, not_found, internal_error, bad_request, unprocessable_entity, conflict])
         .manage(pool)
         .mount(
             "/api",
@@ -131,7 +133,7 @@ fn rocket() -> _ {
                 cors_preflight_handler,
                 get_store_list_for_user,
                 get_user_logs,
-                get_route_logs,
+                //get_route_logs,
                 get_all_logs,
                 //get_products_pi,
                 delete_log_logs,
@@ -143,7 +145,7 @@ fn rocket() -> _ {
 }
 
 // Start Request Guard Functions
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ApiKey<'r>(&'r str);
 
 #[rocket::async_trait]
@@ -212,6 +214,16 @@ fn unauthorized() -> &'static str {
 #[catch(404)]
 fn not_found(req: &Request) -> String {
     format!("I couldn't find '{}'. Try something else?", req.uri())
+}
+
+#[catch(409)]
+fn conflict(_req: &Request) -> String {
+    format!("Data Conflict, please make sure you are not trying to insert duplicate data")
+}
+
+#[catch(422)]
+fn unprocessable_entity(_req: &Request) -> String {
+    format!("The body data is invalid, please make sure you are following the correct structure")
 }
 
 #[catch(500)]
