@@ -6,14 +6,14 @@ use oracle::sql_type::Timestamp;
 // TODO: fix this mess
 pub fn log_data(
     pool: &Pool,
-    username: String,
-    ip_addr: String,
-    route: String,
-    parameters: Option<String>,
+    mut username: String,
+    mut ip_addr: String,
+    mut route: String,
+    mut parameters: Option<String>,
     timestamp: Timestamp,
-    token: String,
-    result: String,
-    method: String
+    mut token: String,
+    mut result: String,
+    mut method: String
 ) {
     let conn = pool.get();
     if conn.is_err() {
@@ -21,6 +21,37 @@ pub fn log_data(
         return;
     }
     let conn = conn.unwrap();
+
+
+    // Chop long VALUES
+    // Only really applies for extra long parameters and routes (User Input)
+    // TODO: Add a flag for chopped values
+    if username.len() > 64 {
+        username = username[..64].to_string();
+    }
+    if ip_addr.len() > 60 {
+        ip_addr = ip_addr[..60].to_string();
+    }
+    if route.len() > 64 {
+        route = route[..64].to_string();
+    }
+    if token.len() > 255 {
+        token = token[..255].to_string();
+    }
+    if result.len() > 200 {
+        result = result[..200].to_string();
+    }
+    if method.len() > 64 {
+        method = method[..64].to_string();
+    }
+    if parameters.is_some() {
+        if parameters.as_ref().unwrap().len() > 2000 {
+            parameters = Some(parameters.as_ref().unwrap()[..2000].to_string());
+        }
+    }
+
+    
+
 
     let stmt = conn
         .statement(

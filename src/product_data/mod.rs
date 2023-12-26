@@ -42,7 +42,7 @@ pub async fn get_product(
             username = data.USER_ID.unwrap().to_string();
         },
         None => {
-            return Err(APIErrors::InvalideToken);
+            return Err(APIErrors::InvalidToken);
         }
     }
 

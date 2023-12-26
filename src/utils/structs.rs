@@ -4,5 +4,9 @@ pub enum APIErrors {
     UserNotFound,
     UserExists,
     InvalidData,
-    InvalideToken,
+    InvalidToken,
+    SFTPError,
+    InternalServerError,
+    FileNotFound,
+    InvalidCredentials,
 }

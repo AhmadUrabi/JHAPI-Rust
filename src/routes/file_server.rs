@@ -12,12 +12,16 @@ use rocket::{get, State};
 use crate::file_server::download_file;
 use crate::file_server::upload_file;
 
+use crate::utils::structs::APIErrors;
+
 use std::net::IpAddr;
 
 use crate::utils::logging::{get_timestamp, log_data};
 
 use std::path::*;
 
+
+// TODO: Rework temporary file storage
 #[get("/images/<file..>")]
 pub async fn get_image(
     file: PathBuf,
@@ -26,6 +30,7 @@ pub async fn get_image(
     client_ip: Option<IpAddr>,
     log_check: LogCheck,
 ) -> Result<Option<NamedFile>, Status> {
+    // TODO: Fix these temp user_id strings
     let mut user_id: String = "".to_string();
     match decode_token_data(_key.0) {
         Some(data) => {
@@ -56,24 +61,50 @@ pub async fn get_image(
 
     let filename = file.to_str().unwrap().to_string();
 
-    if download_file(&filename).await.is_ok() {
-        info!("File Downloaded");
-    } else {
-        info!("File Not Found");
+    if filename == "" {
         if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-        log_data(
-            pool,
-            user_id,
-            client_ip.unwrap().to_string(),
-            ("/images/".to_owned() + file.to_str().unwrap()).to_string(),
-            None,
-            get_timestamp(),
-            _key.0.to_string(),
-            "File Not Found".to_string(),
-            "GET".to_string()
-        );
+            log_data(
+                pool,
+                user_id,
+                client_ip.unwrap().to_string(),
+                ("/images/".to_owned() + file.to_str().unwrap()).to_string(),
+                None,
+                get_timestamp(),
+                _key.0.to_string(),
+                "File Not Found".to_string(),
+                "GET".to_string()
+            );
+        }
+        return Err(Status::NotFound);
     }
-        Err(Status::NotFound)?;
+
+    match download_file(&filename).await {
+        Ok (()) => info!("File Downloaded"),
+        Err(e) => {
+        info!("File Not Found");
+                if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
+                log_data(
+                    pool,
+                    user_id,
+                    client_ip.unwrap().to_string(),
+                    ("/images/".to_owned() + file.to_str().unwrap()).to_string(),
+                    None,
+                    get_timestamp(),
+                    _key.0.to_string(),
+                    match e {
+                        APIErrors::SFTPError => "SFTP Error".to_string(),
+                        APIErrors::FileNotFound => "File Not Found".to_string(),
+                        _ => "Error".to_string(),
+                    },
+                    "GET".to_string()
+                );
+            }
+            match e {
+                APIErrors::SFTPError => return Err(Status::InternalServerError),
+                APIErrors::FileNotFound => return Err(Status::NotFound),
+                _ => return Err(Status::InternalServerError),
+            }
+        }
     };
     if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
     log_data(
@@ -99,7 +130,7 @@ pub struct ImageUpload<'f> {
     pub file: TempFile<'f>,
     pub item_code: String,
 }
-
+// TODO: Add Error Handling
 #[post("/upload", data = "<params>")]
 pub async fn upload(
     mut params: Form<ImageUpload<'_>>,
@@ -138,13 +169,30 @@ pub async fn upload(
     info!("Image Upload Request: {:?}", params.item_code);
 
     // Save file temporarily
+    
+    if params.file.name().is_none() || params.item_code == "" {
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
+        log_data(
+            pool,
+            user_id,
+            client_ip.unwrap().to_string(),
+            "/upload".to_string(),
+            Some(params.item_code.clone()),
+            get_timestamp(),
+            _key.0.to_string(),
+            "No File Uploaded".to_string(),
+            "POST".to_string()
+        );
+    }
+        return Err(Status::BadRequest);
+    }
     let filename = "tmp/".to_string() + params.file.name().unwrap();
     params.file.persist_to(&filename).await.unwrap();
 
     // Upload file to server
-    if upload_file(&params.item_code, &filename).await.is_ok() {
-        info!("File Uploaded");
-    } else {
+    match upload_file(&params.item_code, &filename).await {
+        Ok(()) => info!("File Uploaded"),
+        Err(e) => {
         info!("File Not Uploaded");
         log_data(
             pool,
@@ -154,10 +202,19 @@ pub async fn upload(
             Some(params.item_code.clone()),
             get_timestamp(),
             _key.0.to_string(),
-            "File Not Uploaded".to_string(),
+            match e {
+                APIErrors::SFTPError => "SFTP Error".to_string(),
+                APIErrors::FileNotFound => "File Not Found".to_string(),
+                _ => "Error".to_string(),
+            },
             "POST".to_string()
         );
-        Err(Status::NotFound)?;
+            match e {
+                APIErrors::SFTPError => return Err(Status::InternalServerError),
+                APIErrors::FileNotFound => return Err(Status::NotFound),
+                _ => return Err(Status::InternalServerError),
+            }
+    }
     }
 
     // Delete temporary file
