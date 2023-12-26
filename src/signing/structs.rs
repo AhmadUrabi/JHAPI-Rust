@@ -22,8 +22,9 @@ impl User {
     }
 }
 
+// These shouldn't be options, both values are required
 #[derive(serde::Deserialize, Debug, Serialize, Clone)]
 pub struct LoginParams {
-    pub p_username: Option<String>,
-    pub p_password: Option<String>,
+    pub p_username: String,
+    pub p_password: String,
 }

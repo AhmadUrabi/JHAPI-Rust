@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::signing::structs::LoginParams;
 use crate::signing::structs::User;
+use crate::utils::structs::APIErrors;
 
 use bcrypt::verify;
 
@@ -48,38 +49,26 @@ impl Claims {
 
 
 
-pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Result<String, String> {
+pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Result<String, APIErrors> {
     // Check for empty username and password
     info!("Login Attempt: {:?}", params.0.p_username);
 
-    if params.p_username.is_none() || params.p_password.is_none() {
-        error!("Empty username or password");
-        return Err("Empty username or password".to_string());
+    if params.p_username == "" {
+        error!("Empty username");
+        return Err(APIErrors::InvalidData);
     }
 
-    let mut my_p_username = "%";
-    let mut my_p_password = "%";
-
-    if let Some(p_username) = &params.p_username {
-        my_p_username = p_username;
-    }
-
-    if let Some(p_password) = &params.p_password {
-        my_p_password = p_password;
-    }
-
-    let user = fetch_user_data(my_p_username.to_lowercase(), my_p_password.to_string(), pool);
+    let user = fetch_user_data(params.p_username.to_lowercase(), params.p_password.to_string(), pool);
     if user.is_err() {
-        error!("Error fetching user data: {}", user.err().unwrap());
-        return Err("Error fetching user data".to_string());
+        error!("Error fetching user data");
+        return Err(user.err().unwrap());
     }
     let user = user.unwrap();
 
-
     let token = generate_token(&user);
     if token.is_err() {
-        error!("Error generating token: {}", token.err().unwrap());
-        return Err("Error generating token".to_string());
+        error!("Error generating token");
+        return Err(token.err().unwrap());
     }
     let token = token.unwrap();
 
@@ -87,25 +76,25 @@ pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Result<String, St
     Ok(token)
 }
 
-fn fetch_user_data(username: String, password: String, pool: &Pool) -> Result<User, String> {
+fn fetch_user_data(username: String, password: String, pool: &Pool) -> Result<User, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
-        return Err(conn.err().unwrap().to_string());
+        return Err(APIErrors::DBError);
     }
     let conn = conn.unwrap();
 
     let stmt = conn.statement("SELECT USERNAME, PASSWORD, FULLNAME, EMAIL, LOGINDURATION FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1").build();
     if stmt.is_err() {
         error!("Error building statement");
-        return Err(stmt.err().unwrap().to_string());
+        return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
 
     let rows = stmt.query(&[&username]);
     if rows.is_err() {
         error!("Error executing query");
-        return Err(rows.err().unwrap().to_string());
+        return Err(APIErrors::DBError);
     }
     let rows = rows.unwrap();
 
@@ -115,12 +104,13 @@ fn fetch_user_data(username: String, password: String, pool: &Pool) -> Result<Us
         let row = row_result;
         if row.is_err() {
             error!("Error fetching row");
-            return Err(row.err().unwrap().to_string());
+            return Err(APIErrors::DBError);
         }
         let row = row.unwrap();
 
         if !verify(&password, &row.get::<&str, String>("PASSWORD").unwrap()).unwrap() {
-            return Err("Password incorrect".to_string());
+            error!("Invalid password");
+            return Err(APIErrors::InvalidCredentials);
         }
         user.USER_ID = Some(row.get::<&str, String>("USERNAME").unwrap());
         user.USER_NAME = Some(row.get::<&str, String>("FULLNAME").unwrap());
@@ -130,7 +120,7 @@ fn fetch_user_data(username: String, password: String, pool: &Pool) -> Result<Us
     Ok(user)
 }
 
-fn generate_token(user: &User) -> Result<String,String> {
+fn generate_token(user: &User) -> Result<String,APIErrors> {
     let secret: String = std::env::var("SECRET_KEY").expect("SECRET_KEY must be set.");
     if user.USER_ID.is_none()
         || user.USER_NAME.is_none()
@@ -138,7 +128,7 @@ fn generate_token(user: &User) -> Result<String,String> {
         || user.LOGIN_DURATION.is_none()
     {
         error!("User data incomplete");
-        return Err("User data incomplete".to_string());
+        return Err(APIErrors::InvalidData);
     }
 
     let claims = Claims::new(
@@ -158,7 +148,7 @@ fn generate_token(user: &User) -> Result<String,String> {
         Ok(token) => Ok(token),
         Err(err) => {
             error!("Error generating token: {}", err);
-            Err(err.to_string())
+            Err(APIErrors::InternalServerError)
         }
     }
 }
@@ -176,7 +166,7 @@ pub fn validate_token(token: &str) -> bool {
             return token.claims.exp
                 > SystemTime::now()
                     .duration_since(UNIX_EPOCH)
-                    .unwrap()
+                    .unwrap() // Safe Unwap, earlier is const, always less than current time
                     .as_secs() as usize
         }
         Err(err) => {
