@@ -47,9 +47,3 @@ pub struct EditUserParams {
     pub p_email: Option<String>,
     pub p_loginduration: Option<i32>,
 }
-
-pub enum UserFunctionErrors {
-    DBError,
-    UserNotFound,
-    UserAlreadyExists,
-}

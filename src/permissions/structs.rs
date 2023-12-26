@@ -33,8 +33,3 @@ impl Permissions {
         }
     }
 }
-
-pub enum PermissionsErrors {
-    UserNotFound,
-    DBError,
-}

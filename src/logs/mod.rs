@@ -188,7 +188,7 @@ pub fn delete_user_logs_fn(username: String, pool: &State<Pool>, limit: Option<i
             let mut stmt = stmt.unwrap();
             match stmt.execute(&[&username, &lim]) {
                 Ok(_) => (),
-                Err(err) => {
+                Err(_err) => {
                     error!("Error executing statement");
                     return Err(APIErrors::DBError);
                 }

@@ -69,7 +69,7 @@ pub async fn get_products(
         }
             Json(products)
         }
-        Err(err) => {
+        Err(_err) => {
             error!("Error");
             if log_check.0 || (!log_check.0 && !is_admin_perm(&key, pool)){
             log_data(

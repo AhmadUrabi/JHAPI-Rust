@@ -134,6 +134,7 @@ pub struct ImageUpload<'f> {
 #[post("/upload", data = "<params>")]
 pub async fn upload(
     mut params: Form<ImageUpload<'_>>,
+    #[allow(non_snake_case)] // Keeps giving warnings about _key not being snake_case
     _key: ApiKey<'_>,
     pool: &State<Pool>,
     client_ip: Option<IpAddr>,
