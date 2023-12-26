@@ -217,12 +217,12 @@ fn not_found(req: &Request) -> String {
 }
 
 #[catch(409)]
-fn conflict(req: &Request) -> String {
+fn conflict(_req: &Request) -> String {
     format!("Data Conflict, please make sure you are not trying to insert duplicate data")
 }
 
 #[catch(422)]
-fn unprocessable_entity(req: &Request) -> String {
+fn unprocessable_entity(_req: &Request) -> String {
     format!("The body data is invalid, please make sure you are following the correct structure")
 }
 

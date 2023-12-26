@@ -81,6 +81,6 @@ pub fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, APIErrors>
 
         stores.push(store);
     }
-    info!("Stores Count: {}", stores.len());
+    // info!("Stores Count: {}", stores.len());
     Ok(stores)
 }

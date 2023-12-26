@@ -3,7 +3,7 @@ use oracle::pool::Pool;
 use crate::utils::structs::APIErrors;
 use crate::utils::check_user_exists;
 
-use self::structs::{Permissions};
+use self::structs::Permissions;
 
 pub mod structs;
 

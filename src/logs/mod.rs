@@ -49,17 +49,17 @@ pub fn get_all_logs_fn(pool: &State<Pool>, limit: Option<i32>) -> Result<Json<Ve
         }
         let row = row.unwrap();
         
-        // TODO: remove unwarps
+        // Added Default Values to prevent panics, Frontend should handle this
         logs.push(LogData {
-            LOG_ID: row.get("LOG_ID").unwrap(),
-            USERNAME: row.get("USERNAME").unwrap(),
-            ROUTE: row.get("ROUTE").unwrap(),
-            PARAMETERS: row.get("PARAMETERS").unwrap(),
-            RESULT: row.get("RESULT").unwrap(),
-            TIMESTAMP: row.get("TIMESTAMP").unwrap(),
-            TOKEN_USED: row.get("TOKEN_USED").unwrap(),
-            IP_ADDRESS: row.get("IP_ADDRESS").unwrap(),
-            METHOD: row.get("METHOD").unwrap(),
+            LOG_ID: row.get("LOG_ID").unwrap_or(-1),
+            USERNAME: row.get("USERNAME").unwrap_or(None),
+            ROUTE: row.get("ROUTE").unwrap_or("NULL".to_string()),
+            PARAMETERS: row.get("PARAMETERS").unwrap_or(None),
+            RESULT: row.get("RESULT").unwrap_or("NULL".to_string()),
+            TIMESTAMP: row.get("TIMESTAMP").unwrap_or("NULL".to_string()),
+            TOKEN_USED: row.get("TOKEN_USED").unwrap_or("NULL".to_string()),
+            IP_ADDRESS: row.get("IP_ADDRESS").unwrap_or(None),
+            METHOD: row.get("METHOD").unwrap_or(None),
         });
     }
     Ok(Json(logs))
@@ -103,15 +103,15 @@ pub fn get_user_logs_fn(username: String, pool: &State<Pool>, limit: Option<i32>
         }
         let row = row.unwrap();
         logs.push(LogData {
-            LOG_ID: row.get("LOG_ID").unwrap(),
-            USERNAME: row.get("USERNAME").unwrap(),
-            ROUTE: row.get("ROUTE").unwrap(),
-            PARAMETERS: row.get("PARAMETERS").unwrap(),
-            RESULT: row.get("RESULT").unwrap(),
-            TIMESTAMP: row.get("TIMESTAMP").unwrap(),
-            TOKEN_USED: row.get("TOKEN_USED").unwrap(),
-            IP_ADDRESS: row.get("IP_ADDRESS").unwrap(),
-            METHOD: row.get("METHOD").unwrap(),
+            LOG_ID: row.get("LOG_ID").unwrap_or(-1),
+            USERNAME: row.get("USERNAME").unwrap_or(None),
+            ROUTE: row.get("ROUTE").unwrap_or("NULL".to_string()),
+            PARAMETERS: row.get("PARAMETERS").unwrap_or(None),
+            RESULT: row.get("RESULT").unwrap_or("NULL".to_string()),
+            TIMESTAMP: row.get("TIMESTAMP").unwrap_or("NULL".to_string()),
+            TOKEN_USED: row.get("TOKEN_USED").unwrap_or("NULL".to_string()),
+            IP_ADDRESS: row.get("IP_ADDRESS").unwrap_or(None),
+            METHOD: row.get("METHOD").unwrap_or(None),
         });
     }
     Ok(Json(logs))
