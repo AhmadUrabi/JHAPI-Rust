@@ -14,7 +14,7 @@ pub fn check_user_exists(username: String, pool: &Pool) -> Result<bool, APIError
         return Err(APIErrors::DBError);
     }
     let conn = conn.unwrap();
-println!("Username: {}", username);
+    println!("Username Check: {}", username);
     let stmt = conn
         .statement("SELECT USERNAME FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1")
         .build();
