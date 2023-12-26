@@ -270,7 +270,6 @@ pub async fn edit_user_route(
     }
 
     // Check deserialization
-    // TODO: Check if this happens on other routes
     if params.0.p_password.is_none() && params.0.p_fullname.is_none() && params.0.p_email.is_none() && params.0.p_loginduration.is_none()  {
         return Err(Status::BadRequest);
     }

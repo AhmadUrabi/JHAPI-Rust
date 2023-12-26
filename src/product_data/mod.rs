@@ -51,7 +51,6 @@ pub async fn get_product(
     // To ensure user only gets data for stores they have access to
     // This does have a performance penalty, as the function has to touch the DB twice
     // Could be optimized by creating a more complex query, or by using hashsets
-    // TODO Test using a hashset instead of a vector
     // TODO Test using a more complex query
     let mut store_ids: HashSet<String> = HashSet::new(); 
     
