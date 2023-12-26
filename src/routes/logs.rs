@@ -62,9 +62,10 @@ pub async fn get_all_logs(pool: &State<Pool>, _key: ApiKey<'_> , limit: Option<i
             );
             Ok(logs)
         }
-        Err(err) => {
-            error!("Error: {}", err);
-            Err(Status::InternalServerError)
+        Err(_err) => {
+            log_data(pool, userId, client_ip.unwrap().to_string(), ("/logs").to_string(),
+            None, get_timestamp(), _key.0.to_string(), "DB Error".to_string(), "GET".to_string());
+            return Err(Status::InternalServerError);
         }
     }
     
@@ -115,8 +116,7 @@ pub async fn get_user_logs(pool: &State<Pool>, _key: ApiKey<'_> , username: Stri
             );
             Ok(logs)
         }
-        Err(err) => {
-            error!("Error: {}", err);
+        Err(_err) => {
             Err(Status::InternalServerError)
         }
     }
@@ -124,6 +124,10 @@ pub async fn get_user_logs(pool: &State<Pool>, _key: ApiKey<'_> , username: Stri
     
 }
 
+
+// TODO: Fix this route
+// Unused, should handle nested routes
+/*
 #[get("/logs/route/<route>?<limit>")]
 pub async fn get_route_logs(pool: &State<Pool>, _key: ApiKey<'_> , route: String,limit: Option<i32>, client_ip: Option<IpAddr>) -> Result<Json<Vec<LogData>>, Status> {
     let mut userId: String = "".to_string();
@@ -169,15 +173,14 @@ pub async fn get_route_logs(pool: &State<Pool>, _key: ApiKey<'_> , route: String
             );
             Ok(logs)
         }
-        Err(err) => {
-            error!("Error: {}", err);
+        Err(_err) => {
             Err(Status::InternalServerError)
         }
     }
     
     
 }
-
+*/
 
 #[delete("/logs/user/<username>?<limit>")]
 pub async fn delete_user_logs(pool: &State<Pool>, _key: ApiKey<'_> , username: String,limit: Option<i32>, client_ip: Option<IpAddr>) -> Result<String, Status>{
@@ -223,13 +226,13 @@ pub async fn delete_user_logs(pool: &State<Pool>, _key: ApiKey<'_> , username: S
             );
             Ok("Logs Deleted".to_string())
         }
-        Err(err) => {
-            error!("Error: {}", err);
+        Err(_err) => {
             Err(Status::InternalServerError)
         }
     }
 }
 
+// TODO: warn on missing log
 #[delete("/logs/<log_id>")]
 pub async fn delete_log_logs(pool: &State<Pool>, _key: ApiKey<'_> , log_id: i32, client_ip: Option<IpAddr>) -> Result<String, Status> {
     let mut userId: String = "".to_string();
@@ -272,8 +275,7 @@ pub async fn delete_log_logs(pool: &State<Pool>, _key: ApiKey<'_> , log_id: i32,
             );
             Ok("Logs Deleted".to_string())
         }
-        Err(err) => {
-            error!("Error: {}", err);
+        Err(_err) => {
             Err(Status::InternalServerError)
         }
     } 
