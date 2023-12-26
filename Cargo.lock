@@ -984,8 +984,6 @@ dependencies = [
 [[package]]
 name = "magick_rust"
 version = "0.19.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c912b69250bcd5d024852a1a75c567d3b5d881871a55b741018741632a921bf8"
 dependencies = [
  "bindgen",
  "libc",
