@@ -71,6 +71,24 @@ impl Fairing for CORS {
     }
 }
 
+pub struct IPCheck;
+
+#[rocket::async_trait]
+impl<'r> Fairing for IPCheck {
+    fn info (&self) -> Info {
+        Info {
+            name: "IP Check",
+            kind: Kind::Request
+        }
+    }
+    async fn on_request(&self, req: &mut Request<'_>, _data: &mut rocket::Data<'_>) {
+        match req.remote() {
+            Some(i) => println!("Client IP: {}", i.ip()),
+            None => println!("Client IP: Unknown"),
+        }
+    }
+}
+
 
 #[derive(Copy, Clone, Debug)]
 pub struct LogCheck(pub bool);
@@ -142,6 +160,7 @@ fn rocket() -> _ {
             ],
         )
         .attach(CORS)
+        .attach(IPCheck)
 }
 
 // Start Request Guard Functions
@@ -213,7 +232,7 @@ fn unauthorized() -> &'static str {
 
 #[catch(404)]
 fn not_found(req: &Request) -> String {
-    format!("I couldn't find '{}'. Try something else?", req.uri())
+    format!("I couldn't find '{}'. Try something else?", req.uri())    
 }
 
 #[catch(409)]
