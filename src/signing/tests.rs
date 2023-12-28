@@ -14,9 +14,10 @@ fn get_pool() -> oracle::pool::Pool {
 
 #[tokio::test]
 async fn sign_in_valid_params() {
+    let valid_params: (String, String) = crate::utils::get_valid_user_cred();
     let login_params = crate::signing::structs::LoginParams {
-        p_username: "test".to_string(),
-        p_password: "test".to_string(),
+        p_username: valid_params.0,
+        p_password: valid_params.1,
     };
 
     match crate::signing::signin(rocket::serde::json::Json(login_params), &get_pool()).await {
@@ -50,9 +51,10 @@ async fn sign_in_valid_params() {
 
 #[tokio::test]
 async fn sign_in_invalid_params() {
+    let invalid_params: (String, String) = crate::utils::get_invalid_user_cred();
     let login_params = crate::signing::structs::LoginParams {
-        p_username: "test_incorrect".to_string(),
-        p_password: "test".to_string(),
+        p_username: invalid_params.0,
+        p_password: invalid_params.1,
     };
 
     match crate::signing::signin(rocket::serde::json::Json(login_params), &get_pool()).await {

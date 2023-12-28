@@ -2,6 +2,8 @@ use oracle::pool::Pool;
 
 use self::structs::APIErrors;
 
+use dotenv::dotenv;
+
 pub mod logging;
 pub mod permissions;
 pub mod structs;
@@ -34,4 +36,17 @@ pub fn check_user_exists(username: String, pool: &Pool) -> Result<bool, APIError
         return Ok(true);
     }
     Ok(false)
+}
+
+pub fn get_valid_user_cred() -> (String, String) {
+    dotenv().ok();
+    let username = std::env::var("VALID_USER_TEST").expect("VALID_USER_TEST must be set.");
+    let password = std::env::var("VALID_PASS_TEST").expect("VALID_PASS_TEST must be set.");
+    (username, password)
+}
+pub fn get_invalid_user_cred() -> (String, String) {
+    dotenv().ok();
+    let username = std::env::var("INVALID_USER_TEST").expect("INVALID_USER_TEST must be set.");
+    let password = std::env::var("INVALID_PASS_TEST").expect("INVALID_PASS_TEST must be set.");
+    (username, password)
 }

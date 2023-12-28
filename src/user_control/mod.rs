@@ -12,9 +12,9 @@ use bcrypt::{hash, DEFAULT_COST};
 use crate::utils::permissions::{is_admin_perm, is_users_perm};
 
 pub mod structs;
-
+mod tests;
 use crate::user_control::structs::*;
-
+// TODO Split into multiple files
 pub async fn get_users(_key: &ApiKey<'_>, pool: &Pool) -> Result<Vec<User>, APIErrors> {
     let mut users: Vec<User> = Vec::new();
     if is_admin_perm(_key, pool) || is_users_perm(_key, pool) {
