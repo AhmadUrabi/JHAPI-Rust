@@ -20,6 +20,12 @@ impl User {
             LOGIN_DURATION: None,
         }
     }
+    pub fn is_none(&self) -> bool {
+        self.USER_ID.is_none()
+            && self.USER_NAME.is_none()
+            && self.USER_EMAIL.is_none()
+            && self.LOGIN_DURATION.is_none()
+    }
 }
 
 // These shouldn't be options, both values are required

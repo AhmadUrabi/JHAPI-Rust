@@ -15,6 +15,9 @@ use bcrypt::verify;
 
 pub mod structs;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
     id: String,
@@ -117,6 +120,12 @@ fn fetch_user_data(username: String, password: String, pool: &Pool) -> Result<Us
         user.USER_EMAIL = Some(row.get::<&str, String>("EMAIL").unwrap());
         user.LOGIN_DURATION = Some(row.get::<&str, String>("LOGINDURATION").unwrap());
     }
+
+    // TODO - Check if this response is proper for incorrect username
+    if user.is_none() {
+        error!("User not found");
+        return Err(APIErrors::InvalidCredentials);
+    }
     Ok(user)
 }
 
@@ -209,3 +218,4 @@ pub fn decode_token_data(token: &str) -> Option<User> {
 
     return Some(user);
 }
+
