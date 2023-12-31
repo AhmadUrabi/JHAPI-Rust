@@ -84,39 +84,29 @@ fn fetch_user_data(username: String, password: String, pool: &Pool) -> Result<Us
     }
     let conn = conn.unwrap();
 
-    let stmt = conn.statement("SELECT USERNAME, PASSWORD, FULLNAME, EMAIL, LOGINDURATION FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1").build();
+    let stmt = conn.statement("SELECT USERNAME, PASSWORD, FULLNAME, EMAIL, LOGINDURATION FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1").fetch_array_size(1).build();
     if stmt.is_err() {
         error!("Error building statement");
         return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
-
-    let rows = stmt.query(&[&username]);
+    let rows = stmt.query_row(&[&username]);
     if rows.is_err() {
         error!("Error executing query");
-        return Err(APIErrors::DBError);
+        return Err(APIErrors::UserNotFound);
     }
-    let rows = rows.unwrap();
+    let row = rows.unwrap();
+    
 
     let mut user = User::new();
-
-    for row_result in rows {
-        let row = row_result;
-        if row.is_err() {
-            error!("Error fetching row");
-            return Err(APIErrors::DBError);
-        }
-        let row = row.unwrap();
-
-        if !verify(&password, &row.get::<&str, String>("PASSWORD").unwrap()).unwrap() {
-            error!("Invalid password");
-            return Err(APIErrors::InvalidCredentials);
-        }
-        user.USER_ID = Some(row.get::<&str, String>("USERNAME").unwrap());
-        user.USER_NAME = Some(row.get::<&str, String>("FULLNAME").unwrap());
-        user.USER_EMAIL = Some(row.get::<&str, String>("EMAIL").unwrap());
-        user.LOGIN_DURATION = Some(row.get::<&str, String>("LOGINDURATION").unwrap());
+    if !verify(&password, &row.get::<&str, String>("PASSWORD").unwrap()).unwrap() {
+        error!("Invalid password");
+        return Err(APIErrors::InvalidCredentials);
     }
+    user.USER_ID = Some(row.get::<&str, String>("USERNAME").unwrap());
+    user.USER_NAME = Some(row.get::<&str, String>("FULLNAME").unwrap());
+    user.USER_EMAIL = Some(row.get::<&str, String>("EMAIL").unwrap());
+    user.LOGIN_DURATION = Some(row.get::<&str, String>("LOGINDURATION").unwrap());
     Ok(user)
 }
 
