@@ -1,12 +1,11 @@
 use oracle::pool::Pool;
 
-use crate::utils::structs::APIErrors;
 use crate::utils::check_user_exists;
+use crate::utils::structs::APIErrors;
 
 use self::structs::Permissions;
 
 pub mod structs;
-
 
 // TODO: try to optimize this function
 pub fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions, APIErrors> {
@@ -85,7 +84,6 @@ pub fn edit_user_permissions(
         return Err(APIErrors::UserNotFound);
     }
 
-
     let user_id = username.to_string();
     let stmt = conn
         .statement("DELETE FROM ODBC_JHC.PERMISSIONS_JHC WHERE USERNAME = :user_id")
@@ -95,7 +93,6 @@ pub fn edit_user_permissions(
         return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
-
 
     match stmt.execute(&[&user_id]) {
         Ok(_) => (),
@@ -112,13 +109,12 @@ pub fn edit_user_permissions(
     }
     let mut stmt = stmt.unwrap();
 
-
-    
     if permissions.users {
         stmt.execute(&[&user_id, &"users".to_string()]).unwrap();
     }
     if permissions.permissions {
-        stmt.execute(&[&user_id, &"permissions".to_string()]).unwrap();
+        stmt.execute(&[&user_id, &"permissions".to_string()])
+            .unwrap();
     }
     if permissions.query {
         stmt.execute(&[&user_id, &"query".to_string()]).unwrap();

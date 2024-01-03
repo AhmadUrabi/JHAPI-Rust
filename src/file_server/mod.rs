@@ -30,7 +30,6 @@ fn resize(filename: &str, name: &str) -> Result<bool, String> {
             return Err(format!("Error reading image: {:?}", e));
         }
     };
-    
 
     // Set background color
     let mut pixelwand = PixelWand::new();
@@ -58,7 +57,9 @@ fn resize(filename: &str, name: &str) -> Result<bool, String> {
     let height = magickwand.get_image_height() as isize;
     let y_offset: isize = (640 - height) / 2 * -1;
 
-    magickwand.extend_image(640, 640, x_offset, y_offset).unwrap();
+    magickwand
+        .extend_image(640, 640, x_offset, y_offset)
+        .unwrap();
 
     let res_file = "tmp/".to_string() + name + ".jpg";
 
@@ -68,7 +69,6 @@ fn resize(filename: &str, name: &str) -> Result<bool, String> {
 }
 
 pub async fn download_file(file_name: &String) -> Result<(), APIErrors> {
-
     // No caching, will always download file
 
     // Delete temporary file
@@ -79,7 +79,8 @@ pub async fn download_file(file_name: &String) -> Result<(), APIErrors> {
     }
 
     // Connect to the local SSH server
-    let tcp_stream = TcpStream::connect(std::env::var("SFTP_HOST").expect("SFTP_HOST must be set.")).unwrap();
+    let tcp_stream =
+        TcpStream::connect(std::env::var("SFTP_HOST").expect("SFTP_HOST must be set.")).unwrap();
     let mut sess = Session::new().unwrap();
     sess.set_tcp_stream(tcp_stream);
     match sess.handshake() {

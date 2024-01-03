@@ -1,7 +1,6 @@
 use rocket::serde::Deserialize;
 use rocket::serde::Serialize;
 
-
 #[allow(non_snake_case)]
 #[derive(Serialize, Deserialize)]
 pub struct Store {
@@ -9,7 +8,6 @@ pub struct Store {
     pub STORE_DESC: Option<String>,
     pub STORE_DESC_S: Option<String>,
 }
-
 
 #[derive(serde::Deserialize, Debug, Serialize, Clone)]
 pub struct StoreListUpdateParams {

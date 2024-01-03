@@ -6,7 +6,6 @@ pub mod logging;
 pub mod permissions;
 pub mod structs;
 
-
 pub fn check_user_exists(username: String, pool: &Pool) -> Result<bool, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {

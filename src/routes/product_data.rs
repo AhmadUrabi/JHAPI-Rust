@@ -13,7 +13,6 @@ use crate::signing::decode_token_data;
 use crate::ApiKey;
 use crate::LogCheck;
 
-
 use crate::product_data::structs::FetchParams;
 use crate::product_data::structs::Product;
 use crate::utils::logging::get_timestamp;
@@ -43,44 +42,42 @@ pub async fn get_products(
         }
     }
 
-    
-
     // Convert json to String
 
     let params_clone = params.clone();
 
     match get_product(params, pool, &key).await {
         Ok(products) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&key, pool)){
-            log_data(
-                pool,
-                username,
-                client_ip.unwrap().to_string(),
-                "/GetProductData".to_string(),
-                Some(serde_json::to_string(&params_clone.0).unwrap()),
-                get_timestamp(),
-                key.clone().0.to_string(),
-                "Success".to_string(),
-                "GET".to_string()
-            );
-        }
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&key, pool)) {
+                log_data(
+                    pool,
+                    username,
+                    client_ip.unwrap().to_string(),
+                    "/GetProductData".to_string(),
+                    Some(serde_json::to_string(&params_clone.0).unwrap()),
+                    get_timestamp(),
+                    key.clone().0.to_string(),
+                    "Success".to_string(),
+                    "GET".to_string(),
+                );
+            }
             Json(products)
         }
         Err(_err) => {
             error!("Error");
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&key, pool)){
-            log_data(
-                pool,
-                username,
-                client_ip.unwrap().to_string(),
-                "/GetProductData".to_string(),
-                Some(serde_json::to_string(&params_clone.0).unwrap()),
-                get_timestamp(),
-                key.clone().0.to_string(),
-                "Error Fetching".to_string(),
-                "GET".to_string()
-            );
-        }
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&key, pool)) {
+                log_data(
+                    pool,
+                    username,
+                    client_ip.unwrap().to_string(),
+                    "/GetProductData".to_string(),
+                    Some(serde_json::to_string(&params_clone.0).unwrap()),
+                    get_timestamp(),
+                    key.clone().0.to_string(),
+                    "Error Fetching".to_string(),
+                    "GET".to_string(),
+                );
+            }
             Json(vec![])
         }
     }

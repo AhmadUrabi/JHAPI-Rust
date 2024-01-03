@@ -41,57 +41,57 @@ pub async fn get_permissions(
         && !is_admin_perm(&_key, pool)
         && username.to_lowercase() != user_id.to_lowercase()
     {
-        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-        log_data(
-            pool,
-            user_id,
-            client_ip.unwrap().to_string(),
-            ("/permissions/".to_owned() + &username).to_string(),
-            None,
-            get_timestamp(),
-            token_used,
-            "Not authorized".to_string(),
-            "GET".to_string()
-        );
-    }
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+            log_data(
+                pool,
+                user_id,
+                client_ip.unwrap().to_string(),
+                ("/permissions/".to_owned() + &username).to_string(),
+                None,
+                get_timestamp(),
+                token_used,
+                "Not authorized".to_string(),
+                "GET".to_string(),
+            );
+        }
         return Err(Status::Unauthorized);
     }
 
     match crate::permissions::get_user_permissions(&username.to_lowercase(), pool) {
         Ok(permissions) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-            log_data(
-                pool,
-                user_id,
-                client_ip.unwrap().to_string(),
-                ("/permissions/".to_owned() + &username).to_string(),
-                None,
-                get_timestamp(),
-                token_used,
-                "Success".to_string(),
-                "GET".to_string()
-            );
-        }
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    user_id,
+                    client_ip.unwrap().to_string(),
+                    ("/permissions/".to_owned() + &username).to_string(),
+                    None,
+                    get_timestamp(),
+                    token_used,
+                    "Success".to_string(),
+                    "GET".to_string(),
+                );
+            }
             Ok(Json(permissions))
         }
         Err(err) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-            log_data(
-                pool,
-                user_id,
-                client_ip.unwrap().to_string(),
-                ("/permissions/".to_owned() + &username).to_string(),
-                None,
-                get_timestamp(),
-                token_used,
-                match err {
-                    APIErrors::UserNotFound => "User not found".to_string(),
-                    APIErrors::DBError => "Error connecting to DB".to_string(),
-                    _ => "Error getting permissions".to_string(),
-                },
-                "GET".to_string()
-            );
-        }
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    user_id,
+                    client_ip.unwrap().to_string(),
+                    ("/permissions/".to_owned() + &username).to_string(),
+                    None,
+                    get_timestamp(),
+                    token_used,
+                    match err {
+                        APIErrors::UserNotFound => "User not found".to_string(),
+                        APIErrors::DBError => "Error connecting to DB".to_string(),
+                        _ => "Error getting permissions".to_string(),
+                    },
+                    "GET".to_string(),
+                );
+            }
             match err {
                 APIErrors::UserNotFound => Err(Status::NotFound),
                 APIErrors::DBError => Err(Status::InternalServerError),
@@ -114,7 +114,7 @@ pub async fn edit_permissions(
 
     let params_clone = params.clone();
     let mut user_id: String = "".to_string();
-    info!("/permissions/{:?} Request: {:?}", username.clone() ,params);
+    info!("/permissions/{:?} Request: {:?}", username.clone(), params);
     match decode_token_data(_key.0) {
         Some(data) => {
             user_id = data.USER_ID.unwrap();
@@ -123,19 +123,19 @@ pub async fn edit_permissions(
         None => info!("Token Data: None"),
     }
     if !is_perm_perm(&_key, pool) && !is_admin_perm(&_key, pool) {
-        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-        log_data(
-            pool,
-            user_id,
-            client_ip.unwrap().to_string(),
-            ("/permissions/".to_owned() + &username).to_string(),
-            Some(serde_json::to_string(&params_clone.0).unwrap()),
-            get_timestamp(),
-            token_used,
-            "Not authorized".to_string(),
-            "POST".to_string()
-        );
-    }
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+            log_data(
+                pool,
+                user_id,
+                client_ip.unwrap().to_string(),
+                ("/permissions/".to_owned() + &username).to_string(),
+                Some(serde_json::to_string(&params_clone.0).unwrap()),
+                get_timestamp(),
+                token_used,
+                "Not authorized".to_string(),
+                "POST".to_string(),
+            );
+        }
         return Err(Status::Unauthorized);
     }
     match crate::permissions::edit_user_permissions(
@@ -146,39 +146,39 @@ pub async fn edit_permissions(
         Ok(permissions) => {
             info!("Permissions Edited");
             info!("New Permissions: {:?}", permissions);
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-            log_data(
-                pool,
-                user_id,
-                client_ip.unwrap().to_string(),
-                ("/permissions/".to_owned() + &username).to_string(),
-                Some(serde_json::to_string(&params_clone.0).unwrap()),
-                get_timestamp(),
-                token_used,
-                "Success".to_string(),
-                "POST".to_string()
-            );
-        }
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    user_id,
+                    client_ip.unwrap().to_string(),
+                    ("/permissions/".to_owned() + &username).to_string(),
+                    Some(serde_json::to_string(&params_clone.0).unwrap()),
+                    get_timestamp(),
+                    token_used,
+                    "Success".to_string(),
+                    "POST".to_string(),
+                );
+            }
             Ok("Permissions Edited".to_string())
         }
         Err(err) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-            log_data(
-                pool,
-                user_id,
-                client_ip.unwrap().to_string(),
-                ("/permissions/".to_owned() + &username).to_string(),
-                Some(serde_json::to_string(&params_clone.0).unwrap()),
-                get_timestamp(),
-                token_used,
-                match err {
-                    APIErrors::UserNotFound => "User not found".to_string(),
-                    APIErrors::DBError => "Error connecting to DB".to_string(),
-                    _ => "Error editing permissions".to_string(),
-                },
-                "POST".to_string()
-            );
-        }
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    user_id,
+                    client_ip.unwrap().to_string(),
+                    ("/permissions/".to_owned() + &username).to_string(),
+                    Some(serde_json::to_string(&params_clone.0).unwrap()),
+                    get_timestamp(),
+                    token_used,
+                    match err {
+                        APIErrors::UserNotFound => "User not found".to_string(),
+                        APIErrors::DBError => "Error connecting to DB".to_string(),
+                        _ => "Error editing permissions".to_string(),
+                    },
+                    "POST".to_string(),
+                );
+            }
             match err {
                 APIErrors::UserNotFound => Err(Status::NotFound),
                 APIErrors::DBError => Err(Status::InternalServerError),

@@ -14,7 +14,7 @@ use crate::fetch_stores::get_stores;
 
 use crate::signing::decode_token_data;
 
-use crate::utils::{permissions::*, check_user_exists};
+use crate::utils::{check_user_exists, permissions::*};
 
 use crate::fetch_stores::structs::Store;
 
@@ -42,39 +42,39 @@ pub async fn get_store_list(
     if is_stores_perm(&_key, &pool) || is_admin_perm(&_key, &pool) {
         match get_stores(pool, "admin".to_string()) {
             Ok(stores) => {
-                if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-                log_data(
-                    pool,
-                    user_id,
-                    client_ip.unwrap().to_string(),
-                    "/stores".to_string(),
-                    None,
-                    get_timestamp(),
-                    _key.0.to_string(),
-                    "Success as Admin".to_string(),
-                    "GET".to_string()
-                );
-            }
+                if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                    log_data(
+                        pool,
+                        user_id,
+                        client_ip.unwrap().to_string(),
+                        "/stores".to_string(),
+                        None,
+                        get_timestamp(),
+                        _key.0.to_string(),
+                        "Success as Admin".to_string(),
+                        "GET".to_string(),
+                    );
+                }
                 return Ok(Json(stores));
             }
             Err(err) => {
-                if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-                log_data(
-                    pool,
-                    user_id,
-                    client_ip.unwrap().to_string(),
-                    "/stores".to_string(),
-                    None,
-                    get_timestamp(),
-                    _key.0.to_string(),
-                    match err {
-                        APIErrors::DBError => "DB Error".to_string(),
-                        APIErrors::UserNotFound => "User Not Found".to_string(),
-                        _ => "Error Fetching".to_string(),
-                    },
-                    "GET".to_string()
-                );
-            }
+                if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                    log_data(
+                        pool,
+                        user_id,
+                        client_ip.unwrap().to_string(),
+                        "/stores".to_string(),
+                        None,
+                        get_timestamp(),
+                        _key.0.to_string(),
+                        match err {
+                            APIErrors::DBError => "DB Error".to_string(),
+                            APIErrors::UserNotFound => "User Not Found".to_string(),
+                            _ => "Error Fetching".to_string(),
+                        },
+                        "GET".to_string(),
+                    );
+                }
                 match err {
                     APIErrors::DBError => return Err(Status::InternalServerError),
                     APIErrors::UserNotFound => return Err(Status::NotFound),
@@ -85,39 +85,39 @@ pub async fn get_store_list(
     }
     match get_stores(pool, user_id) {
         Ok(stores) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-            log_data(
-                pool,
-                username_clone,
-                client_ip.unwrap().to_string(),
-                "/stores".to_string(),
-                None,
-                get_timestamp(),
-                _key.0.to_string(),
-                "Success".to_string(),
-                "GET".to_string()
-            );
-        }
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    username_clone,
+                    client_ip.unwrap().to_string(),
+                    "/stores".to_string(),
+                    None,
+                    get_timestamp(),
+                    _key.0.to_string(),
+                    "Success".to_string(),
+                    "GET".to_string(),
+                );
+            }
             Ok(Json(stores))
         }
         Err(err) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-            log_data(
-                pool,
-                username_clone,
-                client_ip.unwrap().to_string(),
-                "/stores".to_string(),
-                None,
-                get_timestamp(),
-                _key.0.to_string(),
-                match err {
-                    APIErrors::DBError => "DB Error".to_string(),
-                    APIErrors::UserNotFound => "User Not Found".to_string(),
-                    _ => "Error Fetching".to_string(),
-                },
-                "GET".to_string()
-            );
-        }
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    username_clone,
+                    client_ip.unwrap().to_string(),
+                    "/stores".to_string(),
+                    None,
+                    get_timestamp(),
+                    _key.0.to_string(),
+                    match err {
+                        APIErrors::DBError => "DB Error".to_string(),
+                        APIErrors::UserNotFound => "User Not Found".to_string(),
+                        _ => "Error Fetching".to_string(),
+                    },
+                    "GET".to_string(),
+                );
+            }
             match err {
                 APIErrors::DBError => return Err(Status::InternalServerError),
                 APIErrors::UserNotFound => return Err(Status::NotFound),
@@ -126,8 +126,6 @@ pub async fn get_store_list(
         }
     }
 }
-
-
 
 #[post("/stores", data = "<params>")]
 pub async fn update_store_list(
@@ -155,47 +153,7 @@ pub async fn update_store_list(
         info!("User has permissions");
     } else {
         info!("User does not have permissions");
-        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-        log_data(
-            pool,
-            user_id,
-            client_ip.unwrap().to_string(),
-            "/stores".to_string(),
-            Some(serde_json::to_string(&params_clone.0).unwrap()),
-            get_timestamp(),
-            _key.0.to_string(),
-            "Not Authorized".to_string(),
-            "POST".to_string()
-        );
-    }
-        return Err(Status::Unauthorized);
-    }
-
-
-    // TODO: Whole function should be separated from route function
-    match check_user_exists(params.0.p_username.clone(), pool){
-        Ok(x) => {
-            if !x {
-                if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-                log_data(
-                    pool,
-                    user_id,
-                    client_ip.unwrap().to_string(),
-                    "/stores".to_string(),
-                    Some(serde_json::to_string(&params_clone.0).unwrap()),
-                    get_timestamp(),
-                    _key.0.to_string(),
-                    "User Not Found".to_string(),
-                    "POST".to_string()
-                );
-            }
-                return Err(Status::NotFound);
-            } else {
-                println!("User exists");
-            }
-        },
-        Err(_err) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
             log_data(
                 pool,
                 user_id,
@@ -204,10 +162,49 @@ pub async fn update_store_list(
                 Some(serde_json::to_string(&params_clone.0).unwrap()),
                 get_timestamp(),
                 _key.0.to_string(),
-                "Error Checking User".to_string(),
-                "POST".to_string()
+                "Not Authorized".to_string(),
+                "POST".to_string(),
             );
         }
+        return Err(Status::Unauthorized);
+    }
+
+    // TODO: Whole function should be separated from route function
+    match check_user_exists(params.0.p_username.clone(), pool) {
+        Ok(x) => {
+            if !x {
+                if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                    log_data(
+                        pool,
+                        user_id,
+                        client_ip.unwrap().to_string(),
+                        "/stores".to_string(),
+                        Some(serde_json::to_string(&params_clone.0).unwrap()),
+                        get_timestamp(),
+                        _key.0.to_string(),
+                        "User Not Found".to_string(),
+                        "POST".to_string(),
+                    );
+                }
+                return Err(Status::NotFound);
+            } else {
+                println!("User exists");
+            }
+        }
+        Err(_err) => {
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    user_id,
+                    client_ip.unwrap().to_string(),
+                    "/stores".to_string(),
+                    Some(serde_json::to_string(&params_clone.0).unwrap()),
+                    get_timestamp(),
+                    _key.0.to_string(),
+                    "Error Checking User".to_string(),
+                    "POST".to_string(),
+                );
+            }
             return Err(Status::InternalServerError);
         }
     }
@@ -268,7 +265,7 @@ pub async fn get_store_list_for_user(
     log_check: LogCheck,
 ) -> Result<Json<Vec<Store>>, Status> {
     info!("User stores Request");
-    
+
     let mut user_id: String = "".to_string();
     let my_username = username.to_lowercase();
 
@@ -280,60 +277,59 @@ pub async fn get_store_list_for_user(
         None => info!("Token Data: None"),
     }
 
-
     if !is_stores_perm(&_key, &pool) && !is_admin_perm(&_key, &pool) {
-        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-        log_data(
-            pool,
-            user_id,
-            client_ip.unwrap().to_string(),
-            ("/stores/".to_owned() + &my_username).to_string(),
-            None,
-            get_timestamp(),
-            _key.0.to_string(),
-            "Not Authorized".to_string(),
-            "GET".to_string()
-        );
-    }
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+            log_data(
+                pool,
+                user_id,
+                client_ip.unwrap().to_string(),
+                ("/stores/".to_owned() + &my_username).to_string(),
+                None,
+                get_timestamp(),
+                _key.0.to_string(),
+                "Not Authorized".to_string(),
+                "GET".to_string(),
+            );
+        }
         info!("Token does not have permissions");
         return Err(Status::Unauthorized);
     }
 
     match get_stores(pool, username) {
         Ok(stores) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-            log_data(
-                pool,
-                user_id,
-                client_ip.unwrap().to_string(),
-                ("/stores/".to_owned() + &my_username).to_string(),
-                None,
-                get_timestamp(),
-                _key.0.to_string(),
-                "Success".to_string(),
-                "GET".to_string()
-            );
-        }
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    user_id,
+                    client_ip.unwrap().to_string(),
+                    ("/stores/".to_owned() + &my_username).to_string(),
+                    None,
+                    get_timestamp(),
+                    _key.0.to_string(),
+                    "Success".to_string(),
+                    "GET".to_string(),
+                );
+            }
             Ok(Json(stores))
         }
         Err(err) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-            log_data(
-                pool,
-                user_id,
-                client_ip.unwrap().to_string(),
-                ("/stores/".to_owned() + &my_username).to_string(),
-                None,
-                get_timestamp(),
-                _key.0.to_string(),
-                match err {
-                    APIErrors::DBError => "DB Error".to_string(),
-                    APIErrors::UserNotFound => "User Not Found".to_string(),
-                    _ => "Error Fetching".to_string(),
-                },
-                "GET".to_string()
-            );
-        }
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    user_id,
+                    client_ip.unwrap().to_string(),
+                    ("/stores/".to_owned() + &my_username).to_string(),
+                    None,
+                    get_timestamp(),
+                    _key.0.to_string(),
+                    match err {
+                        APIErrors::DBError => "DB Error".to_string(),
+                        APIErrors::UserNotFound => "User Not Found".to_string(),
+                        _ => "Error Fetching".to_string(),
+                    },
+                    "GET".to_string(),
+                );
+            }
             match err {
                 APIErrors::DBError => return Err(Status::InternalServerError),
                 APIErrors::UserNotFound => return Err(Status::NotFound),

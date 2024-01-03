@@ -112,8 +112,6 @@ pub async fn get_user(user_id: &str, pool: &Pool) -> Result<User, APIErrors> {
     }
 }
 
-
-
 pub async fn create_user(data: NewUser, pool: &Pool) -> Result<(), APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
@@ -158,7 +156,7 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<(), APIErrors> {
             return Err(APIErrors::DBError);
         }
     }
-    
+
     match conn.commit() {
         Ok(_) => Ok(()),
         Err(_err) => {
@@ -168,9 +166,12 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<(), APIErrors> {
     }
 }
 
-
-
-pub async fn edit_user(params: Json<EditUserParams>, username: &str, pool: &Pool, is_admin: bool) -> Result<(), APIErrors> {
+pub async fn edit_user(
+    params: Json<EditUserParams>,
+    username: &str,
+    pool: &Pool,
+    is_admin: bool,
+) -> Result<(), APIErrors> {
     let params_unwrapped = params.into_inner();
 
     let original_user = match get_user(&username, pool).await {
@@ -178,7 +179,7 @@ pub async fn edit_user(params: Json<EditUserParams>, username: &str, pool: &Pool
         Err(_) => {
             error!("Error getting user");
             return Err(APIErrors::DBError);
-        },
+        }
     };
 
     if original_user.username == "" {
@@ -229,7 +230,6 @@ pub async fn edit_user(params: Json<EditUserParams>, username: &str, pool: &Pool
         }
     }
 
-
     match conn.commit() {
         Ok(_) => (),
         Err(err) => {
@@ -241,14 +241,14 @@ pub async fn edit_user(params: Json<EditUserParams>, username: &str, pool: &Pool
     if params_unwrapped.p_password.is_some() && is_admin {
         match conn
             .statement("UPDATE ODBC_JHC.AUTHENTICATION_JHC SET PASSWORD = :1 WHERE USERNAME = :2")
-            .build() {
-                    Ok(data) => stmt = data,
-                    Err(err) => {
-                        error!("Error building statement: {}", err);
-                        return Err(APIErrors::DBError);
-                    }
-                }
-        
+            .build()
+        {
+            Ok(data) => stmt = data,
+            Err(err) => {
+                error!("Error building statement: {}", err);
+                return Err(APIErrors::DBError);
+            }
+        }
 
         match stmt.execute(&[
             &hash(params_unwrapped.p_password.unwrap(), DEFAULT_COST).unwrap(),
@@ -274,7 +274,6 @@ pub async fn edit_user(params: Json<EditUserParams>, username: &str, pool: &Pool
 }
 
 pub async fn delete_user(user_id: &str, pool: &Pool) -> Result<(), APIErrors> {
-
     match check_user_exists(user_id.to_string(), pool) {
         Ok(exists) => {
             if !exists {

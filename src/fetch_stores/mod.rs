@@ -19,7 +19,7 @@ pub fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, APIErrors>
                 error!("User does not exist");
                 return Err(APIErrors::UserNotFound);
             }
-        },
+        }
         Err(_err) => {
             error!("Error checking for duplicate user");
             return Err(APIErrors::DBError);
@@ -27,7 +27,8 @@ pub fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, APIErrors>
     }
 
     let stmt = conn
-        .statement("
+        .statement(
+            "
         SELECT
         lpad(s.STORE_ID, 2, '0') STORE_ID, s.STORE_DESC, s.STORE_DESC_S
             FROM
@@ -44,7 +45,8 @@ pub fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, APIErrors>
                     WHERE
                         (u.username = :user_id AND usa.all_stores_access = 1)
                         OR (u.username = :user_id AND usa.store_id = s.store_id)
-                )")
+                )",
+        )
         .build();
 
     if stmt.is_err() {
@@ -76,7 +78,7 @@ pub fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, APIErrors>
         let store = Store {
             STORE_ID: row.get(0).unwrap(),
             STORE_DESC: row.get(1).unwrap(),
-            STORE_DESC_S: row.get(2).unwrap()
+            STORE_DESC_S: row.get(2).unwrap(),
         };
 
         stores.push(store);

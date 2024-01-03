@@ -3,11 +3,10 @@ use std::net::IpAddr;
 
 use oracle::pool::Pool;
 
+use rocket::http::Status;
 use rocket::log::private::info;
 use rocket::serde::json::Json;
 use rocket::State;
-use rocket::http::Status;
-
 
 use crate::signing::decode_token_data;
 use crate::ApiKey;
@@ -19,10 +18,13 @@ use crate::utils::logging::log_data;
 
 use crate::logs::structs::LogData;
 
-
-
 #[get("/logs?<limit>")]
-pub async fn get_all_logs(pool: &State<Pool>, _key: ApiKey<'_> , limit: Option<i32>, client_ip: Option<IpAddr>) -> Result<Json<Vec<LogData>>, Status> {
+pub async fn get_all_logs(
+    pool: &State<Pool>,
+    _key: ApiKey<'_>,
+    limit: Option<i32>,
+    client_ip: Option<IpAddr>,
+) -> Result<Json<Vec<LogData>>, Status> {
     let mut userId: String = "".to_string();
 
     match decode_token_data(_key.0) {
@@ -42,7 +44,7 @@ pub async fn get_all_logs(pool: &State<Pool>, _key: ApiKey<'_> , limit: Option<i
             get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
-            "GET".to_string()
+            "GET".to_string(),
         );
         return Err(Status::Unauthorized);
     }
@@ -58,23 +60,35 @@ pub async fn get_all_logs(pool: &State<Pool>, _key: ApiKey<'_> , limit: Option<i
                 get_timestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
-                "GET".to_string()
+                "GET".to_string(),
             );
             Ok(logs)
         }
         Err(_err) => {
-            log_data(pool, userId, client_ip.unwrap().to_string(), ("/logs").to_string(),
-            None, get_timestamp(), _key.0.to_string(), "DB Error".to_string(), "GET".to_string());
+            log_data(
+                pool,
+                userId,
+                client_ip.unwrap().to_string(),
+                ("/logs").to_string(),
+                None,
+                get_timestamp(),
+                _key.0.to_string(),
+                "DB Error".to_string(),
+                "GET".to_string(),
+            );
             return Err(Status::InternalServerError);
         }
     }
-    
-    
 }
 
-
 #[get("/logs/user/<username>?<limit>")]
-pub async fn get_user_logs(pool: &State<Pool>, _key: ApiKey<'_> , username: String,limit: Option<i32>, client_ip: Option<IpAddr>) -> Result<Json<Vec<LogData>>, Status> {
+pub async fn get_user_logs(
+    pool: &State<Pool>,
+    _key: ApiKey<'_>,
+    username: String,
+    limit: Option<i32>,
+    client_ip: Option<IpAddr>,
+) -> Result<Json<Vec<LogData>>, Status> {
     let mut userId: String = "".to_string();
 
     match decode_token_data(_key.0) {
@@ -91,12 +105,12 @@ pub async fn get_user_logs(pool: &State<Pool>, _key: ApiKey<'_> , username: Stri
             pool,
             userId,
             client_ip.unwrap().to_string(),
-            ("/logs/user/".to_owned()+&username_clone).to_string(),
+            ("/logs/user/".to_owned() + &username_clone).to_string(),
             None,
             get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
-            "GET".to_string()
+            "GET".to_string(),
         );
         return Err(Status::Unauthorized);
     }
@@ -107,23 +121,18 @@ pub async fn get_user_logs(pool: &State<Pool>, _key: ApiKey<'_> , username: Stri
                 pool,
                 userId,
                 client_ip.unwrap().to_string(),
-                ("/logs/user/".to_owned()+&username_clone).to_string(),
+                ("/logs/user/".to_owned() + &username_clone).to_string(),
                 None,
                 get_timestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
-                "GET".to_string()
+                "GET".to_string(),
             );
             Ok(logs)
         }
-        Err(_err) => {
-            Err(Status::InternalServerError)
-        }
+        Err(_err) => Err(Status::InternalServerError),
     }
-    
-    
 }
-
 
 // TODO: Fix this route
 // Unused, should handle nested routes
@@ -177,13 +186,19 @@ pub async fn get_route_logs(pool: &State<Pool>, _key: ApiKey<'_> , route: String
             Err(Status::InternalServerError)
         }
     }
-    
-    
+
+
 }
 */
 
 #[delete("/logs/user/<username>?<limit>")]
-pub async fn delete_user_logs(pool: &State<Pool>, _key: ApiKey<'_> , username: String,limit: Option<i32>, client_ip: Option<IpAddr>) -> Result<String, Status>{
+pub async fn delete_user_logs(
+    pool: &State<Pool>,
+    _key: ApiKey<'_>,
+    username: String,
+    limit: Option<i32>,
+    client_ip: Option<IpAddr>,
+) -> Result<String, Status> {
     let mut userId: String = "".to_string();
 
     match decode_token_data(_key.0) {
@@ -200,12 +215,12 @@ pub async fn delete_user_logs(pool: &State<Pool>, _key: ApiKey<'_> , username: S
             pool,
             userId,
             client_ip.unwrap().to_string(),
-            ("/logs/user/".to_owned()+&username_clone).to_string(),
+            ("/logs/user/".to_owned() + &username_clone).to_string(),
             None,
             get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
-            "DELETE".to_string()
+            "DELETE".to_string(),
         );
         return Err(Status::Unauthorized);
     }
@@ -216,25 +231,27 @@ pub async fn delete_user_logs(pool: &State<Pool>, _key: ApiKey<'_> , username: S
                 pool,
                 userId,
                 client_ip.unwrap().to_string(),
-                ("/logs/user/".to_owned()+&username_clone).to_string(),
+                ("/logs/user/".to_owned() + &username_clone).to_string(),
                 None,
                 get_timestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
-                "DELETE".to_string()
-
+                "DELETE".to_string(),
             );
             Ok("Logs Deleted".to_string())
         }
-        Err(_err) => {
-            Err(Status::InternalServerError)
-        }
+        Err(_err) => Err(Status::InternalServerError),
     }
 }
 
 // TODO: warn on missing log
 #[delete("/logs/<log_id>")]
-pub async fn delete_log_logs(pool: &State<Pool>, _key: ApiKey<'_> , log_id: i32, client_ip: Option<IpAddr>) -> Result<String, Status> {
+pub async fn delete_log_logs(
+    pool: &State<Pool>,
+    _key: ApiKey<'_>,
+    log_id: i32,
+    client_ip: Option<IpAddr>,
+) -> Result<String, Status> {
     let mut userId: String = "".to_string();
 
     match decode_token_data(_key.0) {
@@ -249,12 +266,12 @@ pub async fn delete_log_logs(pool: &State<Pool>, _key: ApiKey<'_> , log_id: i32,
             pool,
             userId,
             client_ip.unwrap().to_string(),
-            ("/logs/".to_owned()+&log_id.to_string()).to_string(),
+            ("/logs/".to_owned() + &log_id.to_string()).to_string(),
             None,
             get_timestamp(),
             _key.0.to_string(),
             "Unauthorized".to_string(),
-            "DELETE".to_string()
+            "DELETE".to_string(),
         );
         return Err(Status::Unauthorized);
     }
@@ -265,18 +282,15 @@ pub async fn delete_log_logs(pool: &State<Pool>, _key: ApiKey<'_> , log_id: i32,
                 pool,
                 userId,
                 client_ip.unwrap().to_string(),
-                ("/logs/".to_owned()+&log_id.to_string()).to_string(),
+                ("/logs/".to_owned() + &log_id.to_string()).to_string(),
                 None,
                 get_timestamp(),
                 _key.0.to_string(),
                 "Success".to_string(),
-                "DELETE".to_string()
-
+                "DELETE".to_string(),
             );
             Ok("Logs Deleted".to_string())
         }
-        Err(_err) => {
-            Err(Status::InternalServerError)
-        }
-    } 
+        Err(_err) => Err(Status::InternalServerError),
+    }
 }

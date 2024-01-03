@@ -1,9 +1,9 @@
-use crate::LogCheck;
 use crate::signing::decode_token_data;
-use crate::user_control::*;
 use crate::user_control::structs::*;
-use crate::ApiKey;
+use crate::user_control::*;
 use crate::utils::structs::APIErrors;
+use crate::ApiKey;
+use crate::LogCheck;
 
 use oracle::pool::Pool;
 
@@ -34,43 +34,11 @@ pub async fn get_user_list(
         None => {
             user_id = "".to_string();
             info!("Token Data: None")
-        },
+        }
     }
 
     if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
-        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-        log_data(
-            pool,
-            user_id.clone(),
-            client_ip.unwrap().to_string(),
-            "/users".to_string(),
-            None,
-            get_timestamp(),
-            _key.clone().0.to_string(),
-            "Unauthorized".to_string(),
-            "GET".to_string()
-        );
-    }
-        return Err(Status::Unauthorized);
-    }
-    if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-    log_data(
-        pool,
-        user_id.clone(),
-        client_ip.unwrap().to_string(),
-        "/users".to_string(),
-        None,
-        get_timestamp(),
-        _key.clone().0.to_string(),
-        "Success".to_string(),
-        "GET".to_string()
-    );
-}
-
-    match get_users(&_key, &pool).await {
-        Ok(users) => Ok(Json(users)),
-        Err(error) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
             log_data(
                 pool,
                 user_id.clone(),
@@ -79,14 +47,46 @@ pub async fn get_user_list(
                 None,
                 get_timestamp(),
                 _key.clone().0.to_string(),
-                match error {
-                    APIErrors::UserNotFound => "User Not Found".to_string(),
-                    APIErrors::DBError => "DB Error".to_string(),
-                    _ => "Unknown Error".to_string(),
-                },
-                "GET".to_string()
+                "Unauthorized".to_string(),
+                "GET".to_string(),
             );
         }
+        return Err(Status::Unauthorized);
+    }
+    if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+        log_data(
+            pool,
+            user_id.clone(),
+            client_ip.unwrap().to_string(),
+            "/users".to_string(),
+            None,
+            get_timestamp(),
+            _key.clone().0.to_string(),
+            "Success".to_string(),
+            "GET".to_string(),
+        );
+    }
+
+    match get_users(&_key, &pool).await {
+        Ok(users) => Ok(Json(users)),
+        Err(error) => {
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    user_id.clone(),
+                    client_ip.unwrap().to_string(),
+                    "/users".to_string(),
+                    None,
+                    get_timestamp(),
+                    _key.clone().0.to_string(),
+                    match error {
+                        APIErrors::UserNotFound => "User Not Found".to_string(),
+                        APIErrors::DBError => "DB Error".to_string(),
+                        _ => "Unknown Error".to_string(),
+                    },
+                    "GET".to_string(),
+                );
+            }
             Err(Status::InternalServerError)
         }
     }
@@ -113,57 +113,57 @@ pub async fn get_user_by_id(
         && !is_users_perm(&_key, pool)
         && my_user_id.to_lowercase() != user_id.to_lowercase()
     {
-        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-        log_data(
-            pool,
-            my_user_id,
-            client_ip.unwrap().to_string(),
-            ("/user/".to_owned() + &user_id).to_string(),
-            None,
-            get_timestamp(),
-            _key.0.to_string(),
-            "Unauthorized".to_string(),
-            "GET".to_string()
-        );
-    }
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+            log_data(
+                pool,
+                my_user_id,
+                client_ip.unwrap().to_string(),
+                ("/user/".to_owned() + &user_id).to_string(),
+                None,
+                get_timestamp(),
+                _key.0.to_string(),
+                "Unauthorized".to_string(),
+                "GET".to_string(),
+            );
+        }
         return Err(Status::Unauthorized);
     }
 
     match get_user(&user_id, pool).await {
         Ok(user) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-            log_data(
-                pool,
-                my_user_id,
-                client_ip.unwrap().to_string(),
-                ("/user/".to_owned() + &user_id).to_string(),
-                None,
-                get_timestamp(),
-                _key.0.to_string(),
-                "Success".to_string(),
-                "GET".to_string()
-            );
-        }
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    my_user_id,
+                    client_ip.unwrap().to_string(),
+                    ("/user/".to_owned() + &user_id).to_string(),
+                    None,
+                    get_timestamp(),
+                    _key.0.to_string(),
+                    "Success".to_string(),
+                    "GET".to_string(),
+                );
+            }
             Ok(Json(user))
         }
         Err(error) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-            log_data(
-                pool,
-                my_user_id,
-                client_ip.unwrap().to_string(),
-                ("/user/".to_owned() + &user_id).to_string(),
-                None,
-                get_timestamp(),
-                _key.0.to_string(),
-                match error {
-                    APIErrors::UserNotFound => "User Not Found".to_string(),
-                    APIErrors::DBError => "DB Error".to_string(),
-                    _ => "Unknown Error".to_string(),
-                },
-                "GET".to_string()
-            );
-        }
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    my_user_id,
+                    client_ip.unwrap().to_string(),
+                    ("/user/".to_owned() + &user_id).to_string(),
+                    None,
+                    get_timestamp(),
+                    _key.0.to_string(),
+                    match error {
+                        APIErrors::UserNotFound => "User Not Found".to_string(),
+                        APIErrors::DBError => "DB Error".to_string(),
+                        _ => "Unknown Error".to_string(),
+                    },
+                    "GET".to_string(),
+                );
+            }
             Err(Status::NotFound)
         }
     }
@@ -190,24 +190,7 @@ pub async fn create_user_route(
         params.0.p_username, params.0.p_fullname
     );
     if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
-        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-        log_data(
-            pool,
-            user_id,
-            client_ip.unwrap().to_string(),
-            "/user".to_string(),
-            None,
-            get_timestamp(),
-            _key.0.to_string(),
-            "Unauthorized".to_string(),
-            "POST".to_string()
-        );
-    }
-        return Err(Status::Unauthorized);
-    }
-    match create_user(params.0, pool).await {
-        Ok(_) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
             log_data(
                 pool,
                 user_id,
@@ -216,41 +199,55 @@ pub async fn create_user_route(
                 None,
                 get_timestamp(),
                 _key.0.to_string(),
-                "Success".to_string(),
-                "POST".to_string()
+                "Unauthorized".to_string(),
+                "POST".to_string(),
             );
         }
+        return Err(Status::Unauthorized);
+    }
+    match create_user(params.0, pool).await {
+        Ok(_) => {
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    user_id,
+                    client_ip.unwrap().to_string(),
+                    "/user".to_string(),
+                    None,
+                    get_timestamp(),
+                    _key.0.to_string(),
+                    "Success".to_string(),
+                    "POST".to_string(),
+                );
+            }
             Ok("User Created".to_string())
         }
         Err(error) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-                        log_data(
-                            pool,
-                            user_id,
-                            client_ip.unwrap().to_string(),
-                            "/user".to_string(),
-                            None,
-                            get_timestamp(),
-                            _key.0.to_string(),
-                            match error {
-                                APIErrors::UserNotFound => "User Not Found".to_string(),
-                                APIErrors::DBError => "DB Error".to_string(),
-                                _ => "Unknown Error".to_string(),
-                            },
-                            "POST".to_string()
-                        );
-                }
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    user_id,
+                    client_ip.unwrap().to_string(),
+                    "/user".to_string(),
+                    None,
+                    get_timestamp(),
+                    _key.0.to_string(),
+                    match error {
+                        APIErrors::UserNotFound => "User Not Found".to_string(),
+                        APIErrors::DBError => "DB Error".to_string(),
+                        _ => "Unknown Error".to_string(),
+                    },
+                    "POST".to_string(),
+                );
+            }
             match error {
                 APIErrors::UserExists => Err(Status::Conflict),
-                APIErrors::DBError => Err(Status::InternalServerError),                   
+                APIErrors::DBError => Err(Status::InternalServerError),
                 _ => Err(Status::InternalServerError),
-                }
-            
-            
+            }
         }
     }
 }
-
 
 #[put("/user/<username>", data = "<params>")]
 pub async fn edit_user_route(
@@ -270,69 +267,71 @@ pub async fn edit_user_route(
     }
 
     // Check deserialization
-    if params.0.p_password.is_none() && params.0.p_fullname.is_none() && params.0.p_email.is_none() && params.0.p_loginduration.is_none()  {
+    if params.0.p_password.is_none()
+        && params.0.p_fullname.is_none()
+        && params.0.p_email.is_none()
+        && params.0.p_loginduration.is_none()
+    {
         return Err(Status::BadRequest);
     }
 
-
     println!("Edit User Request: {:?}", username);
     if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
-        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-        log_data(
-            pool,
-            user_id,
-            client_ip.unwrap().to_string(),
-            ("/user/".to_owned()+&username).to_string(),
-            None,
-            get_timestamp(),
-            _key.0.to_string(),
-            "Unauthorized".to_string(),
-            "PUT".to_string()
-        );
-    }
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+            log_data(
+                pool,
+                user_id,
+                client_ip.unwrap().to_string(),
+                ("/user/".to_owned() + &username).to_string(),
+                None,
+                get_timestamp(),
+                _key.0.to_string(),
+                "Unauthorized".to_string(),
+                "PUT".to_string(),
+            );
+        }
         return Err(Status::Unauthorized);
     }
-    let res = edit_user(params, username, pool, is_admin_perm(&_key, pool))
-        .await;
+    let res = edit_user(params, username, pool, is_admin_perm(&_key, pool)).await;
 
     if res.is_err() {
         let error = res.err().unwrap();
-        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-        log_data(
-            pool,
-            user_id,
-            client_ip.unwrap().to_string(),
-            ("/user/".to_owned()+&username).to_string(),
-            None,
-            get_timestamp(),
-            _key.0.to_string(),
-            match error {
-                APIErrors::UserNotFound => "User Not Found".to_string(),
-                APIErrors::DBError => "DB Error".to_string(),
-                _ => "Unknown Error".to_string(),
-            },
-            "PUT".to_string()
-        );
-    }
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+            log_data(
+                pool,
+                user_id,
+                client_ip.unwrap().to_string(),
+                ("/user/".to_owned() + &username).to_string(),
+                None,
+                get_timestamp(),
+                _key.0.to_string(),
+                match error {
+                    APIErrors::UserNotFound => "User Not Found".to_string(),
+                    APIErrors::DBError => "DB Error".to_string(),
+                    _ => "Unknown Error".to_string(),
+                },
+                "PUT".to_string(),
+            );
+        }
         match error {
             APIErrors::UserNotFound => return Err(Status::NotFound),
             APIErrors::DBError => return Err(Status::InternalServerError),
             _ => return Err(Status::InternalServerError),
         }
     }
-    if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-    log_data(
-        pool,
-        user_id,
-        client_ip.unwrap().to_string(),
-        ("/user/".to_owned()+&username).to_string(),
-        None,
-        get_timestamp(),
-        _key.0.to_string(),
-        "Success".to_string(),
-        "PUT".to_string()
-    );
-}
+    if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+        log_data(
+            pool,
+            user_id,
+            client_ip.unwrap().to_string(),
+            ("/user/".to_owned() + &username).to_string(),
+            None,
+            get_timestamp(),
+            _key.0.to_string(),
+            "Success".to_string(),
+            "PUT".to_string(),
+        );
+    }
     Ok("User Edited".to_string())
 }
 
@@ -353,56 +352,56 @@ pub async fn delete_user_route(
     }
 
     if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
-        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-        log_data(
-            pool,
-            my_user_id,
-            client_ip.unwrap().to_string(),
-            ("/user/".to_owned() + &user_id).to_string(),
-            None,
-            get_timestamp(),
-            _key.0.to_string(),
-            "Unauthorized".to_string(),
-            "DELETE".to_string()
-        );
-    }
+        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+            log_data(
+                pool,
+                my_user_id,
+                client_ip.unwrap().to_string(),
+                ("/user/".to_owned() + &user_id).to_string(),
+                None,
+                get_timestamp(),
+                _key.0.to_string(),
+                "Unauthorized".to_string(),
+                "DELETE".to_string(),
+            );
+        }
         return Err(Status::Unauthorized);
     }
     match delete_user(&user_id, pool).await {
         Ok(_) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-            log_data(
-                pool,
-                my_user_id,
-                client_ip.unwrap().to_string(),
-                ("/user/".to_owned() + &user_id).to_string(),
-                None,
-                get_timestamp(),
-                _key.0.to_string(),
-                "Success".to_string(),
-                "DELETE".to_string()
-            );
-        }
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    my_user_id,
+                    client_ip.unwrap().to_string(),
+                    ("/user/".to_owned() + &user_id).to_string(),
+                    None,
+                    get_timestamp(),
+                    _key.0.to_string(),
+                    "Success".to_string(),
+                    "DELETE".to_string(),
+                );
+            }
             Ok("User Deleted".to_string())
         }
         Err(error) => {
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)){
-            log_data(
-                pool,
-                my_user_id,
-                client_ip.unwrap().to_string(),
-                ("/user/".to_owned() + &user_id).to_string(),
-                None,
-                get_timestamp(),
-                _key.0.to_string(),
-                match error {
-                    APIErrors::UserNotFound => "User Not Found".to_string(),
-                    APIErrors::DBError => "DB Error".to_string(),
-                    _ => "Unknown Error".to_string(),
-                },
-                "DELETE".to_string()
-            );
-        }
+            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
+                log_data(
+                    pool,
+                    my_user_id,
+                    client_ip.unwrap().to_string(),
+                    ("/user/".to_owned() + &user_id).to_string(),
+                    None,
+                    get_timestamp(),
+                    _key.0.to_string(),
+                    match error {
+                        APIErrors::UserNotFound => "User Not Found".to_string(),
+                        APIErrors::DBError => "DB Error".to_string(),
+                        _ => "Unknown Error".to_string(),
+                    },
+                    "DELETE".to_string(),
+                );
+            }
             match error {
                 APIErrors::UserNotFound => Err(Status::NotFound),
                 APIErrors::DBError => Err(Status::InternalServerError),

@@ -17,10 +17,9 @@ pub fn is_admin_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
             }
             let permissions = permissions.unwrap();
             permissions.admin
-        },
+        }
         None => return false,
     }
-
 }
 
 // Check for Permissions Permissions
@@ -34,7 +33,7 @@ pub fn is_perm_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
             }
             let permissions = permissions.unwrap();
             permissions.permissions
-        },
+        }
         None => return false,
     }
 }
@@ -50,7 +49,7 @@ pub fn is_users_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
             }
             let permissions = permissions.unwrap();
             permissions.users
-        },
+        }
         None => return false,
     }
 }
@@ -66,7 +65,7 @@ pub fn is_images_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
             }
             let permissions = permissions.unwrap();
             permissions.images
-        },
+        }
         None => return false,
     }
 }
@@ -82,7 +81,7 @@ pub fn is_cost_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
             }
             let permissions = permissions.unwrap();
             permissions.cost
-        },
+        }
         None => return false,
     }
 }
@@ -98,7 +97,7 @@ pub fn is_query_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
             }
             let permissions = permissions.unwrap();
             permissions.query
-        },
+        }
         None => return false,
     }
 }
@@ -115,7 +114,7 @@ pub fn is_stock_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
             }
             let permissions = permissions.unwrap();
             permissions.stock
-        },
+        }
         None => return false,
     }
 }
@@ -132,7 +131,7 @@ pub fn is_reports_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
             }
             let permissions = permissions.unwrap();
             permissions.reports
-        },
+        }
         None => return false,
     }
 }
@@ -148,7 +147,7 @@ pub fn is_stores_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
             }
             let permissions = permissions.unwrap();
             permissions.stores
-        },
+        }
         None => return false,
     }
 }

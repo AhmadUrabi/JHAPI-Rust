@@ -3,13 +3,13 @@ extern crate rocket;
 
 mod fetch_stores;
 mod file_server;
+mod logs;
 mod permissions;
 mod product_data;
 mod routes;
 mod signing;
 mod user_control;
 mod utils;
-mod logs;
 mod version_check;
 
 use dotenv::dotenv;
@@ -18,7 +18,7 @@ use rocket::fairing::{Fairing, Info, Kind};
 use rocket::http::Header;
 use rocket::http::Status;
 use rocket::log::private::info;
-use rocket::request::{FromRequest, Outcome, Request, self};
+use rocket::request::{self, FromRequest, Outcome, Request};
 use rocket::Response;
 
 use oracle::pool::PoolBuilder;
@@ -32,17 +32,17 @@ use routes::permissions::edit_permissions;
 use routes::permissions::get_permissions;
 use routes::product_data::get_products;
 // use routes::product_data::get_products_pi;
+use routes::logs::get_user_logs;
 use routes::signing::sign;
 use routes::user_control::create_user_route;
 use routes::user_control::delete_user_route;
 use routes::user_control::edit_user_route;
 use routes::user_control::get_user_by_id;
 use routes::user_control::get_user_list;
-use routes::logs::get_user_logs;
 /*use routes::logs::get_route_logs;*/
-use routes::logs::get_all_logs;
 use routes::logs::delete_log_logs;
 use routes::logs::delete_user_logs;
+use routes::logs::get_all_logs;
 use routes::version_check::route_version_check;
 // use crate::routes::user_control::edit_user;
 
@@ -75,10 +75,10 @@ pub struct IPCheck;
 
 #[rocket::async_trait]
 impl<'r> Fairing for IPCheck {
-    fn info (&self) -> Info {
+    fn info(&self) -> Info {
         Info {
             name: "IP Check",
-            kind: Kind::Request
+            kind: Kind::Request,
         }
     }
     async fn on_request(&self, req: &mut Request<'_>, _data: &mut rocket::Data<'_>) {
@@ -89,10 +89,8 @@ impl<'r> Fairing for IPCheck {
     }
 }
 
-
 #[derive(Copy, Clone, Debug)]
 pub struct LogCheck(pub bool);
-
 
 // Hack: To handle Options request on firefox
 #[options("/<_path..>")]
@@ -118,7 +116,7 @@ fn rocket() -> _ {
 
     let pool = PoolBuilder::new(username, password, database)
         .min_connections(8) // Min == Max always
-        .max_connections(8) 
+        .max_connections(8)
         .build();
 
     // If pool is an error, log and exit
@@ -130,7 +128,17 @@ fn rocket() -> _ {
     // Pool built
 
     rocket::build()
-        .register("/", catchers![unauthorized, not_found, internal_error, bad_request, unprocessable_entity, conflict])
+        .register(
+            "/",
+            catchers![
+                unauthorized,
+                not_found,
+                internal_error,
+                bad_request,
+                unprocessable_entity,
+                conflict
+            ],
+        )
         .manage(pool)
         .mount(
             "/api",
@@ -210,7 +218,7 @@ impl<'r> FromRequest<'r> for LogCheck {
                 } else {
                     Outcome::Success(LogCheck(true))
                 }
-            },
+            }
             _ => Outcome::Success(LogCheck(true)),
         }
     }
@@ -224,7 +232,6 @@ fn bad_request() -> &'static str {
     "Bad Request, please make sure your request body is valid"
 }
 
-
 #[catch(401)]
 fn unauthorized() -> &'static str {
     "Unauthorized, please include a valid Authentication header, or check your request body"
@@ -232,7 +239,7 @@ fn unauthorized() -> &'static str {
 
 #[catch(404)]
 fn not_found(req: &Request) -> String {
-    format!("I couldn't find '{}'. Try something else?", req.uri())    
+    format!("I couldn't find '{}'. Try something else?", req.uri())
 }
 
 #[catch(409)]

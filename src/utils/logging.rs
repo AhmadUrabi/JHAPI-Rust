@@ -2,7 +2,6 @@ use chrono::{Datelike, Local, Timelike};
 use oracle::pool::Pool;
 use oracle::sql_type::Timestamp;
 
-
 // TODO: fix this mess
 pub fn log_data(
     pool: &Pool,
@@ -13,7 +12,7 @@ pub fn log_data(
     timestamp: Timestamp,
     mut token: String,
     mut result: String,
-    mut method: String
+    mut method: String,
 ) {
     let conn = pool.get();
     if conn.is_err() {
@@ -21,7 +20,6 @@ pub fn log_data(
         return;
     }
     let conn = conn.unwrap();
-
 
     // Chop long VALUES
     // Only really applies for extra long parameters and routes (User Input)
@@ -49,9 +47,6 @@ pub fn log_data(
             parameters = Some(parameters.as_ref().unwrap()[..2000].to_string());
         }
     }
-
-    
-
 
     let stmt = conn
         .statement(
@@ -91,7 +86,7 @@ pub fn log_data(
         &result,
         &token,
         &ip_addr,
-        &method
+        &method,
     ]) {
         Ok(_) => (),
         Err(err) => {

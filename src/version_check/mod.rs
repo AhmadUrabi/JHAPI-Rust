@@ -42,7 +42,6 @@ pub fn get_latest_version(platform: &str, pool: &State<Pool>) -> Result<Json<Ver
                     Err(Error::NullValue)
                 }
             }
-           
         }
         Err(err) => {
             error!("Error: {}", err);

@@ -47,8 +47,6 @@ impl Claims {
     }
 }
 
-
-
 pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Result<String, APIErrors> {
     // Check for empty username and password
     info!("Login Attempt: {:?}", params.0.p_username);
@@ -58,7 +56,11 @@ pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Result<String, AP
         return Err(APIErrors::InvalidData);
     }
 
-    let user = fetch_user_data(params.p_username.to_lowercase(), params.p_password.to_string(), pool);
+    let user = fetch_user_data(
+        params.p_username.to_lowercase(),
+        params.p_password.to_string(),
+        pool,
+    );
     if user.is_err() {
         error!("Error fetching user data");
         return Err(user.err().unwrap());
@@ -96,7 +98,6 @@ fn fetch_user_data(username: String, password: String, pool: &Pool) -> Result<Us
         return Err(APIErrors::UserNotFound);
     }
     let row = rows.unwrap();
-    
 
     let mut user = User::new();
     if !verify(&password, &row.get::<&str, String>("PASSWORD").unwrap()).unwrap() {
@@ -110,7 +111,7 @@ fn fetch_user_data(username: String, password: String, pool: &Pool) -> Result<Us
     Ok(user)
 }
 
-fn generate_token(user: &User) -> Result<String,APIErrors> {
+fn generate_token(user: &User) -> Result<String, APIErrors> {
     let secret: String = std::env::var("SECRET_KEY").expect("SECRET_KEY must be set.");
     if user.USER_ID.is_none()
         || user.USER_NAME.is_none()
@@ -157,7 +158,7 @@ pub fn validate_token(token: &str) -> bool {
                 > SystemTime::now()
                     .duration_since(UNIX_EPOCH)
                     .unwrap() // Safe Unwap, earlier is const, always less than current time
-                    .as_secs() as usize
+                    .as_secs() as usize;
         }
         Err(err) => {
             println!("Error decoding token: {}", err);

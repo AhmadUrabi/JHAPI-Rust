@@ -21,7 +21,7 @@ pub async fn sign(
     info!("Client IP: {:?}", client_ip);
 
     let username = params.0.p_username.clone();
-    
+
     match signin(params, pool).await {
         Ok(token) => {
             info!("Valid User Data, Token Sent");

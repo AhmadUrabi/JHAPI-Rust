@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 use oracle::pool::Pool;
 
-use rocket::State;
 use rocket::serde::json::Json;
+use rocket::State;
 
 pub mod structs;
 
@@ -10,8 +10,10 @@ use structs::LogData;
 
 use crate::utils::structs::APIErrors;
 
-
-pub fn get_all_logs_fn(pool: &State<Pool>, limit: Option<i32>) -> Result<Json<Vec<LogData>>,APIErrors>{
+pub fn get_all_logs_fn(
+    pool: &State<Pool>,
+    limit: Option<i32>,
+) -> Result<Json<Vec<LogData>>, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
@@ -26,13 +28,16 @@ pub fn get_all_logs_fn(pool: &State<Pool>, limit: Option<i32>) -> Result<Json<Ve
     }
 
     let mut logs: Vec<LogData> = Vec::new();
-    let stmt = conn.statement("SELECT * FROM ODBC_JHC.API_LOGS ORDER BY TIMESTAMP DESC FETCH NEXT :limit ROWS ONLY").build();
+    let stmt = conn
+        .statement(
+            "SELECT * FROM ODBC_JHC.API_LOGS ORDER BY TIMESTAMP DESC FETCH NEXT :limit ROWS ONLY",
+        )
+        .build();
     if stmt.is_err() {
         error!("Error building statement");
         return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
-
 
     let rows = stmt.query(&[&logLimit]);
     if rows.is_err() {
@@ -48,7 +53,7 @@ pub fn get_all_logs_fn(pool: &State<Pool>, limit: Option<i32>) -> Result<Json<Ve
             return Err(APIErrors::DBError);
         }
         let row = row.unwrap();
-        
+
         // Added Default Values to prevent panics, Frontend should handle this
         logs.push(LogData {
             LOG_ID: row.get("LOG_ID").unwrap_or(-1),
@@ -65,7 +70,11 @@ pub fn get_all_logs_fn(pool: &State<Pool>, limit: Option<i32>) -> Result<Json<Ve
     Ok(Json(logs))
 }
 
-pub fn get_user_logs_fn(username: String, pool: &State<Pool>, limit: Option<i32>) -> Result<Json<Vec<LogData>>,APIErrors>{
+pub fn get_user_logs_fn(
+    username: String,
+    pool: &State<Pool>,
+    limit: Option<i32>,
+) -> Result<Json<Vec<LogData>>, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
@@ -86,7 +95,6 @@ pub fn get_user_logs_fn(username: String, pool: &State<Pool>, limit: Option<i32>
         return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
-
 
     let rows = stmt.query(&[&username, &logLimit]);
     if rows.is_err() {
@@ -170,7 +178,11 @@ pub fn get_route_logs_fn(route: String, pool: &State<Pool>, limit: Option<i32>) 
 }
 */
 
-pub fn delete_user_logs_fn(username: String, pool: &State<Pool>, limit: Option<i32>) -> Result<(),APIErrors>{
+pub fn delete_user_logs_fn(
+    username: String,
+    pool: &State<Pool>,
+    limit: Option<i32>,
+) -> Result<(), APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
@@ -179,7 +191,7 @@ pub fn delete_user_logs_fn(username: String, pool: &State<Pool>, limit: Option<i
     let conn = conn.unwrap();
     let stmt;
     match limit {
-        Some(lim)=> {
+        Some(lim) => {
             stmt = conn.statement("DELETE FROM ODBC_JHC.API_LOGS WHERE ROWID IN (SELECT ROWID FROM ODBC_JHC.API_LOGS WHERE USERNAME = :username ORDER BY LOG_ID DESC FETCH FIRST :limit ROWS ONLY)").build();
             if stmt.is_err() {
                 error!("Error building statement");
@@ -193,9 +205,11 @@ pub fn delete_user_logs_fn(username: String, pool: &State<Pool>, limit: Option<i
                     return Err(APIErrors::DBError);
                 }
             };
-        },
+        }
         None => {
-            stmt = conn.statement("DELETE FROM ODBC_JHC.API_LOGS WHERE USERNAME = :username").build();
+            stmt = conn
+                .statement("DELETE FROM ODBC_JHC.API_LOGS WHERE USERNAME = :username")
+                .build();
             if stmt.is_err() {
                 error!("Error building statement");
                 return Err(APIErrors::DBError);
@@ -208,7 +222,7 @@ pub fn delete_user_logs_fn(username: String, pool: &State<Pool>, limit: Option<i
                     return Err(APIErrors::DBError);
                 }
             };
-            },
+        }
     }
     match conn.commit() {
         Ok(_) => (),
@@ -217,11 +231,11 @@ pub fn delete_user_logs_fn(username: String, pool: &State<Pool>, limit: Option<i
             return Err(APIErrors::DBError);
         }
     }
-    
+
     Ok(())
 }
 
-pub fn delete_log_logs_fn(log_id: i32, pool: &State<Pool>) -> Result<(),APIErrors>{
+pub fn delete_log_logs_fn(log_id: i32, pool: &State<Pool>) -> Result<(), APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
@@ -229,7 +243,9 @@ pub fn delete_log_logs_fn(log_id: i32, pool: &State<Pool>) -> Result<(),APIError
     }
     let conn = conn.unwrap();
 
-    let stmt = conn.statement("DELETE FROM ODBC_JHC.API_LOGS WHERE LOG_ID = :log_id").build();
+    let stmt = conn
+        .statement("DELETE FROM ODBC_JHC.API_LOGS WHERE LOG_ID = :log_id")
+        .build();
     if stmt.is_err() {
         error!("Error building statement");
         return Err(APIErrors::DBError);
@@ -243,8 +259,7 @@ pub fn delete_log_logs_fn(log_id: i32, pool: &State<Pool>) -> Result<(),APIError
             return Err(APIErrors::DBError);
         }
     };
-    
-    
+
     match conn.commit() {
         Ok(_) => Ok(()),
         Err(err) => {
@@ -252,5 +267,4 @@ pub fn delete_log_logs_fn(log_id: i32, pool: &State<Pool>) -> Result<(),APIError
             return Err(APIErrors::DBError);
         }
     }
-
 }

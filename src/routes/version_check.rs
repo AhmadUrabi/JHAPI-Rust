@@ -7,8 +7,8 @@ use rocket::{post, State};
 
 use crate::utils::logging::{get_timestamp, log_data};
 
-use crate::version_check::structs::*;
 use crate::version_check::get_latest_version;
+use crate::version_check::structs::*;
 
 #[post("/version", data = "<params>")]
 pub async fn route_version_check(
@@ -49,5 +49,4 @@ pub async fn route_version_check(
             Err(Status::InternalServerError)
         }
     }
-
 }
