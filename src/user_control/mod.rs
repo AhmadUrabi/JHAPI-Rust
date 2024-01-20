@@ -53,10 +53,10 @@ pub async fn get_users(_key: &ApiKey<'_>, pool: &Pool) -> Result<Vec<User>, APIE
             let row = row.unwrap();
 
             let user = User {
-                username: row.get::<&str, String>("USERNAME").unwrap(),
-                fullname: row.get::<&str, String>("FULLNAME").unwrap(),
-                email: row.get::<&str, String>("EMAIL").unwrap(),
-                login_duration: row.get::<&str, i32>("LOGINDURATION").unwrap(),
+                username: row.get("USERNAME").unwrap(),
+                fullname: row.get("FULLNAME").unwrap(),
+                email: row.get("EMAIL").unwrap(),
+                login_duration: row.get("LOGINDURATION").unwrap(),
             };
             users.push(user);
         }
@@ -98,10 +98,10 @@ pub async fn get_user(user_id: &str, pool: &Pool) -> Result<User, APIErrors> {
         }
         let row = row.unwrap();
         user = User {
-            username: row.get::<&str, String>("USERNAME").unwrap(),
-            fullname: row.get::<&str, String>("FULLNAME").unwrap(),
-            email: row.get::<&str, String>("EMAIL").unwrap(),
-            login_duration: row.get::<&str, i32>("LOGINDURATION").unwrap(),
+            username: row.get("USERNAME").unwrap(),
+            fullname: row.get("FULLNAME").unwrap(),
+            email: row.get("EMAIL").unwrap(),
+            login_duration: row.get("LOGINDURATION").unwrap(),
         };
     }
     if user.is_empty() {
@@ -190,15 +190,15 @@ pub async fn edit_user(
     let mut new_user = original_user.clone();
 
     if params_unwrapped.p_fullname.is_some() {
-        new_user.fullname = params_unwrapped.p_fullname.unwrap();
+        new_user.fullname = params_unwrapped.p_fullname;
     }
 
     if params_unwrapped.p_email.is_some() {
-        new_user.email = params_unwrapped.p_email.unwrap();
+        new_user.email = params_unwrapped.p_email;
     }
 
     if params_unwrapped.p_loginduration.is_some() {
-        new_user.login_duration = params_unwrapped.p_loginduration.unwrap();
+        new_user.login_duration = params_unwrapped.p_loginduration;
     }
 
     let conn = pool.get();

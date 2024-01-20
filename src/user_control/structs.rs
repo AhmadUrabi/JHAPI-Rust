@@ -1,18 +1,18 @@
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct User {
     pub username: String,
-    pub fullname: String,
-    pub email: String,
-    pub login_duration: i32,
+    pub fullname: Option<String>,
+    pub email: Option<String>,
+    pub login_duration: Option<i32>,
 }
 
 impl User {
     pub fn new() -> User {
         User {
             username: "".to_string(),
-            fullname: "".to_string(),
-            email: "".to_string(),
-            login_duration: 0,
+            fullname: None,
+            email: None,
+            login_duration: None,
         }
     }
     pub fn is_empty(&self) -> bool {
