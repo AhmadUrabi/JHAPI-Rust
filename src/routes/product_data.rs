@@ -45,7 +45,7 @@ pub async fn get_products(
     // Convert json to String
 
     let params_clone = params.clone();
-
+    
     match get_product(params, pool, &key).await {
         Ok(products) => {
             if log_check.0 || (!log_check.0 && !is_admin_perm(&key, pool)) {

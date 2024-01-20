@@ -19,6 +19,7 @@ tokio = { version = "1", features = ["full"] }
 #magick_rust = "0.19.1"
 magick_rust = { path = "magick-rust" }
 bcrypt = "0.15.0"
+redis = "0.24.0"
 
 [dependencies.rocket]
 version = "0.5.0"

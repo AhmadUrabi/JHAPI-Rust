@@ -5,6 +5,7 @@ use oracle::pool::Pool;
 use oracle::Row;
 
 use oracle::sql_type::ToSql;
+use redis::Commands;
 use rocket::log::private::info;
 use rocket::serde::json::Json;
 
@@ -33,6 +34,20 @@ pub async fn get_product(
         println!("Empty params");
         return Ok(Vec::new());
     }
+
+    let client = redis::Client::open("redis://10.0.0.138/").unwrap();
+    let mut con = client.get_connection().unwrap();
+
+    let now = tokio::time::Instant::now();
+    let my_ref = params.p_ref.clone().unwrap();
+    if let Ok(value) = con.get::<String,String>(my_ref.clone()) {
+        println!("Got value from cache");
+        // Do something with the value
+        println!("Total Cache Time: {:?}", now.elapsed().as_millis());
+        return Ok(serde_json::from_str(&value).unwrap());
+    }
+
+
 
     // Get username from token
     let username: String;
@@ -290,6 +305,7 @@ pub async fn get_product(
     }
 
     info!("Products Count: {:?}", products.len());
-
+    let options = redis::SetOptions::default().with_expiration(redis::SetExpiry::EX(60));
+    con.set_options::<String, String, String>(my_ref, serde_json::to_string(&products).unwrap(),options).unwrap();
     Ok(products)
 }

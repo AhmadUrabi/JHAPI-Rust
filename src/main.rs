@@ -127,6 +127,8 @@ fn rocket() -> _ {
     let pool = pool.unwrap();
     // Pool built
 
+
+    
     rocket::build()
         .register(
             "/",
