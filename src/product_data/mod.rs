@@ -81,35 +81,61 @@ pub async fn get_product(
         }
     }
 
-    let mut sql = String::from("SELECT * FROM ODBC_JHC.JHC_INVDATA");
+    let mut sql = String::from("SELECT * FROM ODBC_JHC.JHC_INVDATA WHERE");
     let mut my_params: Vec<(&str, &dyn ToSql)> = Vec::new();
-
+    let mut param_count = 0;
     if let Some(p_ref) = &params.p_ref {
         if p_ref.contains("%") {
-            sql.push_str(" WHERE FOREIGN_ITEM_CODE LIKE :ref");
+            if param_count > 0 {
+                sql.push_str(" AND");
+            }
+            param_count += 1;
+            sql.push_str(" FOREIGN_ITEM_CODE LIKE :ref");
         } else {
-            sql.push_str(" WHERE FOREIGN_ITEM_CODE = :ref");
+            if param_count > 0 {
+                sql.push_str(" AND");
+            }
+            param_count += 1;
+            sql.push_str(" FOREIGN_ITEM_CODE = :ref");
         }
         my_params.push(("ref", p_ref as &dyn ToSql));
     }
 
     if let Some(p_barcode) = &params.p_barcode {
         if p_barcode.contains("%") {
-            sql.push_str(" AND ITEM_MAIN_BARCODE LIKE :barcode");
+            if param_count > 0 {
+                sql.push_str(" AND");
+            }
+            param_count += 1;
+            sql.push_str(" BARCODE_LISTED LIKE '%' || :barcode");
         } else {
-            sql.push_str(" AND ITEM_MAIN_BARCODE = :barcode");
+            if param_count > 0 {
+                sql.push_str(" AND");
+            }
+            param_count += 1;
+            sql.push_str(" BARCODE_LISTED LIKE '%' || :barcode || '%'");
         }
         my_params.push(("barcode", p_barcode as &dyn ToSql));
     }
 
     if let Some(p_id) = &params.p_id {
         if p_id.contains("%") {
-            sql.push_str(" AND ITEM_ID LIKE :id");
+            if param_count > 0 {
+                sql.push_str(" AND");
+            }
+            param_count += 1;
+            sql.push_str(" ITEM_ID LIKE :id");
         } else {
-            sql.push_str(" AND ITEM_ID = :id");
+            if param_count > 0 {
+                sql.push_str(" AND");
+            }
+            param_count += 1;
+            sql.push_str(" ITEM_ID = :id");
         }
         my_params.push(("id", p_id as &dyn ToSql));
     }
+
+    println!("SQL: {:?}", sql);
 
     if my_params.is_empty() {
         return Ok(Vec::new());
