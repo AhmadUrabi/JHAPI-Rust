@@ -11,15 +11,14 @@ mod signing;
 mod user_control;
 mod utils;
 mod version_check;
+mod fairings;
 
 use dotenv::dotenv;
 
-use rocket::fairing::{Fairing, Info, Kind};
-use rocket::http::Header;
 use rocket::http::Status;
 use rocket::log::private::info;
-use rocket::request::{self, FromRequest, Outcome, Request};
-use rocket::Response;
+use rocket::request::{FromRequest, Outcome, Request};
+
 
 use oracle::pool::PoolBuilder;
 
@@ -48,49 +47,8 @@ use routes::version_check::route_version_check;
 
 use signing::validate_token;
 
-// CORS Setup
-pub struct CORS;
-
-#[rocket::async_trait]
-impl Fairing for CORS {
-    fn info(&self) -> Info {
-        Info {
-            name: "Add CORS headers to responses",
-            kind: Kind::Response,
-        }
-    }
-
-    async fn on_response<'r>(&self, _request: &'r Request<'_>, response: &mut Response<'r>) {
-        response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
-        response.set_header(Header::new(
-            "Access-Control-Allow-Methods",
-            "POST, GET, PATCH, OPTIONS, PUT, DELETE",
-        ));
-        response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
-        response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
-    }
-}
-
-pub struct IPCheck;
-
-#[rocket::async_trait]
-impl<'r> Fairing for IPCheck {
-    fn info(&self) -> Info {
-        Info {
-            name: "IP Check",
-            kind: Kind::Request,
-        }
-    }
-    async fn on_request(&self, req: &mut Request<'_>, _data: &mut rocket::Data<'_>) {
-        match req.remote() {
-            Some(i) => println!("Client IP: {}", i.ip()),
-            None => println!("Client IP: Unknown"),
-        }
-    }
-}
-
-#[derive(Copy, Clone, Debug)]
-pub struct LogCheck(pub bool);
+use crate::fairings::log::Logger;
+use crate::fairings::cors::CORS;
 
 // Hack: To handle Options request on firefox
 #[options("/<_path..>")]
@@ -128,6 +86,8 @@ fn rocket() -> _ {
     // Pool built
 
     rocket::build()
+        .attach(CORS)
+        .attach(Logger)
         .register(
             "/",
             catchers![
@@ -167,8 +127,7 @@ fn rocket() -> _ {
                 route_version_check,
             ],
         )
-        .attach(CORS)
-        .attach(IPCheck)
+        
 }
 
 // Start Request Guard Functions
@@ -204,27 +163,6 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
         }
     }
 }
-
-// Used to check for X-Log-Request header
-#[rocket::async_trait]
-impl<'r> FromRequest<'r> for LogCheck {
-    type Error = ();
-
-    async fn from_request(request: &'r Request<'_>) -> request::Outcome<Self, ()> {
-        match request.headers().get_one("X-Log-Request") {
-            Some(key) => {
-                if key == "false" {
-                    Outcome::Success(LogCheck(false))
-                } else {
-                    Outcome::Success(LogCheck(true))
-                }
-            }
-            _ => Outcome::Success(LogCheck(true)),
-        }
-    }
-}
-// End Request Guard Functions
-
 // Route catchers
 
 #[catch(400)]

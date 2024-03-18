@@ -1,9 +1,8 @@
-use crate::signing::decode_token_data;
 use crate::utils::permissions::is_admin_perm;
 use crate::utils::permissions::is_images_perm;
 use crate::utils::permissions::is_query_perm;
 use crate::ApiKey;
-use crate::LogCheck;
+
 use oracle::pool::Pool;
 use rocket::fs::NamedFile;
 use rocket::http::Status;
@@ -14,9 +13,6 @@ use crate::file_server::upload_file;
 
 use crate::utils::structs::APIErrors;
 
-use std::net::IpAddr;
-
-use crate::utils::logging::{get_timestamp, log_data};
 
 use std::path::*;
 
@@ -26,34 +22,8 @@ pub async fn get_image(
     file: PathBuf,
     _key: ApiKey<'_>,
     pool: &State<Pool>,
-    client_ip: Option<IpAddr>,
-    log_check: LogCheck,
 ) -> Result<Option<NamedFile>, Status> {
-    // TODO: Fix these temp user_id strings
-    let mut user_id: String = "".to_string();
-    match decode_token_data(_key.0) {
-        Some(data) => {
-            info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap());
-            user_id = data.USER_ID.unwrap();
-        }
-        None => info!("Token Data: None"),
-    }
-    let user_copy = user_id.clone();
-
     if !is_query_perm(&_key, pool) && !is_admin_perm(&_key, pool) {
-        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
-            log_data(
-                pool,
-                user_id,
-                client_ip.unwrap().to_string(),
-                ("/images/".to_owned() + file.to_str().unwrap()).to_string(),
-                None,
-                get_timestamp(),
-                _key.0.to_string(),
-                "Unauthorized".to_string(),
-                "GET".to_string(),
-            );
-        }
         return Err(Status::Unauthorized);
     }
     info!("Image Request: {:?}", file);
@@ -61,19 +31,6 @@ pub async fn get_image(
     let filename = file.to_str().unwrap().to_string();
 
     if filename == "" {
-        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
-            log_data(
-                pool,
-                user_id,
-                client_ip.unwrap().to_string(),
-                ("/images/".to_owned() + file.to_str().unwrap()).to_string(),
-                None,
-                get_timestamp(),
-                _key.0.to_string(),
-                "File Not Found".to_string(),
-                "GET".to_string(),
-            );
-        }
         return Err(Status::NotFound);
     }
 
@@ -81,23 +38,6 @@ pub async fn get_image(
         Ok(()) => info!("File Downloaded"),
         Err(e) => {
             info!("File Not Found");
-            if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
-                log_data(
-                    pool,
-                    user_id,
-                    client_ip.unwrap().to_string(),
-                    ("/images/".to_owned() + file.to_str().unwrap()).to_string(),
-                    None,
-                    get_timestamp(),
-                    _key.0.to_string(),
-                    match e {
-                        APIErrors::SFTPError => "SFTP Error".to_string(),
-                        APIErrors::FileNotFound => "File Not Found".to_string(),
-                        _ => "Error".to_string(),
-                    },
-                    "GET".to_string(),
-                );
-            }
             match e {
                 APIErrors::SFTPError => return Err(Status::InternalServerError),
                 APIErrors::FileNotFound => return Err(Status::NotFound),
@@ -105,19 +45,6 @@ pub async fn get_image(
             }
         }
     };
-    if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
-        log_data(
-            pool,
-            user_copy,
-            client_ip.unwrap().to_string(),
-            ("/images/".to_owned() + file.to_str().unwrap()).to_string(),
-            None,
-            get_timestamp(),
-            _key.0.to_string(),
-            "Success".to_string(),
-            "GET".to_string(),
-        );
-    }
     Ok(NamedFile::open(Path::new("tmp/tmpdownload.jpg")).await.ok())
 }
 
@@ -136,33 +63,8 @@ pub async fn upload(
     #[allow(non_snake_case)] // Keeps giving warnings about _key not being snake_case
     _key: ApiKey<'_>,
     pool: &State<Pool>,
-    client_ip: Option<IpAddr>,
-    log_check: LogCheck,
 ) -> Result<String, Status> {
-    let mut user_id: String = "".to_string();
-    match decode_token_data(_key.0) {
-        Some(data) => {
-            info!("Token User Id: {:?}", data.USER_ID.as_ref().unwrap());
-            user_id = data.USER_ID.unwrap();
-        }
-        None => info!("Token Data: None"),
-    }
-    let user_copy = user_id.clone();
-
     if !is_images_perm(&_key, pool) && !is_admin_perm(&_key, pool) {
-        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
-            log_data(
-                pool,
-                user_id,
-                client_ip.unwrap().to_string(),
-                "/upload".to_string(),
-                Some(params.item_code.clone()),
-                get_timestamp(),
-                _key.0.to_string(),
-                "Unauthorized".to_string(),
-                "POST".to_string(),
-            );
-        }
         return Err(Status::Unauthorized);
     }
 
@@ -171,19 +73,6 @@ pub async fn upload(
     // Save file temporarily
 
     if params.file.name().is_none() || params.item_code == "" {
-        if log_check.0 || (!log_check.0 && !is_admin_perm(&_key, pool)) {
-            log_data(
-                pool,
-                user_id,
-                client_ip.unwrap().to_string(),
-                "/upload".to_string(),
-                Some(params.item_code.clone()),
-                get_timestamp(),
-                _key.0.to_string(),
-                "No File Uploaded".to_string(),
-                "POST".to_string(),
-            );
-        }
         return Err(Status::BadRequest);
     }
     let filename = "tmp/".to_string() + params.file.name().unwrap();
@@ -194,21 +83,6 @@ pub async fn upload(
         Ok(()) => info!("File Uploaded"),
         Err(e) => {
             info!("File Not Uploaded");
-            log_data(
-                pool,
-                user_id,
-                client_ip.unwrap().to_string(),
-                "/upload".to_string(),
-                Some(params.item_code.clone()),
-                get_timestamp(),
-                _key.0.to_string(),
-                match e {
-                    APIErrors::SFTPError => "SFTP Error".to_string(),
-                    APIErrors::FileNotFound => "File Not Found".to_string(),
-                    _ => "Error".to_string(),
-                },
-                "POST".to_string(),
-            );
             match e {
                 APIErrors::SFTPError => return Err(Status::InternalServerError),
                 APIErrors::FileNotFound => return Err(Status::NotFound),
@@ -219,18 +93,5 @@ pub async fn upload(
 
     // Delete temporary file
     std::fs::remove_file(filename).unwrap();
-
-    log_data(
-        pool,
-        user_copy,
-        client_ip.unwrap().to_string(),
-        "/upload".to_string(),
-        Some(params.item_code.clone()),
-        get_timestamp(),
-        _key.0.to_string(),
-        "Success".to_string(),
-        "POST".to_string(),
-    );
-
     Ok("File Uploaded".to_string())
 }
