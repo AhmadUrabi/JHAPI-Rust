@@ -7,7 +7,7 @@ use rocket::{get, State};
 use crate::fetch_stores::structs::*;
 
 use crate::utils::structs::APIErrors;
-use crate::ApiKey;
+use crate::request_guard::api_key::ApiKey;
 
 use crate::fetch_stores::get_stores;
 

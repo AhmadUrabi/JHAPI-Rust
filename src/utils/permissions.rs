@@ -1,6 +1,6 @@
 use oracle::pool::Pool;
 
-use crate::ApiKey;
+use crate::request_guard::api_key::ApiKey;
 
 use crate::permissions::get_user_permissions;
 

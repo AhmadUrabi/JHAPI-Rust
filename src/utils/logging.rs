@@ -14,6 +14,7 @@ pub fn log_data(
     mut result: String,
     mut method: String,
 ) {
+    
     let conn = pool.get();
     if conn.is_err() {
         error!("Error: {}", conn.err().unwrap());
@@ -74,6 +75,7 @@ pub fn log_data(
         .build();
     if stmt.is_err() {
         error!("Error building statement: {}", stmt.err().unwrap());
+        println!("Error building statement");
         return;
     }
     let mut stmt = stmt.unwrap();
@@ -91,6 +93,7 @@ pub fn log_data(
         Ok(_) => (),
         Err(err) => {
             error!("Error executing query: {}", err);
+            println!("Error executing query: {}", err);
             return;
         }
     };
@@ -98,6 +101,7 @@ pub fn log_data(
         Ok(_) => (),
         Err(err) => {
             error!("Error: {}", err);
+            println!("Error: {}", err);
             return;
         }
     }

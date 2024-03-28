@@ -1,7 +1,7 @@
 use crate::utils::permissions::is_admin_perm;
 use crate::utils::permissions::is_images_perm;
 use crate::utils::permissions::is_query_perm;
-use crate::ApiKey;
+use crate::request_guard::api_key::ApiKey;
 
 use oracle::pool::Pool;
 use rocket::fs::NamedFile;

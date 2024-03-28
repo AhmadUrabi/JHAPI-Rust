@@ -8,7 +8,7 @@ use crate::permissions::structs::{PermissionEditParams, Permissions};
 
 use crate::signing::decode_token_data;
 
-use crate::ApiKey;
+use crate::request_guard::api_key::ApiKey;
 
 use crate::utils::permissions::{is_admin_perm, is_perm_perm};
 use crate::utils::structs::APIErrors;

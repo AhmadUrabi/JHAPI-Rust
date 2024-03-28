@@ -4,7 +4,7 @@ use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::State;
 
-use crate::ApiKey;
+use crate::request_guard::api_key::ApiKey;
 
 use crate::utils::permissions::is_admin_perm;
 

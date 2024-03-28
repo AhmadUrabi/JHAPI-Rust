@@ -1,4 +1,4 @@
-use crate::ApiKey;
+use crate::request_guard::api_key::ApiKey;
 
 use crate::utils::check_user_exists;
 use crate::utils::structs::APIErrors;

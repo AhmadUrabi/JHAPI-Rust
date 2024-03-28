@@ -6,7 +6,7 @@ use rocket::serde::json::Json;
 use rocket::{post, State};
 
 use crate::product_data::get_product;
-use crate::ApiKey;
+use crate::request_guard::api_key::ApiKey;
 
 use crate::product_data::structs::FetchParams;
 use crate::product_data::structs::Product;

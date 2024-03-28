@@ -13,7 +13,7 @@ use crate::product_data::structs::Product;
 
 use crate::fetch_stores::get_stores;
 
-use crate::ApiKey;
+use crate::request_guard::api_key::ApiKey;
 
 use crate::signing::decode_token_data;
 use crate::utils::permissions::is_cost_perm;

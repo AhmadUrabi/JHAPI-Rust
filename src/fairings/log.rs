@@ -38,7 +38,6 @@ impl Fairing for Logger {
                 username = "No User".to_string();
             }
         }
-
         log_data(
             &pool,
             username,
