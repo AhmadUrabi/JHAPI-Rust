@@ -1,6 +1,7 @@
 use oracle::pool::PoolBuilder;
 
 mod fairings;
+mod catchers;
 pub mod request_guard;
 
 use fairings::log::Logger;
@@ -11,14 +12,14 @@ pub struct JHApiServer {
 }
 
 impl JHApiServer {
-    pub fn init(routes: Vec<rocket::Route>, catchers: Vec<rocket::Catcher>) -> JHApiServer {
+    pub fn init(routes: Vec<rocket::Route>) -> JHApiServer {
         let pool = JHApiServer::build_pool();
         let rocket = rocket::build()
         .attach(CORS)
         .attach(Logger)
         .register(
             "/",
-            catchers
+            Self::get_catchers()
         )
         .manage(pool)
         .mount(
@@ -30,7 +31,7 @@ impl JHApiServer {
         }
     }
 
-    pub fn build_pool() -> oracle::pool::Pool {
+    fn build_pool() -> oracle::pool::Pool {
         let username = std::env::var("LOGIN_USERNAME").expect("LOGIN_USERNAME must be set.");
         let password = std::env::var("LOGIN_PASSWORD").expect("LOGIN_PASSWORD must be set.");
         let database = std::env::var("DB_CONNECTION").expect("DB_CONNECTION must be set.");
@@ -47,6 +48,18 @@ impl JHApiServer {
         }
         let pool = pool.unwrap();
         pool
+    }
+
+    fn get_catchers() -> Vec<rocket::Catcher> {
+        let catchers = catchers![
+            catchers::bad_request,
+            catchers::unauthorized,
+            catchers::not_found,
+            catchers::conflict,
+            catchers::unprocessable_entity,
+            catchers::internal_error,
+        ];
+        catchers
     }
 
     
