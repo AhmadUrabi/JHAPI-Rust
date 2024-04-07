@@ -6,7 +6,7 @@ use oracle::pool::Pool;
 
 use crate::functions::permissions::structs::{PermissionEditParams, Permissions};
 
-use crate::functions::signing::decode_token_data;
+use crate::functions::authentication::decode_token_data;
 
 use crate::server::request_guard::api_key::ApiKey;
 

@@ -1,7 +1,7 @@
 use oracle::pool::Pool;
 
 use crate::utils::check_user_exists;
-use crate::{functions::fetch_stores::structs::Store, utils::structs::APIErrors};
+use crate::{functions::stores::structs::Store, utils::structs::APIErrors};
 
 pub mod structs;
 

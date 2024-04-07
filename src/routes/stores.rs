@@ -4,18 +4,18 @@ use rocket::log::private::info;
 use rocket::serde::json::Json;
 use rocket::{get, State};
 
-use crate::functions::fetch_stores::structs::*;
+use crate::functions::stores::structs::*;
 
 use crate::utils::structs::APIErrors;
 use crate::server::request_guard::api_key::ApiKey;
 
-use crate::functions::fetch_stores::get_stores;
+use crate::functions::stores::get_stores;
 
-use crate::functions::signing::decode_token_data;
+use crate::functions::authentication::decode_token_data;
 
 use crate::utils::{check_user_exists, permissions::*};
 
-use crate::functions::fetch_stores::structs::Store;
+use crate::functions::stores::structs::Store;
 
 
 #[get("/stores")]

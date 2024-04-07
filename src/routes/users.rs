@@ -1,6 +1,6 @@
-use crate::functions::signing::decode_token_data;
-use crate::functions::user_control::structs::*;
-use crate::functions::user_control::*;
+use crate::functions::authentication::decode_token_data;
+use crate::functions::users::structs::*;
+use crate::functions::users::*;
 use crate::utils::structs::APIErrors;
 use crate::server::request_guard::api_key::ApiKey;
 

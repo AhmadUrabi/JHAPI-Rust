@@ -13,7 +13,7 @@ use crate::utils::permissions::{is_admin_perm, is_users_perm};
 
 pub mod structs;
 
-use crate::functions::user_control::structs::*;
+use crate::functions::users::structs::*;
 
 pub async fn get_users(_key: &ApiKey<'_>, pool: &Pool) -> Result<Vec<User>, APIErrors> {
     let mut users: Vec<User> = Vec::new();

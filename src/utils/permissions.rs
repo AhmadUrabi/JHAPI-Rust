@@ -4,7 +4,7 @@ use crate::server::request_guard::api_key::ApiKey;
 
 use crate::functions::permissions::get_user_permissions;
 
-use crate::functions::signing::decode_token_data;
+use crate::functions::authentication::decode_token_data;
 
 // Check for Admin Permissions
 pub fn is_admin_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {

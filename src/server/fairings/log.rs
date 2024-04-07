@@ -1,6 +1,6 @@
 use rocket::{fairing::{Fairing, Info, Kind}, Request, Response};
 
-use crate::{functions::signing::decode_token_data, utils::logging::{get_timestamp, log_data}};
+use crate::{functions::authentication::decode_token_data, utils::logging::{get_timestamp, log_data}};
 
 pub struct Logger;
 

@@ -7,8 +7,8 @@ use oracle::pool::Pool;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
-use crate::functions::signing::structs::LoginParams;
-use crate::functions::signing::structs::User;
+use crate::functions::authentication::structs::LoginParams;
+use crate::functions::authentication::structs::User;
 use crate::utils::structs::APIErrors;
 
 use bcrypt::verify;

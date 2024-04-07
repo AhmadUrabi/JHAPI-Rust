@@ -8,14 +8,14 @@ mod server;
 
 use dotenv::dotenv;
 
-use routes::fetch_stores::*;
-use routes::file_server::*;
+use routes::stores::*;
+use routes::files::*;
 use routes::logs::*;
 use routes::permissions::*;
-use routes::product_data::*;
-use routes::signing::*;
-use routes::user_control::*;
-use routes::version_check::*;
+use routes::products::*;
+use routes::authentication::*;
+use routes::users::*;
+use routes::versions::*;
 
 use server::JHApiServer;
 

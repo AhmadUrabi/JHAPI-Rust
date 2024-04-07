@@ -5,11 +5,11 @@ use rocket::log::private::info;
 use rocket::serde::json::Json;
 use rocket::{post, State};
 
-use crate::functions::product_data::get_product;
+use crate::functions::products::get_product;
 use crate::server::request_guard::api_key::ApiKey;
 
-use crate::functions::product_data::structs::FetchParams;
-use crate::functions::product_data::structs::Product;
+use crate::functions::products::structs::FetchParams;
+use crate::functions::products::structs::Product;
 
 #[post("/products", data = "<params>")]
 pub async fn get_products(

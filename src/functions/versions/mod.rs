@@ -1,6 +1,6 @@
 pub mod structs;
 
-use crate::{utils::structs::APIErrors, functions::version_check::structs::Version};
+use crate::{utils::structs::APIErrors, functions::versions::structs::Version};
 use oracle::pool::Pool;
 use rocket::{serde::json::Json, State};
 
