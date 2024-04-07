@@ -13,13 +13,11 @@ mod utils;
 mod version_check;
 mod fairings;
 mod request_guard;
+mod server;
 
 use dotenv::dotenv;
 
 use rocket::request::Request;
-
-
-use oracle::pool::PoolBuilder;
 
 use routes::fetch_stores::get_store_list;
 use routes::fetch_stores::get_store_list_for_user;
@@ -44,8 +42,7 @@ use routes::logs::get_all_logs;
 use routes::version_check::route_version_check;
 // use crate::routes::user_control::edit_user;
 
-use crate::fairings::log::Logger;
-use crate::fairings::cors::CORS;
+use crate::server::JHApiServer;
 
 // Hack: To handle Options request on firefox
 #[options("/<_path..>")]
@@ -62,68 +59,42 @@ fn rocket() -> _ {
     log4rs::init_file("config/log4rs.yaml", Default::default()).unwrap();
     // Logging Setup End
 
-    //let routes = routes![get_products, get_store_list, sign, files, get_permissions, edit_permissions, get_user_list];
+    let routes = routes![
+        get_products,
+        get_store_list,
+        update_store_list,
+        sign,
+        get_permissions,
+        edit_permissions,
+        get_user_list,
+        get_user_by_id,
+        create_user_route,
+        edit_user_route,
+        delete_user_route,
+        get_image,
+        upload,
+        cors_preflight_handler,
+        get_store_list_for_user,
+        get_user_logs,
+        //get_route_logs,
+        get_all_logs,
+        //get_products_pi,
+        delete_log_logs,
+        delete_user_logs,
+        route_version_check,
+    ];
 
-    // Build Connection Pool, program should crash if it fails
-    let username = std::env::var("LOGIN_USERNAME").expect("LOGIN_USERNAME must be set.");
-    let password = std::env::var("LOGIN_PASSWORD").expect("LOGIN_PASSWORD must be set.");
-    let database = std::env::var("DB_CONNECTION").expect("DB_CONNECTION must be set.");
+    let catchers = catchers![
+        unauthorized,
+        not_found,
+        internal_error,
+        bad_request,
+        unprocessable_entity,
+        conflict
+    ];
 
-    let pool = PoolBuilder::new(username, password, database)
-        .min_connections(8) // Min == Max always
-        .max_connections(8)
-        .build();
-
-    // If pool is an error, log and exit
-    if pool.is_err() {
-        error!("Failed to build connection pool");
-        std::process::exit(1);
-    }
-    let pool = pool.unwrap();
-    // Pool built
-
-    rocket::build()
-        .attach(CORS)
-        .attach(Logger)
-        .register(
-            "/",
-            catchers![
-                unauthorized,
-                not_found,
-                internal_error,
-                bad_request,
-                unprocessable_entity,
-                conflict
-            ],
-        )
-        .manage(pool)
-        .mount(
-            "/api",
-            routes![
-                get_products,
-                get_store_list,
-                update_store_list,
-                sign,
-                get_permissions,
-                edit_permissions,
-                get_user_list,
-                get_user_by_id,
-                create_user_route,
-                edit_user_route,
-                delete_user_route,
-                get_image,
-                upload,
-                cors_preflight_handler,
-                get_store_list_for_user,
-                get_user_logs,
-                //get_route_logs,
-                get_all_logs,
-                //get_products_pi,
-                delete_log_logs,
-                delete_user_logs,
-                route_version_check,
-            ],
-        )
+    let server = JHApiServer::init(routes, catchers);
+    server.server
         
 }
 
