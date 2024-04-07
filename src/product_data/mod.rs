@@ -22,6 +22,7 @@ use crate::utils::structs::APIErrors;
 pub mod structs;
 
 // TODO: Test performance of this function
+#[allow(unused_assignments)]
 pub async fn get_product(
     params: Json<FetchParams>,
     pool: &Pool,
