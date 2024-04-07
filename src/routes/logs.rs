@@ -4,12 +4,12 @@ use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::State;
 
-use crate::request_guard::api_key::ApiKey;
+use crate::server::request_guard::api_key::ApiKey;
 
 use crate::utils::permissions::is_admin_perm;
 
 
-use crate::logs::structs::LogData;
+use crate::functions::logs::structs::LogData;
 
 #[get("/logs?<limit>")]
 pub async fn get_all_logs(
@@ -21,7 +21,7 @@ pub async fn get_all_logs(
         return Err(Status::Unauthorized);
     }
 
-    match crate::logs::get_all_logs_fn(&pool, limit) {
+    match crate::functions::logs::get_all_logs_fn(&pool, limit) {
         Ok(logs) => {
             Ok(logs)
         }
@@ -43,7 +43,7 @@ pub async fn get_user_logs(
         return Err(Status::Unauthorized);
     }
 
-    match crate::logs::get_user_logs_fn(username, pool, limit) {
+    match crate::functions::logs::get_user_logs_fn(username, pool, limit) {
         Ok(logs) => {
             Ok(logs)
         }
@@ -119,7 +119,7 @@ pub async fn delete_user_logs(
         return Err(Status::Unauthorized);
     }
 
-    match crate::logs::delete_user_logs_fn(username, pool, limit) {
+    match crate::functions::logs::delete_user_logs_fn(username, pool, limit) {
         Ok(_logs) => {
             Ok("Logs Deleted".to_string())
         }
@@ -138,7 +138,7 @@ pub async fn delete_log_logs(
         return Err(Status::Unauthorized);
     }
 
-    match crate::logs::delete_log_logs_fn(log_id, pool) {
+    match crate::functions::logs::delete_log_logs_fn(log_id, pool) {
         Ok(_logs) => {
             Ok("Logs Deleted".to_string())
         }

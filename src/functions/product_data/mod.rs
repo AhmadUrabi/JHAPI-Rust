@@ -8,14 +8,14 @@ use oracle::sql_type::ToSql;
 use rocket::log::private::info;
 use rocket::serde::json::Json;
 
-use crate::product_data::structs::FetchParams;
-use crate::product_data::structs::Product;
+use crate::functions::product_data::structs::FetchParams;
+use crate::functions::product_data::structs::Product;
 
-use crate::fetch_stores::get_stores;
+use crate::functions::fetch_stores::get_stores;
 
-use crate::request_guard::api_key::ApiKey;
+use crate::server::request_guard::api_key::ApiKey;
 
-use crate::signing::decode_token_data;
+use crate::functions::signing::decode_token_data;
 use crate::utils::permissions::is_cost_perm;
 use crate::utils::structs::APIErrors;
 

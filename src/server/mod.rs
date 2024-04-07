@@ -1,7 +1,10 @@
 use oracle::pool::PoolBuilder;
 
-use crate::fairings::log::Logger;
-use crate::fairings::cors::CORS;
+mod fairings;
+pub mod request_guard;
+
+use fairings::log::Logger;
+use fairings::cors::CORS;
 
 pub struct JHApiServer {
     pub server: rocket::Rocket<rocket::Build>,

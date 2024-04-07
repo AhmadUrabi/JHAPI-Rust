@@ -1,4 +1,4 @@
-use crate::request_guard::api_key::ApiKey;
+use crate::server::request_guard::api_key::ApiKey;
 
 use crate::utils::check_user_exists;
 use crate::utils::structs::APIErrors;
@@ -13,7 +13,7 @@ use crate::utils::permissions::{is_admin_perm, is_users_perm};
 
 pub mod structs;
 
-use crate::user_control::structs::*;
+use crate::functions::user_control::structs::*;
 
 pub async fn get_users(_key: &ApiKey<'_>, pool: &Pool) -> Result<Vec<User>, APIErrors> {
     let mut users: Vec<User> = Vec::new();

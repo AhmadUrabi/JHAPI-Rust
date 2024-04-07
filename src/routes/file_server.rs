@@ -1,15 +1,15 @@
 use crate::utils::permissions::is_admin_perm;
 use crate::utils::permissions::is_images_perm;
 use crate::utils::permissions::is_query_perm;
-use crate::request_guard::api_key::ApiKey;
+use crate::server::request_guard::api_key::ApiKey;
 
 use oracle::pool::Pool;
 use rocket::fs::NamedFile;
 use rocket::http::Status;
 use rocket::{get, State};
 
-use crate::file_server::download_file;
-use crate::file_server::upload_file;
+use crate::functions::file_server::download_file;
+use crate::functions::file_server::upload_file;
 
 use crate::utils::structs::APIErrors;
 

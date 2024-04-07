@@ -1,6 +1,6 @@
 use rocket::{http::Status, request::{FromRequest, Outcome}, Request};
 
-use crate::signing::validate_token;
+use crate::functions::signing::validate_token;
 
 
 // Start Request Guard Functions

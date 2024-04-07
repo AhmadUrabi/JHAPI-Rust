@@ -4,11 +4,11 @@ use rocket::{post, State};
 
 use oracle::pool::Pool;
 
-use crate::permissions::structs::{PermissionEditParams, Permissions};
+use crate::functions::permissions::structs::{PermissionEditParams, Permissions};
 
-use crate::signing::decode_token_data;
+use crate::functions::signing::decode_token_data;
 
-use crate::request_guard::api_key::ApiKey;
+use crate::server::request_guard::api_key::ApiKey;
 
 use crate::utils::permissions::{is_admin_perm, is_perm_perm};
 use crate::utils::structs::APIErrors;
@@ -37,7 +37,7 @@ pub async fn get_permissions(
         return Err(Status::Unauthorized);
     }
 
-    match crate::permissions::get_user_permissions(&username.to_lowercase(), pool) {
+    match crate::functions::permissions::get_user_permissions(&username.to_lowercase(), pool) {
         Ok(permissions) => {
             Ok(Json(permissions))
         }
@@ -63,7 +63,7 @@ pub async fn edit_permissions(
     if !is_perm_perm(&_key, pool) && !is_admin_perm(&_key, pool) {
         return Err(Status::Unauthorized);
     }
-    match crate::permissions::edit_user_permissions(
+    match crate::functions::permissions::edit_user_permissions(
         (username.clone()).to_lowercase(),
         pool,
         params.p_permissions.clone(),

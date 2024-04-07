@@ -1,18 +1,9 @@
 #[macro_use]
 extern crate rocket;
 
-mod fetch_stores;
-mod file_server;
-mod logs;
-mod permissions;
-mod product_data;
+mod functions;
 mod routes;
-mod signing;
-mod user_control;
 mod utils;
-mod version_check;
-mod fairings;
-mod request_guard;
 mod server;
 
 use dotenv::dotenv;

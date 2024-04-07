@@ -1,12 +1,10 @@
-use std::net::IpAddr;
-
 use oracle::pool::Pool;
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::{post, State};
 
-use crate::signing::signin;
-use crate::signing::structs::LoginParams;
+use crate::functions::signing::signin;
+use crate::functions::signing::structs::LoginParams;
 
 use crate::utils::structs::APIErrors;
 

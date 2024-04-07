@@ -1,10 +1,10 @@
 use oracle::pool::Pool;
 
-use crate::request_guard::api_key::ApiKey;
+use crate::server::request_guard::api_key::ApiKey;
 
-use crate::permissions::get_user_permissions;
+use crate::functions::permissions::get_user_permissions;
 
-use crate::signing::decode_token_data;
+use crate::functions::signing::decode_token_data;
 
 // Check for Admin Permissions
 pub fn is_admin_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
