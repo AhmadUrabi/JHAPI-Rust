@@ -9,7 +9,7 @@ use rocket::serde::json::Json;
 
 use bcrypt::{hash, DEFAULT_COST};
 
-use crate::utils::permissions::{is_admin_perm, is_users_perm};
+use crate::utils::permissions::{has_admin_perm, has_users_perm};
 
 pub mod structs;
 
@@ -17,7 +17,7 @@ use crate::functions::users::structs::*;
 
 pub async fn get_users(_key: &ApiKey<'_>, pool: &Pool) -> Result<Vec<User>, APIErrors> {
     let mut users: Vec<User> = Vec::new();
-    if is_admin_perm(_key, pool) || is_users_perm(_key, pool) {
+    if has_admin_perm(_key, pool) || has_users_perm(_key, pool) {
         println!("Admin Permissions Found");
         let conn = pool.get();
         if conn.is_err() {

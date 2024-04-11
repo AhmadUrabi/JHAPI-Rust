@@ -33,7 +33,7 @@ pub async fn get_store_list(
         None => info!("Token Data: None"),
     }
 
-    if is_stores_perm(&_key, &pool) || is_admin_perm(&_key, &pool) {
+    if has_stores_perm(&_key, &pool) || has_admin_perm(&_key, &pool) {
         match get_stores(pool, "admin".to_string()) {
             Ok(stores) => {
                 return Ok(Json(stores));
@@ -68,7 +68,7 @@ pub async fn update_store_list(
     params: Json<StoreListUpdateParams>,
 ) -> Result<String, Status> {
     info!("stores Request: {:?}", params);
-    if is_admin_perm(&_key, pool) || is_stores_perm(&_key, pool) {
+    if has_admin_perm(&_key, pool) || has_stores_perm(&_key, pool) {
         info!("User has permissions");
     } else {
         info!("User does not have permissions");
@@ -144,7 +144,7 @@ pub async fn get_store_list_for_user(
 ) -> Result<Json<Vec<Store>>, Status> {
     info!("User stores Request");
 
-    if !is_stores_perm(&_key, &pool) && !is_admin_perm(&_key, &pool) {
+    if !has_stores_perm(&_key, &pool) && !has_admin_perm(&_key, &pool) {
         info!("Token does not have permissions");
         return Err(Status::Unauthorized);
     }

@@ -1,6 +1,6 @@
-use crate::utils::permissions::is_admin_perm;
+use crate::utils::permissions::has_admin_perm;
 use crate::utils::permissions::is_images_perm;
-use crate::utils::permissions::is_query_perm;
+use crate::utils::permissions::has_query_perm;
 use crate::server::request_guard::api_key::ApiKey;
 
 use oracle::pool::Pool;
@@ -23,7 +23,7 @@ pub async fn get_image(
     _key: ApiKey<'_>,
     pool: &State<Pool>,
 ) -> Result<Option<NamedFile>, Status> {
-    if !is_query_perm(&_key, pool) && !is_admin_perm(&_key, pool) {
+    if !has_query_perm(&_key, pool) && !has_admin_perm(&_key, pool) {
         return Err(Status::Unauthorized);
     }
     info!("Image Request: {:?}", file);
@@ -64,7 +64,7 @@ pub async fn upload(
     _key: ApiKey<'_>,
     pool: &State<Pool>,
 ) -> Result<String, Status> {
-    if !is_images_perm(&_key, pool) && !is_admin_perm(&_key, pool) {
+    if !is_images_perm(&_key, pool) && !has_admin_perm(&_key, pool) {
         return Err(Status::Unauthorized);
     }
 

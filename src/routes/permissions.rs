@@ -10,7 +10,7 @@ use crate::functions::authentication::decode_token_data;
 
 use crate::server::request_guard::api_key::ApiKey;
 
-use crate::utils::permissions::{is_admin_perm, is_perm_perm};
+use crate::utils::permissions::{has_admin_perm, has_permissions_perm};
 use crate::utils::structs::APIErrors;
 
 
@@ -30,8 +30,8 @@ pub async fn get_permissions(
         None => info!("Token Data: None"),
     }
 
-    if !is_perm_perm(&_key, pool)
-        && !is_admin_perm(&_key, pool)
+    if !has_permissions_perm(&_key, pool)
+        && !has_admin_perm(&_key, pool)
         && username.to_lowercase() != user_id.to_lowercase()
     {
         return Err(Status::Unauthorized);
@@ -60,7 +60,7 @@ pub async fn edit_permissions(
 ) -> Result<String, Status> {
     info!("/permissions/{:?} Request: {:?}", username.clone(), params);
 
-    if !is_perm_perm(&_key, pool) && !is_admin_perm(&_key, pool) {
+    if !has_permissions_perm(&_key, pool) && !has_admin_perm(&_key, pool) {
         return Err(Status::Unauthorized);
     }
     match crate::functions::permissions::edit_user_permissions(

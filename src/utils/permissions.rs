@@ -6,8 +6,8 @@ use crate::functions::permissions::get_user_permissions;
 
 use crate::functions::authentication::decode_token_data;
 
-// Check for Admin Permissions
-pub fn is_admin_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+/// Check for Admin Permissions
+pub fn has_admin_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
@@ -22,8 +22,8 @@ pub fn is_admin_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     }
 }
 
-// Check for Permissions Permissions
-pub fn is_perm_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+/// Check for Permission Management Permissions
+pub fn has_permissions_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
@@ -38,8 +38,8 @@ pub fn is_perm_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     }
 }
 
-// Check for Users Control Permissions
-pub fn is_users_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+/// Check for Users Control Permissions
+pub fn has_users_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
@@ -86,8 +86,8 @@ pub fn is_cost_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     }
 }
 
-// Check for Product Query Permissions
-pub fn is_query_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+/// Check for Product Query Permissions
+pub fn has_query_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
@@ -119,9 +119,10 @@ pub fn is_stock_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     }
 }
 
-// Check for Reports Permissions
+
 #[allow(dead_code)]
-pub fn is_reports_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+/// Check for Reports Permissions
+pub fn has_reports_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
@@ -136,8 +137,8 @@ pub fn is_reports_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     }
 }
 
-// Check for Stores Permissions
-pub fn is_stores_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+/// Check for Stores Permissions
+pub fn has_stores_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();

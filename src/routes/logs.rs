@@ -6,7 +6,7 @@ use rocket::State;
 
 use crate::server::request_guard::api_key::ApiKey;
 
-use crate::utils::permissions::is_admin_perm;
+use crate::utils::permissions::has_admin_perm;
 
 
 use crate::functions::logs::structs::LogData;
@@ -17,7 +17,7 @@ pub async fn get_all_logs(
     _key: ApiKey<'_>,
     limit: Option<i32>,
 ) -> Result<Json<Vec<LogData>>, Status> {
-    if !is_admin_perm(&_key, pool) {
+    if !has_admin_perm(&_key, pool) {
         return Err(Status::Unauthorized);
     }
 
@@ -39,7 +39,7 @@ pub async fn get_user_logs(
     limit: Option<i32>,
 ) -> Result<Json<Vec<LogData>>, Status> {
     
-    if !is_admin_perm(&_key, pool) {
+    if !has_admin_perm(&_key, pool) {
         return Err(Status::Unauthorized);
     }
 
@@ -115,7 +115,7 @@ pub async fn delete_user_logs(
     username: String,
     limit: Option<i32>,
 ) -> Result<String, Status> {
-    if !is_admin_perm(&_key, pool) {
+    if !has_admin_perm(&_key, pool) {
         return Err(Status::Unauthorized);
     }
 
@@ -134,7 +134,7 @@ pub async fn delete_log_logs(
     _key: ApiKey<'_>,
     log_id: i32,
 ) -> Result<String, Status> {
-    if !is_admin_perm(&_key, pool) {
+    if !has_admin_perm(&_key, pool) {
         return Err(Status::Unauthorized);
     }
 

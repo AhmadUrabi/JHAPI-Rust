@@ -10,7 +10,7 @@ use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::State;
 
-use crate::utils::permissions::{is_admin_perm, is_users_perm};
+use crate::utils::permissions::{has_admin_perm, has_users_perm};
 
 // Get User List
 #[get("/users")]
@@ -19,7 +19,7 @@ pub async fn get_user_list(
     _key: ApiKey<'_>,
 ) -> Result<Json<Vec<User>>, Status> {
 
-    if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
+    if !has_admin_perm(&_key, pool) && !has_users_perm(&_key, pool) {
         return Err(Status::Unauthorized);
     }
     match get_users(&_key, &pool).await {
@@ -45,8 +45,8 @@ pub async fn get_user_by_id(
         None => info!("Token Data: None"),
     }
 
-    if !is_admin_perm(&_key, pool)
-        && !is_users_perm(&_key, pool)
+    if !has_admin_perm(&_key, pool)
+        && !has_users_perm(&_key, pool)
         && my_user_id.to_lowercase() != user_id.to_lowercase()
     {
         return Err(Status::Unauthorized);
@@ -72,7 +72,7 @@ pub async fn create_user_route(
         "Create User Request: {:?}, {:?}",
         params.0.p_username, params.0.p_fullname
     );
-    if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
+    if !has_admin_perm(&_key, pool) && !has_users_perm(&_key, pool) {
         return Err(Status::Unauthorized);
     }
     match create_user(params.0, pool).await {
@@ -106,10 +106,10 @@ pub async fn edit_user_route(
     }
 
     println!("Edit User Request: {:?}", username);
-    if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
+    if !has_admin_perm(&_key, pool) && !has_users_perm(&_key, pool) {
         return Err(Status::Unauthorized);
     }
-    let res = edit_user(params, username, pool, is_admin_perm(&_key, pool)).await;
+    let res = edit_user(params, username, pool, has_admin_perm(&_key, pool)).await;
 
     if res.is_err() {
         let error = res.err().unwrap();
@@ -128,7 +128,7 @@ pub async fn delete_user_route(
     _key: ApiKey<'_>,
     user_id: String,
 ) -> Result<String, Status> {
-    if !is_admin_perm(&_key, pool) && !is_users_perm(&_key, pool) {
+    if !has_admin_perm(&_key, pool) && !has_users_perm(&_key, pool) {
         return Err(Status::Unauthorized);
     }
     match delete_user(&user_id, pool).await {
