@@ -1,10 +1,10 @@
 pub mod structs;
 
-use crate::{utils::structs::APIErrors, functions::versions::structs::Version};
+use crate::{functions::versions::structs::Version, utils::{sql::read_sql, structs::APIErrors}};
 use oracle::pool::Pool;
 use rocket::{serde::json::Json, State};
 
-pub fn get_latest_version(platform: &str, pool: &State<Pool>) -> Result<Json<Version>, APIErrors> {
+pub async fn get_latest_version(platform: &str, pool: &State<Pool>) -> Result<Json<Version>, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error: {}", conn.err().unwrap());
@@ -12,7 +12,8 @@ pub fn get_latest_version(platform: &str, pool: &State<Pool>) -> Result<Json<Ver
     }
     let conn = conn.unwrap();
 
-    let stmt = conn.statement("SELECT * FROM ODBC_JHC.VERSION_CHECK WHERE PLATFORM = :1 ORDER BY RELEASE_DATE DESC FETCH NEXT 1 ROWS ONLY").build();
+    let stmt = conn.statement(read_sql("get_platform_version").await?.as_str()).build();
+    println!("{:?}", stmt);
     if stmt.is_err() {
         error!("Error: {}", stmt.err().unwrap());
         return Err(APIErrors::InternalServerError);

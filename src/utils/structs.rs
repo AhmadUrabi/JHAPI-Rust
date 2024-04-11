@@ -9,7 +9,8 @@ pub enum APIErrors {
     InternalServerError,
     FileNotFound,
     InvalidCredentials,
-    NoData
+    NoData,
+    IOError
 }
 
 use std::fmt;
@@ -28,6 +29,7 @@ impl fmt::Display for APIErrors {
             APIErrors::FileNotFound => write!(f, "File Not Found"),
             APIErrors::InvalidCredentials => write!(f, "Invalid Credentials"),
             APIErrors::NoData => write!(f, "No Data Found"),
+            APIErrors::IOError => write!(f, "IO Error"),
         }
     }
 }

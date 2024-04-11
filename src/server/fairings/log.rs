@@ -38,7 +38,7 @@ impl Fairing for Logger {
                 username = "No User".to_string();
             }
         }
-        log_data(
+        match log_data(
             &pool,
             username,
             client_ip.to_string(),
@@ -48,7 +48,12 @@ impl Fairing for Logger {
             token.unwrap_or("No Token").to_string(),
             result,
             method,
-        );
+        ).await {
+            Ok(_) => {},
+            Err(e) => {
+                error!("Error logging data: {}", e);
+            }
+        }
         
     }
 }

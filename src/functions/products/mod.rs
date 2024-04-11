@@ -53,7 +53,7 @@ pub async fn get_product(
     // TODO Test using a more complex query
     let mut store_ids: HashSet<String> = HashSet::new();
 
-    match get_stores(pool, username) {
+    match get_stores(pool, username).await {
         Ok(store_list) => {
             for i in store_list {
                 store_ids.insert(i.STORE_ID.unwrap());
@@ -66,7 +66,7 @@ pub async fn get_product(
     }
 
     // To call the function once, otherwise will call on each product found, and touch DB every time
-    let show_cost = is_cost_perm(key, pool);
+    let show_cost = is_cost_perm(key, pool).await;
 
     // Helper function to get value from row and check if store is in store_ids
     fn get_value(

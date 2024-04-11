@@ -44,6 +44,8 @@ impl JHApiServer {
         // If pool is an error, log and exit
         if pool.is_err() {
             error!("Failed to build connection pool");
+            let err = pool.unwrap_err();
+            println!("Error: {:?}", err);
             std::process::exit(1);
         }
         let pool = pool.unwrap();

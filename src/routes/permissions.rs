@@ -30,14 +30,14 @@ pub async fn get_permissions(
         None => info!("Token Data: None"),
     }
 
-    if !has_permissions_perm(&_key, pool)
-        && !has_admin_perm(&_key, pool)
+    if !has_permissions_perm(&_key, pool).await
+        && !has_admin_perm(&_key, pool).await
         && username.to_lowercase() != user_id.to_lowercase()
     {
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::permissions::get_user_permissions(&username.to_lowercase(), pool) {
+    match crate::functions::permissions::get_user_permissions(&username.to_lowercase(), pool).await {
         Ok(permissions) => {
             Ok(Json(permissions))
         }
@@ -60,14 +60,14 @@ pub async fn edit_permissions(
 ) -> Result<String, Status> {
     info!("/permissions/{:?} Request: {:?}", username.clone(), params);
 
-    if !has_permissions_perm(&_key, pool) && !has_admin_perm(&_key, pool) {
+    if !has_permissions_perm(&_key, pool).await && !has_admin_perm(&_key, pool).await {
         return Err(Status::Unauthorized);
     }
     match crate::functions::permissions::edit_user_permissions(
         (username.clone()).to_lowercase(),
-        pool,
+        &pool,
         params.p_permissions.clone(),
-    ) {
+    ).await {
         Ok(permissions) => {
             info!("Permissions Edited");
             info!("New Permissions: {:?}", permissions);

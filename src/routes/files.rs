@@ -23,7 +23,7 @@ pub async fn get_image(
     _key: ApiKey<'_>,
     pool: &State<Pool>,
 ) -> Result<Option<NamedFile>, Status> {
-    if !has_query_perm(&_key, pool) && !has_admin_perm(&_key, pool) {
+    if !has_query_perm(&_key, pool).await && !has_admin_perm(&_key, pool).await {
         return Err(Status::Unauthorized);
     }
     info!("Image Request: {:?}", file);
@@ -64,7 +64,7 @@ pub async fn upload(
     _key: ApiKey<'_>,
     pool: &State<Pool>,
 ) -> Result<String, Status> {
-    if !is_images_perm(&_key, pool) && !has_admin_perm(&_key, pool) {
+    if !is_images_perm(&_key, pool).await && !has_admin_perm(&_key, pool).await {
         return Err(Status::Unauthorized);
     }
 

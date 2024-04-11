@@ -1,11 +1,12 @@
 use oracle::pool::Pool;
 
 use crate::utils::check_user_exists;
+use crate::utils::sql::read_sql;
 use crate::{functions::stores::structs::Store, utils::structs::APIErrors};
 
 pub mod structs;
 
-pub fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, APIErrors> {
+pub async fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
@@ -13,7 +14,7 @@ pub fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, APIErrors>
     }
     let conn = conn.unwrap();
 
-    match check_user_exists(user_id.clone(), pool) {
+    match check_user_exists(user_id.clone(), pool).await {
         Ok(b) => {
             if !b {
                 error!("User does not exist");
@@ -27,26 +28,7 @@ pub fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, APIErrors>
     }
 
     let stmt = conn
-        .statement(
-            "
-        SELECT
-        lpad(s.STORE_ID, 2, '0') STORE_ID, s.STORE_DESC, s.STORE_DESC_S
-            FROM
-                ODBC_JHC.JHC_STORES s
-            WHERE
-                EXISTS (
-                    SELECT 1
-                    FROM
-                        ODBC_JHC.USER_STORES_JHC usa
-                    JOIN
-                        ODBC_JHC.AUTHENTICATION_JHC u
-                    ON
-                        usa.username = u.username
-                    WHERE
-                        (u.username = :user_id AND usa.all_stores_access = 1)
-                        OR (u.username = :user_id AND usa.store_id = s.store_id)
-                )",
-        )
+        .statement(read_sql("get_user_stores").await?.as_str())
         .build();
 
     if stmt.is_err() {

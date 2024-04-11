@@ -8,9 +8,10 @@ pub mod structs;
 
 use structs::LogData;
 
+use crate::utils::sql::read_sql;
 use crate::utils::structs::APIErrors;
 
-pub fn get_all_logs_fn(
+pub async fn get_all_logs_fn(
     pool: &State<Pool>,
     limit: Option<i32>,
 ) -> Result<Json<Vec<LogData>>, APIErrors> {
@@ -29,9 +30,7 @@ pub fn get_all_logs_fn(
 
     let mut logs: Vec<LogData> = Vec::new();
     let stmt = conn
-        .statement(
-            "SELECT * FROM ODBC_JHC.API_LOGS ORDER BY TIMESTAMP DESC FETCH NEXT :limit ROWS ONLY",
-        )
+        .statement(read_sql("get_all_logs").await?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");
@@ -70,7 +69,7 @@ pub fn get_all_logs_fn(
     Ok(Json(logs))
 }
 
-pub fn get_user_logs_fn(
+pub async fn get_user_logs_fn(
     username: String,
     pool: &State<Pool>,
     limit: Option<i32>,
@@ -89,7 +88,7 @@ pub fn get_user_logs_fn(
     }
 
     let mut logs: Vec<LogData> = Vec::new();
-    let stmt = conn.statement("SELECT * FROM ODBC_JHC.API_LOGS WHERE USERNAME = :username ORDER BY TIMESTAMP DESC FETCH NEXT :limit ROWS ONLY").build();
+    let stmt = conn.statement(read_sql("get_user_logs").await?.as_str()).build();
     if stmt.is_err() {
         error!("Error building statement");
         return Err(APIErrors::DBError);
@@ -125,60 +124,7 @@ pub fn get_user_logs_fn(
     Ok(Json(logs))
 }
 
-/*
-pub fn get_route_logs_fn(route: String, pool: &State<Pool>, limit: Option<i32>) -> Result<Json<Vec<LogData>>,APIErrors>{
-    let conn = pool.get();
-    if conn.is_err() {
-        error!("Error connecting to DB");
-        return Err(APIErrors::DBError);
-    }
-    let conn = conn.unwrap();
-
-    let logLimit: i32;
-    match limit {
-        Some(limit) => logLimit = limit,
-        None => logLimit = 100,
-    }
-
-    let mut logs: Vec<LogData> = Vec::new();
-    let stmt = conn.statement("SELECT * FROM ODBC_JHC.API_LOGS WHERE ROUTE = :route ORDER BY TIMESTAMP DESC FETCH NEXT :limit ROWS ONLY").build();
-    if stmt.is_err() {
-        error!("Error building statement");
-        return Err(APIErrors::DBError);
-    }
-    let mut stmt = stmt.unwrap();
-
-    let rows = stmt.query(&[&route, &logLimit]);
-    if rows.is_err() {
-        error!("Error executing statement");
-        return Err(APIErrors::DBError);
-    }
-    let rows = rows.unwrap();
-
-    for row_res in rows {
-        let row = row_res;
-        if row.is_err() {
-            error!("Error getting row");
-            return Err(APIErrors::DBError);
-        }
-        let row = row.unwrap();
-        logs.push(LogData {
-            LOG_ID: row.get("LOG_ID").unwrap(),
-            USERNAME: row.get("USERNAME").unwrap(),
-            ROUTE: row.get("ROUTE").unwrap(),
-            PARAMETERS: row.get("PARAMETERS").unwrap(),
-            RESULT: row.get("RESULT").unwrap(),
-            TIMESTAMP: row.get("TIMESTAMP").unwrap(),
-            TOKEN_USED: row.get("TOKEN_USED").unwrap(),
-            IP_ADDRESS: row.get("IP_ADDRESS").unwrap(),
-            METHOD: row.get("METHOD").unwrap(),
-        });
-    }
-    Ok(Json(logs))
-}
-*/
-
-pub fn delete_user_logs_fn(
+pub async fn delete_user_logs_fn(
     username: String,
     pool: &State<Pool>,
     limit: Option<i32>,
@@ -192,7 +138,7 @@ pub fn delete_user_logs_fn(
     let stmt;
     match limit {
         Some(lim) => {
-            stmt = conn.statement("DELETE FROM ODBC_JHC.API_LOGS WHERE ROWID IN (SELECT ROWID FROM ODBC_JHC.API_LOGS WHERE USERNAME = :username ORDER BY LOG_ID DESC FETCH FIRST :limit ROWS ONLY)").build();
+            stmt = conn.statement(read_sql("delete_user_logs_limit").await?.as_str()).build();
             if stmt.is_err() {
                 error!("Error building statement");
                 return Err(APIErrors::DBError);
@@ -208,7 +154,7 @@ pub fn delete_user_logs_fn(
         }
         None => {
             stmt = conn
-                .statement("DELETE FROM ODBC_JHC.API_LOGS WHERE USERNAME = :username")
+                .statement(read_sql("delete_user_logs").await?.as_str())
                 .build();
             if stmt.is_err() {
                 error!("Error building statement");
@@ -235,7 +181,7 @@ pub fn delete_user_logs_fn(
     Ok(())
 }
 
-pub fn delete_log_logs_fn(log_id: i32, pool: &State<Pool>) -> Result<(), APIErrors> {
+pub async fn delete_log_logs_fn(log_id: i32, pool: &State<Pool>) -> Result<(), APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
@@ -244,7 +190,7 @@ pub fn delete_log_logs_fn(log_id: i32, pool: &State<Pool>) -> Result<(), APIErro
     let conn = conn.unwrap();
 
     let stmt = conn
-        .statement("DELETE FROM ODBC_JHC.API_LOGS WHERE LOG_ID = :log_id")
+        .statement(read_sql("delete_log_by_id").await?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");

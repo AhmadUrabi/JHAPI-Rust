@@ -1,11 +1,10 @@
 use crate::server::request_guard::api_key::ApiKey;
 
 use crate::utils::check_user_exists;
+use crate::utils::sql::read_sql;
 use crate::utils::structs::APIErrors;
 
 use oracle::pool::Pool;
-
-use rocket::serde::json::Json;
 
 use bcrypt::{hash, DEFAULT_COST};
 
@@ -17,7 +16,7 @@ use crate::functions::users::structs::*;
 
 pub async fn get_users(_key: &ApiKey<'_>, pool: &Pool) -> Result<Vec<User>, APIErrors> {
     let mut users: Vec<User> = Vec::new();
-    if has_admin_perm(_key, pool) || has_users_perm(_key, pool) {
+    if has_admin_perm(_key, pool).await || has_users_perm(_key, pool).await {
         println!("Admin Permissions Found");
         let conn = pool.get();
         if conn.is_err() {
@@ -27,9 +26,7 @@ pub async fn get_users(_key: &ApiKey<'_>, pool: &Pool) -> Result<Vec<User>, APIE
         let conn = conn.unwrap();
 
         let stmt = conn
-            .statement(
-                "SELECT USERNAME, FULLNAME, EMAIL, LOGINDURATION FROM ODBC_JHC.AUTHENTICATION_JHC",
-            )
+            .statement(read_sql("get_users").await?.as_str())
             .build();
         if stmt.is_err() {
             error!("Error building statement");
@@ -73,7 +70,7 @@ pub async fn get_user(user_id: &str, pool: &Pool) -> Result<User, APIErrors> {
     let conn = conn.unwrap();
 
     let stmt = conn
-        .statement("SELECT USERNAME, FULLNAME, EMAIL, LOGINDURATION FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1")
+        .statement(read_sql("get_user_by_id").await?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");
@@ -121,7 +118,7 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<(), APIErrors> {
     let conn = conn.unwrap();
 
     // Check if user exists with same username
-    match check_user_exists(data.p_username.clone(), &pool) {
+    match check_user_exists(data.p_username.clone(), &pool).await {
         Ok(exists) => {
             if exists {
                 error!("User already exists");
@@ -135,7 +132,7 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<(), APIErrors> {
     }
 
     let stmt = conn
-        .statement("INSERT INTO ODBC_JHC.AUTHENTICATION_JHC (USERNAME, PASSWORD, FULLNAME, EMAIL, LOGINDURATION) VALUES (:1, :2, :3, :4, :5)")
+        .statement(read_sql("create_user").await?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");
@@ -167,12 +164,12 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<(), APIErrors> {
 }
 
 pub async fn edit_user(
-    params: Json<EditUserParams>,
+    params: EditUserParams,
     username: &str,
     pool: &Pool,
     is_admin: bool,
 ) -> Result<(), APIErrors> {
-    let params_unwrapped = params.into_inner();
+    let params_unwrapped = params;
 
     let original_user = match get_user(&username, pool).await {
         Ok(user) => user,
@@ -181,6 +178,9 @@ pub async fn edit_user(
             return Err(APIErrors::DBError);
         }
     };
+    
+    // Weird bug where threads errors are shown when using read_sql, the line position also seems to matter
+    let pass_stmt = read_sql("update_user_password").await;
 
     if original_user.username == "" {
         error!("User not found");
@@ -209,7 +209,7 @@ pub async fn edit_user(
     let conn = conn.unwrap();
 
     let stmt = conn
-        .statement("UPDATE ODBC_JHC.AUTHENTICATION_JHC SET FULLNAME = :1, EMAIL = :2, LOGINDURATION = :3 WHERE USERNAME = :4")
+        .statement(read_sql("update_user").await?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");
@@ -217,18 +217,12 @@ pub async fn edit_user(
     }
     let mut stmt = stmt.unwrap();
 
-    match stmt.execute(&[
+    let _ = stmt.execute(&[
         &new_user.fullname,
         &new_user.email,
         &new_user.login_duration,
         &new_user.username,
-    ]) {
-        Ok(_) => (),
-        Err(err) => {
-            error!("Error executing query: {}", err);
-            return Err(APIErrors::DBError);
-        }
-    }
+    ]).unwrap(); 
 
     match conn.commit() {
         Ok(_) => (),
@@ -240,7 +234,7 @@ pub async fn edit_user(
 
     if params_unwrapped.p_password.is_some() && is_admin {
         match conn
-            .statement("UPDATE ODBC_JHC.AUTHENTICATION_JHC SET PASSWORD = :1 WHERE USERNAME = :2")
+            .statement(pass_stmt.unwrap().as_str())
             .build()
         {
             Ok(data) => stmt = data,
@@ -250,16 +244,10 @@ pub async fn edit_user(
             }
         }
 
-        match stmt.execute(&[
+        let _ = stmt.execute(&[
             &hash(params_unwrapped.p_password.unwrap(), DEFAULT_COST).unwrap(),
             &new_user.username,
-        ]) {
-            Ok(_) => (),
-            Err(err) => {
-                error!("Error executing query: {}", err);
-                return Err(APIErrors::DBError);
-            }
-        }
+        ]).unwrap();
 
         match conn.commit() {
             Ok(_) => (),
@@ -274,7 +262,7 @@ pub async fn edit_user(
 }
 
 pub async fn delete_user(user_id: &str, pool: &Pool) -> Result<(), APIErrors> {
-    match check_user_exists(user_id.to_string(), pool) {
+    match check_user_exists(user_id.to_string(), pool).await {
         Ok(exists) => {
             if !exists {
                 error!("User does not exist");
@@ -295,7 +283,7 @@ pub async fn delete_user(user_id: &str, pool: &Pool) -> Result<(), APIErrors> {
     let conn = conn.unwrap();
 
     let stmt = conn
-        .statement("DELETE FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1")
+        .statement(read_sql("delete_user").await?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");

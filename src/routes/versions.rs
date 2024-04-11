@@ -13,7 +13,7 @@ pub async fn route_version_check(
     pool: &State<Pool>,
 ) -> Result<Json<Version>, Status> {
     println!("Version Check Requested");
-    match get_latest_version(&params.0.p_platform, pool) {
+    match get_latest_version(&params.0.p_platform, pool).await {
         Ok(version) => {
             info!("Valid User Data, Version Sent");
             Ok(version)

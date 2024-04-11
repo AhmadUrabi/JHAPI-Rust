@@ -40,7 +40,7 @@ pub struct NewUser {
     pub p_loginduration: i32,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Debug, serde::Serialize, serde::Deserialize, Clone)]
 pub struct EditUserParams {
     pub p_password: Option<String>,
     pub p_fullname: Option<String>,

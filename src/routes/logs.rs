@@ -17,11 +17,11 @@ pub async fn get_all_logs(
     _key: ApiKey<'_>,
     limit: Option<i32>,
 ) -> Result<Json<Vec<LogData>>, Status> {
-    if !has_admin_perm(&_key, pool) {
+    if !has_admin_perm(&_key, pool).await {
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::logs::get_all_logs_fn(&pool, limit) {
+    match crate::functions::logs::get_all_logs_fn(&pool, limit).await {
         Ok(logs) => {
             Ok(logs)
         }
@@ -39,11 +39,11 @@ pub async fn get_user_logs(
     limit: Option<i32>,
 ) -> Result<Json<Vec<LogData>>, Status> {
     
-    if !has_admin_perm(&_key, pool) {
+    if !has_admin_perm(&_key, pool).await {
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::logs::get_user_logs_fn(username, pool, limit) {
+    match crate::functions::logs::get_user_logs_fn(username, pool, limit).await {
         Ok(logs) => {
             Ok(logs)
         }
@@ -115,11 +115,11 @@ pub async fn delete_user_logs(
     username: String,
     limit: Option<i32>,
 ) -> Result<String, Status> {
-    if !has_admin_perm(&_key, pool) {
+    if !has_admin_perm(&_key, pool).await {
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::logs::delete_user_logs_fn(username, pool, limit) {
+    match crate::functions::logs::delete_user_logs_fn(username, pool, limit).await {
         Ok(_logs) => {
             Ok("Logs Deleted".to_string())
         }
@@ -134,11 +134,11 @@ pub async fn delete_log_logs(
     _key: ApiKey<'_>,
     log_id: i32,
 ) -> Result<String, Status> {
-    if !has_admin_perm(&_key, pool) {
+    if !has_admin_perm(&_key, pool).await {
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::logs::delete_log_logs_fn(log_id, pool) {
+    match crate::functions::logs::delete_log_logs_fn(log_id, pool).await {
         Ok(_logs) => {
             Ok("Logs Deleted".to_string())
         }

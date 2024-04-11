@@ -1,12 +1,15 @@
 use oracle::pool::Pool;
 
+use crate::utils::sql::read_sql;
+
 use self::structs::APIErrors;
 
 pub mod logging;
 pub mod permissions;
 pub mod structs;
+pub mod sql;
 
-pub fn check_user_exists(username: String, pool: &Pool) -> Result<bool, APIErrors> {
+pub async fn check_user_exists(username: String, pool: &Pool) -> Result<bool, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error Connecting to DB");
@@ -15,7 +18,7 @@ pub fn check_user_exists(username: String, pool: &Pool) -> Result<bool, APIError
     let conn = conn.unwrap();
     println!("Username Check: {}", username);
     let stmt = conn
-        .statement("SELECT USERNAME FROM ODBC_JHC.AUTHENTICATION_JHC WHERE USERNAME = :1")
+        .statement(read_sql("check_user").await?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");

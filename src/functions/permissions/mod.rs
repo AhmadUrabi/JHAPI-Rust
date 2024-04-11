@@ -1,6 +1,7 @@
 use oracle::pool::Pool;
 
 use crate::utils::check_user_exists;
+use crate::utils::sql::read_sql;
 use crate::utils::structs::APIErrors;
 
 use self::structs::Permissions;
@@ -8,7 +9,7 @@ use self::structs::Permissions;
 pub mod structs;
 
 // TODO: try to optimize this function
-pub fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions, APIErrors> {
+pub async fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
@@ -16,7 +17,7 @@ pub fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions, A
     }
 
     // Check for user
-    if !check_user_exists(user_id.to_string(), pool).unwrap_or(false) {
+    if !check_user_exists(user_id.to_string(), pool).await.unwrap_or(false) {
         error!("User does not exist");
         return Err(APIErrors::UserNotFound);
     }
@@ -24,7 +25,7 @@ pub fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions, A
     let conn = conn.unwrap();
 
     let stmt = conn
-        .statement("SELECT PERMISSION FROM ODBC_JHC.PERMISSIONS_JHC WHERE USERNAME = :user_id")
+        .statement(read_sql("get_user_permissions").await?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");
@@ -66,7 +67,7 @@ pub fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions, A
     Ok(permission)
 }
 
-pub fn edit_user_permissions(
+pub async fn edit_user_permissions(
     username: String,
     pool: &Pool,
     permissions: Permissions,
@@ -79,14 +80,16 @@ pub fn edit_user_permissions(
     let conn = conn.unwrap();
 
     // Check for user
-    if !check_user_exists(username.to_string(), pool).unwrap_or(false) {
+    if !check_user_exists(username.to_string(), pool).await.unwrap_or(false) {
         error!("User does not exist");
         return Err(APIErrors::UserNotFound);
     }
-
+    
+    // Same Weird threads error as routes/users.rs
+    let insert_stmt = read_sql("insert_user_permissions").await?;
     let user_id = username.to_string();
     let stmt = conn
-        .statement("DELETE FROM ODBC_JHC.PERMISSIONS_JHC WHERE USERNAME = :user_id")
+        .statement(read_sql("delete_user_permissions").await?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");
@@ -102,7 +105,8 @@ pub fn edit_user_permissions(
         }
     };
 
-    let stmt = conn.statement("INSERT INTO ODBC_JHC.PERMISSIONS_JHC (USERNAME, PERMISSION) VALUES (:user_id, :permission)").build();
+
+    let stmt = conn.statement(insert_stmt.as_str()).build();
     if stmt.is_err() {
         error!("Error building statement");
         return Err(APIErrors::DBError);

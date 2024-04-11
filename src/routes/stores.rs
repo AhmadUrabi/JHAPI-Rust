@@ -33,8 +33,8 @@ pub async fn get_store_list(
         None => info!("Token Data: None"),
     }
 
-    if has_stores_perm(&_key, &pool) || has_admin_perm(&_key, &pool) {
-        match get_stores(pool, "admin".to_string()) {
+    if has_stores_perm(&_key, &pool).await || has_admin_perm(&_key, &pool).await {
+        match get_stores(pool, "admin".to_string()).await {
             Ok(stores) => {
                 return Ok(Json(stores));
             }
@@ -47,7 +47,7 @@ pub async fn get_store_list(
             }
         }
     }
-    match get_stores(pool, user_id) {
+    match get_stores(pool, user_id).await {
         Ok(stores) => {
             Ok(Json(stores))
         }
@@ -61,6 +61,8 @@ pub async fn get_store_list(
     }
 }
 
+
+// TODO: extract to function
 #[post("/stores", data = "<params>")]
 pub async fn update_store_list(
     pool: &State<Pool>,
@@ -68,7 +70,7 @@ pub async fn update_store_list(
     params: Json<StoreListUpdateParams>,
 ) -> Result<String, Status> {
     info!("stores Request: {:?}", params);
-    if has_admin_perm(&_key, pool) || has_stores_perm(&_key, pool) {
+    if has_admin_perm(&_key, pool).await || has_stores_perm(&_key, pool).await {
         info!("User has permissions");
     } else {
         info!("User does not have permissions");
@@ -76,7 +78,7 @@ pub async fn update_store_list(
     }
 
     // TODO: Whole function should be separated from route function
-    match check_user_exists(params.0.p_username.clone(), pool) {
+    match check_user_exists(params.0.p_username.clone(), pool).await {
         Ok(x) => {
             if !x {
                 return Err(Status::NotFound);
@@ -144,12 +146,12 @@ pub async fn get_store_list_for_user(
 ) -> Result<Json<Vec<Store>>, Status> {
     info!("User stores Request");
 
-    if !has_stores_perm(&_key, &pool) && !has_admin_perm(&_key, &pool) {
+    if !has_stores_perm(&_key, &pool).await && !has_admin_perm(&_key, &pool).await {
         info!("Token does not have permissions");
         return Err(Status::Unauthorized);
     }
 
-    match get_stores(pool, username) {
+    match get_stores(pool, username).await {
         Ok(stores) => {
             Ok(Json(stores))
         }

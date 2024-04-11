@@ -19,7 +19,7 @@ pub async fn get_user_list(
     _key: ApiKey<'_>,
 ) -> Result<Json<Vec<User>>, Status> {
 
-    if !has_admin_perm(&_key, pool) && !has_users_perm(&_key, pool) {
+    if !has_admin_perm(&_key, pool).await && !has_users_perm(&_key, pool).await {
         return Err(Status::Unauthorized);
     }
     match get_users(&_key, &pool).await {
@@ -45,8 +45,8 @@ pub async fn get_user_by_id(
         None => info!("Token Data: None"),
     }
 
-    if !has_admin_perm(&_key, pool)
-        && !has_users_perm(&_key, pool)
+    if !has_admin_perm(&_key, pool).await
+        && !has_users_perm(&_key, pool).await
         && my_user_id.to_lowercase() != user_id.to_lowercase()
     {
         return Err(Status::Unauthorized);
@@ -72,7 +72,7 @@ pub async fn create_user_route(
         "Create User Request: {:?}, {:?}",
         params.0.p_username, params.0.p_fullname
     );
-    if !has_admin_perm(&_key, pool) && !has_users_perm(&_key, pool) {
+    if !has_admin_perm(&_key, pool).await && !has_users_perm(&_key, pool).await {
         return Err(Status::Unauthorized);
     }
     match create_user(params.0, pool).await {
@@ -106,20 +106,22 @@ pub async fn edit_user_route(
     }
 
     println!("Edit User Request: {:?}", username);
-    if !has_admin_perm(&_key, pool) && !has_users_perm(&_key, pool) {
+    if !has_admin_perm(&_key, &pool).await && !has_users_perm(&_key, &pool).await {
         return Err(Status::Unauthorized);
     }
-    let res = edit_user(params, username, pool, has_admin_perm(&_key, pool)).await;
-
-    if res.is_err() {
-        let error = res.err().unwrap();
-        match error {
-            APIErrors::UserNotFound => return Err(Status::NotFound),
-            APIErrors::DBError => return Err(Status::InternalServerError),
-            _ => return Err(Status::InternalServerError),
+    let perm = has_admin_perm(&_key, &pool).await.clone();
+    
+    match edit_user(params.0.clone(), username, &pool, perm).await {
+        Ok(_) => Ok("User Edited".to_string()),
+        Err(error) => {
+            match error {
+                APIErrors::UserNotFound => return Err(Status::NotFound),
+                APIErrors::DBError => return Err(Status::InternalServerError),
+                _ => return Err(Status::InternalServerError),
+            }
         }
     }
-    Ok("User Edited".to_string())
+    
 }
 
 #[delete("/user/<user_id>")]
@@ -128,7 +130,7 @@ pub async fn delete_user_route(
     _key: ApiKey<'_>,
     user_id: String,
 ) -> Result<String, Status> {
-    if !has_admin_perm(&_key, pool) && !has_users_perm(&_key, pool) {
+    if !has_admin_perm(&_key, pool).await && !has_users_perm(&_key, pool).await {
         return Err(Status::Unauthorized);
     }
     match delete_user(&user_id, pool).await {

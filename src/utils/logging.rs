@@ -2,8 +2,12 @@ use chrono::{Datelike, Local, Timelike};
 use oracle::pool::Pool;
 use oracle::sql_type::Timestamp;
 
+use super::sql::read_sql;
+use super::structs::APIErrors;
+
 // TODO: fix this mess
-pub fn log_data(
+/// Log request data to the database
+pub async fn log_data(
     pool: &Pool,
     mut username: String,
     mut ip_addr: String,
@@ -13,12 +17,12 @@ pub fn log_data(
     mut token: String,
     mut result: String,
     mut method: String,
-) {
+) -> Result<(), APIErrors> {
     
     let conn = pool.get();
     if conn.is_err() {
         error!("Error: {}", conn.err().unwrap());
-        return;
+        return Err(APIErrors::DBError);
     }
     let conn = conn.unwrap();
 
@@ -50,33 +54,11 @@ pub fn log_data(
     }
 
     let stmt = conn
-        .statement(
-            "
-        INSERT INTO odbc_jhc.API_LOGS (
-            username,
-            route,
-            parameters,
-            timestamp,
-            result,
-            token_used,
-            ip_address,
-            method
-        ) VALUES (
-            :username,
-            :route,
-            :parameters,
-            :timestamp,
-            :result,
-            :token_used,
-            :ip_address,
-            :method
-        )",
-        )
+        .statement(read_sql("log_api").await?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement: {}", stmt.err().unwrap());
-        println!("Error building statement");
-        return;
+        return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
 
@@ -93,20 +75,19 @@ pub fn log_data(
         Ok(_) => (),
         Err(err) => {
             error!("Error executing query: {}", err);
-            println!("Error executing query: {}", err);
-            return;
+            return Err(APIErrors::DBError);
         }
     };
     match conn.commit() {
-        Ok(_) => (),
+        Ok(_) => Ok(()),
         Err(err) => {
             error!("Error: {}", err);
-            println!("Error: {}", err);
-            return;
+            return Err(APIErrors::DBError);
         }
     }
 }
 
+/// Helper function to get current timestamp
 pub fn get_timestamp() -> Timestamp {
     // Get Current timestamp and convert to year, month, day
     let now = Local::now();
