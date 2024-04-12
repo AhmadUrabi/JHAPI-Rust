@@ -13,12 +13,16 @@ pub struct JHApiServer {
     pub server: rocket::Rocket<rocket::Build>,
 }
 
+pub struct JHApiServerState {
+    pub pool: oracle::pool::Pool,
+    pub sql_manager: SQLManager,
+}
+
 // TODO: Switch to a single shared object
 
 impl JHApiServer {
-    pub fn init(routes: Vec<rocket::Route>) -> JHApiServer {
-        let pool = JHApiServer::build_pool();
-        let sql_manager = SQLManager::init();
+    pub async fn init(routes: Vec<rocket::Route>) -> JHApiServer {
+        let state = JHApiServer::get_state().await;
         let rocket = rocket::build()
         .attach(CORS)
         .attach(Logger)
@@ -26,8 +30,7 @@ impl JHApiServer {
             "/",
             Self::get_catchers()
         )
-        .manage(pool)
-        .manage(sql_manager)
+        .manage(state)
         .mount(
             "/api",
             routes
@@ -70,5 +73,22 @@ impl JHApiServer {
         catchers
     }
 
+    async fn get_sql_manager() -> SQLManager {
+        let sql_manager = SQLManager::init().await;
+        sql_manager
+    }
+
+    async fn get_state() -> JHApiServerState {
+        let pool = JHApiServer::build_pool();
+        let sql_manager = JHApiServer::get_sql_manager().await;
+        JHApiServerState {
+            pool,
+            sql_manager,
+        }
+    }
+
+    pub async fn launch(self) {
+        self.server.launch().await;
+    }
     
 }

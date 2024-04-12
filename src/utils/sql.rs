@@ -18,23 +18,27 @@ pub async fn read_sql(name: &str) -> Result<String, APIErrors> {
     Ok(sql)
 }
 
-pub fn load_to_hashmap() -> Result<HashMap<String,String>,APIErrors> {
+pub async fn load_to_hashmap() -> Result<HashMap<String,String>,APIErrors> {
+    println!("Loading SQL Files");
     let mut table: HashMap<String,String> = HashMap::new();
     let sql_path = Path::new("src/sql");
-    let files = std::fs::read_dir(sql_path);
+    let files = fs::read_dir(sql_path).await;
     match files {
         Ok(mut filelist)=>{
-            while let Some(entry) = filelist.next(){
+            while let Ok(entry) = filelist.next_entry().await {
+                if entry.is_none() {
+                    break;
+                }
                 let entry = entry.unwrap();
                 let data = std::fs::read_to_string(entry.path());
-                table.entry(entry.file_name().to_str().unwrap().to_string()).or_insert(data.unwrap());
+                table.entry(entry.file_name().to_str().unwrap().to_string().replace(".sql", "")).or_insert(data.unwrap());
             }
         },
         Err(_err) => {
             return Err(APIErrors::IOError);
         }
     }
-
+    println!("Loaded SQL Files");
     Ok(table)
 }
 
@@ -43,12 +47,13 @@ pub struct SQLManager{
 }
 
 impl SQLManager {
-    pub fn init() -> Self {
+    pub async fn init() -> Self {
         SQLManager {
-            map: load_to_hashmap().unwrap()
+            map: load_to_hashmap().await.unwrap()
         }
     }
-    pub fn read_sql(self, function: &str) -> Result<String,APIErrors> {
+    pub fn get_sql(&self, function: &str) -> Result<String,APIErrors> {
+        println!("Function: {}",function);
         if let Some(res) = self.map.get(function) {
             return Ok(res.to_owned());
         } else {

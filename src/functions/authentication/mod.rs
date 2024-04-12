@@ -9,7 +9,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::functions::authentication::structs::LoginParams;
 use crate::functions::authentication::structs::User;
-use crate::utils::sql::read_sql;
+
+use crate::utils::sql::SQLManager;
 use crate::utils::structs::APIErrors;
 
 use bcrypt::verify;
@@ -48,7 +49,7 @@ impl Claims {
     }
 }
 
-pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Result<String, APIErrors> {
+pub async fn signin(params: Json<LoginParams>, pool: &Pool, sql_manager: &SQLManager) -> Result<String, APIErrors> {
     // Check for empty username and password
     info!("Login Attempt: {:?}", params.0.p_username);
 
@@ -61,6 +62,7 @@ pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Result<String, AP
         params.p_username.to_lowercase(),
         params.p_password.to_string(),
         pool,
+        &sql_manager
     ).await;
     if user.is_err() {
         error!("Error fetching user data");
@@ -79,7 +81,7 @@ pub async fn signin(params: Json<LoginParams>, pool: &Pool) -> Result<String, AP
     Ok(token)
 }
 
-async fn fetch_user_data(username: String, password: String, pool: &Pool) -> Result<User, APIErrors> {
+async fn fetch_user_data(username: String, password: String, pool: &Pool, sql_manager: &SQLManager) -> Result<User, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
@@ -87,7 +89,7 @@ async fn fetch_user_data(username: String, password: String, pool: &Pool) -> Res
     }
     let conn = conn.unwrap();
 
-    let stmt = conn.statement(read_sql("fetch_user_data").await?.as_str()).fetch_array_size(1).build();
+    let stmt = conn.statement(sql_manager.get_sql("fetch_user_data")?.as_str()).fetch_array_size(1).build();
     if stmt.is_err() {
         error!("Error building statement");
         return Err(APIErrors::DBError);

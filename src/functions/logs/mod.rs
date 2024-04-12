@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use oracle::pool::Pool;
+use oracle::pool::{self, Pool};
 
 use rocket::serde::json::Json;
 use rocket::State;
@@ -8,11 +8,13 @@ pub mod structs;
 
 use structs::LogData;
 
-use crate::utils::sql::read_sql;
+
+use crate::utils::sql::SQLManager;
 use crate::utils::structs::APIErrors;
 
 pub async fn get_all_logs_fn(
-    pool: &State<Pool>,
+    pool: &Pool,
+    sql_manager: &SQLManager,
     limit: Option<i32>,
 ) -> Result<Json<Vec<LogData>>, APIErrors> {
     let conn = pool.get();
@@ -30,7 +32,7 @@ pub async fn get_all_logs_fn(
 
     let mut logs: Vec<LogData> = Vec::new();
     let stmt = conn
-        .statement(read_sql("get_all_logs").await?.as_str())
+        .statement(sql_manager.get_sql("get_all_logs")?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");
@@ -71,7 +73,8 @@ pub async fn get_all_logs_fn(
 
 pub async fn get_user_logs_fn(
     username: String,
-    pool: &State<Pool>,
+    pool: &Pool,
+    sql_manager: &SQLManager,
     limit: Option<i32>,
 ) -> Result<Json<Vec<LogData>>, APIErrors> {
     let conn = pool.get();
@@ -88,7 +91,7 @@ pub async fn get_user_logs_fn(
     }
 
     let mut logs: Vec<LogData> = Vec::new();
-    let stmt = conn.statement(read_sql("get_user_logs").await?.as_str()).build();
+    let stmt = conn.statement(sql_manager.get_sql("get_user_logs")?.as_str()).build();
     if stmt.is_err() {
         error!("Error building statement");
         return Err(APIErrors::DBError);
@@ -126,7 +129,8 @@ pub async fn get_user_logs_fn(
 
 pub async fn delete_user_logs_fn(
     username: String,
-    pool: &State<Pool>,
+    pool: &Pool,
+    sql_manager: &SQLManager,
     limit: Option<i32>,
 ) -> Result<(), APIErrors> {
     let conn = pool.get();
@@ -138,7 +142,7 @@ pub async fn delete_user_logs_fn(
     let stmt;
     match limit {
         Some(lim) => {
-            stmt = conn.statement(read_sql("delete_user_logs_limit").await?.as_str()).build();
+            stmt = conn.statement(sql_manager.get_sql("delete_user_logs_limit")?.as_str()).build();
             if stmt.is_err() {
                 error!("Error building statement");
                 return Err(APIErrors::DBError);
@@ -154,7 +158,7 @@ pub async fn delete_user_logs_fn(
         }
         None => {
             stmt = conn
-                .statement(read_sql("delete_user_logs").await?.as_str())
+                .statement(sql_manager.get_sql("delete_user_logs")?.as_str())
                 .build();
             if stmt.is_err() {
                 error!("Error building statement");
@@ -181,7 +185,7 @@ pub async fn delete_user_logs_fn(
     Ok(())
 }
 
-pub async fn delete_log_logs_fn(log_id: i32, pool: &State<Pool>) -> Result<(), APIErrors> {
+pub async fn delete_log_logs_fn(log_id: i32, pool: &Pool,sql_manager: &SQLManager) -> Result<(), APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
@@ -190,7 +194,7 @@ pub async fn delete_log_logs_fn(log_id: i32, pool: &State<Pool>) -> Result<(), A
     let conn = conn.unwrap();
 
     let stmt = conn
-        .statement(read_sql("delete_log_by_id").await?.as_str())
+        .statement(sql_manager.get_sql("delete_log_by_id")?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");

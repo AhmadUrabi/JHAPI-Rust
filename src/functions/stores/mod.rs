@@ -1,12 +1,13 @@
 use oracle::pool::Pool;
 
 use crate::utils::check_user_exists;
-use crate::utils::sql::read_sql;
+
+use crate::utils::sql::SQLManager;
 use crate::{functions::stores::structs::Store, utils::structs::APIErrors};
 
 pub mod structs;
 
-pub async fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, APIErrors> {
+pub async fn get_stores(pool: &Pool, sql_manager: &SQLManager, user_id: String) -> Result<Vec<Store>, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
@@ -14,7 +15,7 @@ pub async fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, APIE
     }
     let conn = conn.unwrap();
 
-    match check_user_exists(user_id.clone(), pool).await {
+    match check_user_exists(user_id.clone(), pool, &sql_manager).await {
         Ok(b) => {
             if !b {
                 error!("User does not exist");
@@ -28,7 +29,7 @@ pub async fn get_stores(pool: &Pool, user_id: String) -> Result<Vec<Store>, APIE
     }
 
     let stmt = conn
-        .statement(read_sql("get_user_stores").await?.as_str())
+        .statement(sql_manager.get_sql("get_user_stores")?.as_str())
         .build();
 
     if stmt.is_err() {

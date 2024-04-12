@@ -2,7 +2,7 @@ use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::{post, State};
 
-use oracle::pool::Pool;
+use crate::server::JHApiServerState;
 
 use crate::functions::permissions::structs::{PermissionEditParams, Permissions};
 
@@ -17,10 +17,12 @@ use crate::utils::structs::APIErrors;
 #[get("/permissions/<username>")]
 pub async fn get_permissions(
     username: String,
-    pool: &State<Pool>,
+    state: &State<JHApiServerState>,
     _key: ApiKey<'_>,
 ) -> Result<Json<Permissions>, Status> {
     let mut user_id: String = "".to_string();
+    let pool = &state.pool;
+    let sql_manager = &state.sql_manager;
     info!("/permissions/<username> Get Request: {:?}", username);
     match decode_token_data(_key.0) {
         Some(data) => {
@@ -30,14 +32,14 @@ pub async fn get_permissions(
         None => info!("Token Data: None"),
     }
 
-    if !has_permissions_perm(&_key, pool).await
-        && !has_admin_perm(&_key, pool).await
+    if !has_permissions_perm(&_key, pool, &sql_manager).await
+        && !has_admin_perm(&_key, pool, &sql_manager).await
         && username.to_lowercase() != user_id.to_lowercase()
     {
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::permissions::get_user_permissions(&username.to_lowercase(), pool).await {
+    match crate::functions::permissions::get_user_permissions(&username.to_lowercase(), &sql_manager, &pool).await {
         Ok(permissions) => {
             Ok(Json(permissions))
         }
@@ -55,17 +57,19 @@ pub async fn get_permissions(
 pub async fn edit_permissions(
     username: String,
     params: Json<PermissionEditParams>,
-    pool: &State<Pool>,
+    state: &State<JHApiServerState>,
     _key: ApiKey<'_>,
 ) -> Result<String, Status> {
     info!("/permissions/{:?} Request: {:?}", username.clone(), params);
-
-    if !has_permissions_perm(&_key, pool).await && !has_admin_perm(&_key, pool).await {
+    let pool = &state.pool;
+    let sql_manager = &state.sql_manager;
+    if !has_permissions_perm(&_key, pool, &sql_manager).await && !has_admin_perm(&_key, pool, &sql_manager).await {
         return Err(Status::Unauthorized);
     }
     match crate::functions::permissions::edit_user_permissions(
         (username.clone()).to_lowercase(),
         &pool,
+        &sql_manager,
         params.p_permissions.clone(),
     ).await {
         Ok(permissions) => {

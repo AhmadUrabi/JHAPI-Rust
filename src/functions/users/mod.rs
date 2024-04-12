@@ -1,7 +1,8 @@
 use crate::server::request_guard::api_key::ApiKey;
 
 use crate::utils::check_user_exists;
-use crate::utils::sql::read_sql;
+
+use crate::utils::sql::SQLManager;
 use crate::utils::structs::APIErrors;
 
 use oracle::pool::Pool;
@@ -14,9 +15,9 @@ pub mod structs;
 
 use crate::functions::users::structs::*;
 
-pub async fn get_users(_key: &ApiKey<'_>, pool: &Pool) -> Result<Vec<User>, APIErrors> {
+pub async fn get_users(_key: &ApiKey<'_>, sql_manager: &SQLManager, pool: &Pool) -> Result<Vec<User>, APIErrors> {
     let mut users: Vec<User> = Vec::new();
-    if has_admin_perm(_key, pool).await || has_users_perm(_key, pool).await {
+    if has_admin_perm(_key, pool, &sql_manager).await || has_users_perm(_key, pool, &sql_manager).await {
         println!("Admin Permissions Found");
         let conn = pool.get();
         if conn.is_err() {
@@ -26,7 +27,7 @@ pub async fn get_users(_key: &ApiKey<'_>, pool: &Pool) -> Result<Vec<User>, APIE
         let conn = conn.unwrap();
 
         let stmt = conn
-            .statement(read_sql("get_users").await?.as_str())
+            .statement(sql_manager.get_sql("get_users")?.as_str())
             .build();
         if stmt.is_err() {
             error!("Error building statement");
@@ -61,7 +62,7 @@ pub async fn get_users(_key: &ApiKey<'_>, pool: &Pool) -> Result<Vec<User>, APIE
     Ok(users)
 }
 
-pub async fn get_user(user_id: &str, pool: &Pool) -> Result<User, APIErrors> {
+pub async fn get_user(user_id: &str, sql_manager: &SQLManager, pool: &Pool) -> Result<User, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
@@ -70,7 +71,7 @@ pub async fn get_user(user_id: &str, pool: &Pool) -> Result<User, APIErrors> {
     let conn = conn.unwrap();
 
     let stmt = conn
-        .statement(read_sql("get_user_by_id").await?.as_str())
+        .statement(sql_manager.get_sql("get_user_by_id")?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");
@@ -109,7 +110,7 @@ pub async fn get_user(user_id: &str, pool: &Pool) -> Result<User, APIErrors> {
     }
 }
 
-pub async fn create_user(data: NewUser, pool: &Pool) -> Result<(), APIErrors> {
+pub async fn create_user(data: NewUser, sql_manager: &SQLManager, pool: &Pool) -> Result<(), APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error Connecting to DB");
@@ -118,7 +119,7 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<(), APIErrors> {
     let conn = conn.unwrap();
 
     // Check if user exists with same username
-    match check_user_exists(data.p_username.clone(), &pool).await {
+    match check_user_exists(data.p_username.clone(), &pool, &sql_manager).await {
         Ok(exists) => {
             if exists {
                 error!("User already exists");
@@ -132,7 +133,7 @@ pub async fn create_user(data: NewUser, pool: &Pool) -> Result<(), APIErrors> {
     }
 
     let stmt = conn
-        .statement(read_sql("create_user").await?.as_str())
+        .statement(sql_manager.get_sql("create_user")?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");
@@ -167,11 +168,12 @@ pub async fn edit_user(
     params: EditUserParams,
     username: &str,
     pool: &Pool,
+    sql_manager: &SQLManager,
     is_admin: bool,
 ) -> Result<(), APIErrors> {
     let params_unwrapped = params;
 
-    let original_user = match get_user(&username, pool).await {
+    let original_user = match get_user(&username, &sql_manager, pool).await {
         Ok(user) => user,
         Err(_) => {
             error!("Error getting user");
@@ -179,8 +181,8 @@ pub async fn edit_user(
         }
     };
     
-    // Weird bug where threads errors are shown when using read_sql, the line position also seems to matter
-    let pass_stmt = read_sql("update_user_password").await;
+    // Weird bug where threads errors are shown when using sql_manager.get_sql, the line position also seems to matter
+    let pass_stmt = sql_manager.get_sql("update_user_password");
 
     if original_user.username == "" {
         error!("User not found");
@@ -209,7 +211,7 @@ pub async fn edit_user(
     let conn = conn.unwrap();
 
     let stmt = conn
-        .statement(read_sql("update_user").await?.as_str())
+        .statement(sql_manager.get_sql("update_user")?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");
@@ -261,8 +263,8 @@ pub async fn edit_user(
     Ok(())
 }
 
-pub async fn delete_user(user_id: &str, pool: &Pool) -> Result<(), APIErrors> {
-    match check_user_exists(user_id.to_string(), pool).await {
+pub async fn delete_user(user_id: &str, sql_manager: &SQLManager, pool: &Pool) -> Result<(), APIErrors> {
+    match check_user_exists(user_id.to_string(), &pool, &sql_manager).await {
         Ok(exists) => {
             if !exists {
                 error!("User does not exist");
@@ -283,7 +285,7 @@ pub async fn delete_user(user_id: &str, pool: &Pool) -> Result<(), APIErrors> {
     let conn = conn.unwrap();
 
     let stmt = conn
-        .statement(read_sql("delete_user").await?.as_str())
+        .statement(sql_manager.get_sql("delete_user")?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");

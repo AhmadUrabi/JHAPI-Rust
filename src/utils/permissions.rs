@@ -6,12 +6,14 @@ use crate::functions::permissions::get_user_permissions;
 
 use crate::functions::authentication::decode_token_data;
 
+use super::sql::SQLManager;
+
 /// Check for Admin Permissions
-pub async fn has_admin_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+pub async fn has_admin_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLManager) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id, pool).await;
+            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }
@@ -23,11 +25,11 @@ pub async fn has_admin_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
 }
 
 /// Check for Permission Management Permissions
-pub async fn has_permissions_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+pub async fn has_permissions_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLManager) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id, pool).await;
+            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }
@@ -39,11 +41,11 @@ pub async fn has_permissions_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
 }
 
 /// Check for Users Control Permissions
-pub async fn has_users_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+pub async fn has_users_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLManager) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id, pool).await;
+            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }
@@ -55,11 +57,11 @@ pub async fn has_users_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
 }
 
 // Check for Image Fetching Permissions
-pub async fn is_images_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+pub async fn is_images_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLManager) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id, pool).await;
+            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }
@@ -71,11 +73,11 @@ pub async fn is_images_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
 }
 
 // Check for Product Cost Permissions
-pub async fn is_cost_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+pub async fn is_cost_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLManager) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id, pool).await;
+            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }
@@ -87,11 +89,11 @@ pub async fn is_cost_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
 }
 
 /// Check for Product Query Permissions
-pub async fn has_query_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+pub async fn has_query_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLManager) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id, pool).await;
+            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }
@@ -104,11 +106,11 @@ pub async fn has_query_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
 
 // Check for Stock Permissions
 #[allow(dead_code)]
-pub async fn is_stock_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+pub async fn is_stock_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLManager) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id, pool).await;
+            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }
@@ -122,11 +124,11 @@ pub async fn is_stock_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
 
 #[allow(dead_code)]
 /// Check for Reports Permissions
-pub async fn has_reports_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+pub async fn has_reports_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLManager) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id, pool).await;
+            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }
@@ -138,11 +140,11 @@ pub async fn has_reports_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
 }
 
 /// Check for Stores Permissions
-pub async fn has_stores_perm(_key: &ApiKey<'_>, pool: &Pool) -> bool {
+pub async fn has_stores_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLManager) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id, pool).await;
+            let permissions = get_user_permissions(&user_id, &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }

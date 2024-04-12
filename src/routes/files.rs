@@ -3,7 +3,7 @@ use crate::utils::permissions::is_images_perm;
 use crate::utils::permissions::has_query_perm;
 use crate::server::request_guard::api_key::ApiKey;
 
-use oracle::pool::Pool;
+use crate::server::JHApiServerState;
 use rocket::fs::NamedFile;
 use rocket::http::Status;
 use rocket::{get, State};
@@ -21,9 +21,11 @@ use std::path::*;
 pub async fn get_image(
     file: PathBuf,
     _key: ApiKey<'_>,
-    pool: &State<Pool>,
+    state: &State<JHApiServerState>,
 ) -> Result<Option<NamedFile>, Status> {
-    if !has_query_perm(&_key, pool).await && !has_admin_perm(&_key, pool).await {
+    let pool = &state.pool;
+    let sql_manager = &state.sql_manager;
+    if !has_query_perm(&_key, pool, &sql_manager).await && !has_admin_perm(&_key, pool, &sql_manager).await {
         return Err(Status::Unauthorized);
     }
     info!("Image Request: {:?}", file);
@@ -62,9 +64,11 @@ pub async fn upload(
     mut params: Form<ImageUpload<'_>>,
     #[allow(non_snake_case)] // Keeps giving warnings about _key not being snake_case
     _key: ApiKey<'_>,
-    pool: &State<Pool>,
+    state: &State<JHApiServerState>,
 ) -> Result<String, Status> {
-    if !is_images_perm(&_key, pool).await && !has_admin_perm(&_key, pool).await {
+    let pool = &state.pool;
+    let sql_manager = &state.sql_manager;
+    if !is_images_perm(&_key, pool, &sql_manager).await && !has_admin_perm(&_key, pool, &sql_manager).await {
         return Err(Status::Unauthorized);
     }
 

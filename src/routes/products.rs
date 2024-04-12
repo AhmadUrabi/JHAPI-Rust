@@ -1,5 +1,5 @@
 #![allow(non_snake_case)]
-use oracle::pool::Pool;
+use crate::server::JHApiServerState;
 
 use rocket::log::private::info;
 use rocket::serde::json::Json;
@@ -14,11 +14,13 @@ use crate::functions::products::structs::Product;
 #[post("/products", data = "<params>")]
 pub async fn get_products(
     params: Json<FetchParams>,
-    pool: &State<Pool>,
+    state: &State<JHApiServerState>,
     key: ApiKey<'_>,
 ) -> Json<Vec<Product>> {
+    let pool = &state.pool;
+    let sql_manager = &state.sql_manager;
     info!("GetProductData Request: {:?}", params);
-    match get_product(params, pool, &key).await {
+    match get_product(params, &pool, &sql_manager, &key).await {
         Ok(products) => {
             Json(products)
         }
@@ -33,7 +35,7 @@ pub async fn get_products(
 #[post("/GetProductDataPI", data = "<params>")]
 pub async fn get_products_pi(
     params: Json<FetchParams>,
-    pool: &State<Pool>,
+    state: &State<JHApiServerState>,
     _key: ApiKey<'_>,
     client_ip: Option<IpAddr>,
     log_check: LogCheck,

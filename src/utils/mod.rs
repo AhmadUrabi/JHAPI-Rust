@@ -1,15 +1,15 @@
 use oracle::pool::Pool;
 
-use crate::utils::sql::read_sql;
 
-use self::structs::APIErrors;
+
+use self::{sql::SQLManager, structs::APIErrors};
 
 pub mod logging;
 pub mod permissions;
 pub mod structs;
 pub mod sql;
 
-pub async fn check_user_exists(username: String, pool: &Pool) -> Result<bool, APIErrors> {
+pub async fn check_user_exists(username: String, pool: &Pool, sql_manager: &SQLManager) -> Result<bool, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error Connecting to DB");
@@ -18,7 +18,7 @@ pub async fn check_user_exists(username: String, pool: &Pool) -> Result<bool, AP
     let conn = conn.unwrap();
     println!("Username Check: {}", username);
     let stmt = conn
-        .statement(read_sql("check_user").await?.as_str())
+        .statement(sql_manager.get_sql("check_user")?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");

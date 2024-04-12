@@ -14,7 +14,9 @@ impl Fairing for Logger {
     }
     
     async fn on_response<'r>(&self, req: &'r Request<'_>, response: &mut Response<'r>) {
-        let pool = req.guard::<&rocket::State<oracle::pool::Pool>>().await.unwrap();
+        let state = req.rocket().state::<crate::server::JHApiServerState>().unwrap();
+        let pool = &state.pool;
+        let sql_manager = &state.sql_manager;
         let token = req.headers().get_one("Authorization");
         let username;
         let client_ip = req.client_ip().unwrap();
@@ -27,7 +29,7 @@ impl Fairing for Logger {
                 let token_data = decode_token_data(token);
                 match token_data {
                     Some(user_data) => {
-                        username = user_data.USER_ID .unwrap_or("Unknown".to_string());
+                        username = user_data.USER_ID.unwrap_or("Unknown".to_string());
                     }
                     None => {
                         username = "Unknown".to_string();
@@ -40,6 +42,7 @@ impl Fairing for Logger {
         }
         match log_data(
             &pool,
+            &sql_manager,
             username,
             client_ip.to_string(),
             route,
@@ -48,7 +51,7 @@ impl Fairing for Logger {
             token.unwrap_or("No Token").to_string(),
             result,
             method,
-        ).await {
+        ) {
             Ok(_) => {},
             Err(e) => {
                 error!("Error logging data: {}", e);

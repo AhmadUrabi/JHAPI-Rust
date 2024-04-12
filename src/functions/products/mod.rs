@@ -18,6 +18,7 @@ use crate::server::request_guard::api_key::ApiKey;
 use crate::functions::authentication::decode_token_data;
 use crate::utils::permissions::is_cost_perm;
 use crate::utils::structs::APIErrors;
+use crate::utils::sql::SQLManager;
 
 pub mod structs;
 
@@ -26,6 +27,7 @@ pub mod structs;
 pub async fn get_product(
     params: Json<FetchParams>,
     pool: &Pool,
+    sql_manager: &SQLManager,
     key: &ApiKey<'_>,
 ) -> Result<Vec<Product>, APIErrors> {
     // Empty params are not an error, but they should return an empty vec
@@ -53,7 +55,7 @@ pub async fn get_product(
     // TODO Test using a more complex query
     let mut store_ids: HashSet<String> = HashSet::new();
 
-    match get_stores(pool, username).await {
+    match get_stores(pool, &sql_manager, username).await {
         Ok(store_list) => {
             for i in store_list {
                 store_ids.insert(i.STORE_ID.unwrap());
@@ -66,7 +68,7 @@ pub async fn get_product(
     }
 
     // To call the function once, otherwise will call on each product found, and touch DB every time
-    let show_cost = is_cost_perm(key, pool).await;
+    let show_cost = is_cost_perm(key, pool, &sql_manager).await;
 
     // Helper function to get value from row and check if store is in store_ids
     fn get_value(

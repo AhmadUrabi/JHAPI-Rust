@@ -1,4 +1,4 @@
-use oracle::pool::Pool;
+use crate::server::JHApiServerState;
 use rocket::http::Status;
 use rocket::log::private::info;
 use rocket::serde::json::Json;
@@ -20,9 +20,11 @@ use crate::functions::stores::structs::Store;
 
 #[get("/stores")]
 pub async fn get_store_list(
-    pool: &State<Pool>,
+    state: &State<JHApiServerState>,
     _key: ApiKey<'_>,
 ) -> Result<Json<Vec<Store>>, Status> {
+    let pool = &state.pool;
+    let sql_manager = &state.sql_manager;
     info!("Stores Get Request");
     let mut user_id: String = "".to_string();
     match decode_token_data(_key.0) {
@@ -33,8 +35,8 @@ pub async fn get_store_list(
         None => info!("Token Data: None"),
     }
 
-    if has_stores_perm(&_key, &pool).await || has_admin_perm(&_key, &pool).await {
-        match get_stores(pool, "admin".to_string()).await {
+    if has_stores_perm(&_key, &pool, &sql_manager).await || has_admin_perm(&_key, &pool, &sql_manager).await {
+        match get_stores(&pool, &sql_manager, "admin".to_string()).await {
             Ok(stores) => {
                 return Ok(Json(stores));
             }
@@ -47,7 +49,7 @@ pub async fn get_store_list(
             }
         }
     }
-    match get_stores(pool, user_id).await {
+    match get_stores(&pool, &sql_manager, user_id).await {
         Ok(stores) => {
             Ok(Json(stores))
         }
@@ -65,12 +67,14 @@ pub async fn get_store_list(
 // TODO: extract to function
 #[post("/stores", data = "<params>")]
 pub async fn update_store_list(
-    pool: &State<Pool>,
+    state: &State<JHApiServerState>,
     _key: ApiKey<'_>,
     params: Json<StoreListUpdateParams>,
 ) -> Result<String, Status> {
+    let pool = &state.pool;
+    let sql_manager = &state.sql_manager;
     info!("stores Request: {:?}", params);
-    if has_admin_perm(&_key, pool).await || has_stores_perm(&_key, pool).await {
+    if has_admin_perm(&_key, pool, &sql_manager).await || has_stores_perm(&_key, pool, &sql_manager).await {
         info!("User has permissions");
     } else {
         info!("User does not have permissions");
@@ -78,7 +82,7 @@ pub async fn update_store_list(
     }
 
     // TODO: Whole function should be separated from route function
-    match check_user_exists(params.0.p_username.clone(), pool).await {
+    match check_user_exists(params.0.p_username.clone(), &pool, &sql_manager).await {
         Ok(x) => {
             if !x {
                 return Err(Status::NotFound);
@@ -140,18 +144,20 @@ pub async fn update_store_list(
 
 #[get("/stores/<username>")]
 pub async fn get_store_list_for_user(
-    pool: &State<Pool>,
+    state: &State<JHApiServerState>,
     _key: ApiKey<'_>,
     username: String,
 ) -> Result<Json<Vec<Store>>, Status> {
+    let pool = &state.pool;
+    let sql_manager = &state.sql_manager;
     info!("User stores Request");
 
-    if !has_stores_perm(&_key, &pool).await && !has_admin_perm(&_key, &pool).await {
+    if !has_stores_perm(&_key, &pool, &sql_manager).await && !has_admin_perm(&_key, &pool, &sql_manager).await {
         info!("Token does not have permissions");
         return Err(Status::Unauthorized);
     }
 
-    match get_stores(pool, username).await {
+    match get_stores(&pool, &sql_manager, username).await {
         Ok(stores) => {
             Ok(Json(stores))
         }

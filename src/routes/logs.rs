@@ -1,4 +1,4 @@
-use oracle::pool::Pool;
+use crate::server::JHApiServerState;
 
 use rocket::http::Status;
 use rocket::serde::json::Json;
@@ -13,15 +13,17 @@ use crate::functions::logs::structs::LogData;
 
 #[get("/logs?<limit>")]
 pub async fn get_all_logs(
-    pool: &State<Pool>,
+    state: &State<JHApiServerState>,
     _key: ApiKey<'_>,
     limit: Option<i32>,
 ) -> Result<Json<Vec<LogData>>, Status> {
-    if !has_admin_perm(&_key, pool).await {
+    let pool = &state.pool;
+    let sql_manager = &state.sql_manager;
+    if !has_admin_perm(&_key, pool, &sql_manager).await {
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::logs::get_all_logs_fn(&pool, limit).await {
+    match crate::functions::logs::get_all_logs_fn(&pool, &sql_manager, limit).await {
         Ok(logs) => {
             Ok(logs)
         }
@@ -33,17 +35,18 @@ pub async fn get_all_logs(
 
 #[get("/logs/user/<username>?<limit>")]
 pub async fn get_user_logs(
-    pool: &State<Pool>,
+    state: &State<JHApiServerState>,
     _key: ApiKey<'_>,
     username: String,
     limit: Option<i32>,
 ) -> Result<Json<Vec<LogData>>, Status> {
-    
-    if !has_admin_perm(&_key, pool).await {
+    let pool = &state.pool;
+    let sql_manager = &state.sql_manager;
+    if !has_admin_perm(&_key, pool, &sql_manager).await {
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::logs::get_user_logs_fn(username, pool, limit).await {
+    match crate::functions::logs::get_user_logs_fn(username, &pool, &sql_manager, limit).await {
         Ok(logs) => {
             Ok(logs)
         }
@@ -55,7 +58,7 @@ pub async fn get_user_logs(
 // Unused, should handle nested routes
 /*
 #[get("/logs/route/<route>?<limit>")]
-pub async fn get_route_logs(pool: &State<Pool>, _key: ApiKey<'_> , route: String,limit: Option<i32>, client_ip: Option<IpAddr>) -> Result<Json<Vec<LogData>>, Status> {
+pub async fn get_route_logs(state: &State<JHApiServerState>, _key: ApiKey<'_> , route: String,limit: Option<i32>, client_ip: Option<IpAddr>) -> Result<Json<Vec<LogData>>, Status> {
     let mut userId: String = "".to_string();
 
     match decode_token_data(_key.0) {
@@ -110,16 +113,18 @@ pub async fn get_route_logs(pool: &State<Pool>, _key: ApiKey<'_> , route: String
 
 #[delete("/logs/user/<username>?<limit>")]
 pub async fn delete_user_logs(
-    pool: &State<Pool>,
+    state: &State<JHApiServerState>,
     _key: ApiKey<'_>,
     username: String,
     limit: Option<i32>,
 ) -> Result<String, Status> {
-    if !has_admin_perm(&_key, pool).await {
+    let pool = &state.pool;
+    let sql_manager = &state.sql_manager;
+    if !has_admin_perm(&_key, pool, &sql_manager).await {
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::logs::delete_user_logs_fn(username, pool, limit).await {
+    match crate::functions::logs::delete_user_logs_fn(username, &pool, &sql_manager, limit).await {
         Ok(_logs) => {
             Ok("Logs Deleted".to_string())
         }
@@ -130,15 +135,17 @@ pub async fn delete_user_logs(
 // TODO: warn on missing log
 #[delete("/logs/<log_id>")]
 pub async fn delete_log_logs(
-    pool: &State<Pool>,
+    state: &State<JHApiServerState>,
     _key: ApiKey<'_>,
     log_id: i32,
 ) -> Result<String, Status> {
-    if !has_admin_perm(&_key, pool).await {
+    let pool = &state.pool;
+    let sql_manager = &state.sql_manager;
+    if !has_admin_perm(&_key, pool, &sql_manager).await {
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::logs::delete_log_logs_fn(log_id, pool).await {
+    match crate::functions::logs::delete_log_logs_fn(log_id, &pool, &sql_manager).await {
         Ok(_logs) => {
             Ok("Logs Deleted".to_string())
         }

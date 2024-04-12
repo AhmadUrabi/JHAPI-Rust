@@ -25,8 +25,8 @@ fn cors_preflight_handler(_path: std::path::PathBuf) -> rocket::http::Status {
     rocket::http::Status::Ok
 }
 
-#[launch]
-fn rocket() -> _ {
+#[tokio::main]
+async fn main() {
     // Load .env file
     dotenv().ok();
 
@@ -57,6 +57,6 @@ fn rocket() -> _ {
         route_version_check,
     ];
 
-    let server = JHApiServer::init(routes);
-    server.server
+    let server = JHApiServer::init(routes).await;
+    server.launch().await;
 }

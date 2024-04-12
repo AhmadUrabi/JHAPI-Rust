@@ -1,4 +1,5 @@
-use oracle::pool::Pool;
+use crate::server::JHApiServerState;
+use oracle::pool;
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::{post, State};
@@ -11,10 +12,12 @@ use crate::utils::structs::APIErrors;
 #[post("/login", data = "<params>")]
 pub async fn sign(
     params: Json<LoginParams>,
-    pool: &State<Pool>
+    state: &State<JHApiServerState>
 ) -> Result<String, Status> {
     info!("Sign Request: {:?}", params.0.p_username);
-    match signin(params, pool).await {
+    let pool = &state.pool;
+    let sql_manager = &state.sql_manager;
+    match signin(params, &pool, &sql_manager).await {
         Ok(token) => {
             info!("Valid User Data, Token Sent");
             Ok(token.to_string())

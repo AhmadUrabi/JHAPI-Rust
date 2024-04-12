@@ -1,7 +1,8 @@
 use oracle::pool::Pool;
 
 use crate::utils::check_user_exists;
-use crate::utils::sql::read_sql;
+
+use crate::utils::sql::SQLManager;
 use crate::utils::structs::APIErrors;
 
 use self::structs::Permissions;
@@ -9,7 +10,7 @@ use self::structs::Permissions;
 pub mod structs;
 
 // TODO: try to optimize this function
-pub async fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissions, APIErrors> {
+pub async fn get_user_permissions(user_id: &str, sql_manager: &SQLManager, pool: &Pool) -> Result<Permissions, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
@@ -17,7 +18,7 @@ pub async fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissi
     }
 
     // Check for user
-    if !check_user_exists(user_id.to_string(), pool).await.unwrap_or(false) {
+    if !check_user_exists(user_id.to_string(), pool, &sql_manager).await.unwrap_or(false) {
         error!("User does not exist");
         return Err(APIErrors::UserNotFound);
     }
@@ -25,7 +26,7 @@ pub async fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissi
     let conn = conn.unwrap();
 
     let stmt = conn
-        .statement(read_sql("get_user_permissions").await?.as_str())
+        .statement(sql_manager.get_sql("get_user_permissions")?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");
@@ -70,6 +71,7 @@ pub async fn get_user_permissions(user_id: &str, pool: &Pool) -> Result<Permissi
 pub async fn edit_user_permissions(
     username: String,
     pool: &Pool,
+    sql_manager: &SQLManager,
     permissions: Permissions,
 ) -> Result<String, APIErrors> {
     let conn = pool.get();
@@ -80,16 +82,16 @@ pub async fn edit_user_permissions(
     let conn = conn.unwrap();
 
     // Check for user
-    if !check_user_exists(username.to_string(), pool).await.unwrap_or(false) {
+    if !check_user_exists(username.to_string(), pool, &sql_manager).await.unwrap_or(false) {
         error!("User does not exist");
         return Err(APIErrors::UserNotFound);
     }
     
     // Same Weird threads error as routes/users.rs
-    let insert_stmt = read_sql("insert_user_permissions").await?;
+    let insert_stmt = sql_manager.get_sql("insert_user_permissions")?;
     let user_id = username.to_string();
     let stmt = conn
-        .statement(read_sql("delete_user_permissions").await?.as_str())
+        .statement(sql_manager.get_sql("delete_user_permissions")?.as_str())
         .build();
     if stmt.is_err() {
         error!("Error building statement");

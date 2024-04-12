@@ -2,13 +2,15 @@ use chrono::{Datelike, Local, Timelike};
 use oracle::pool::Pool;
 use oracle::sql_type::Timestamp;
 
-use super::sql::read_sql;
+
+use super::sql::SQLManager;
 use super::structs::APIErrors;
 
 // TODO: fix this mess
 /// Log request data to the database
-pub async fn log_data(
+pub fn log_data(
     pool: &Pool,
+    sql_manager: &SQLManager,
     mut username: String,
     mut ip_addr: String,
     mut route: String,
@@ -54,14 +56,16 @@ pub async fn log_data(
     }
 
     let stmt = conn
-        .statement(read_sql("log_api").await?.as_str())
+        .statement(sql_manager.get_sql("log_api")?.as_str())
         .build();
+
+    println!("SQL: {}", sql_manager.get_sql("log_api")?);
     if stmt.is_err() {
         error!("Error building statement: {}", stmt.err().unwrap());
         return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
-
+    
     match stmt.execute(&[
         &username,
         &route,
@@ -72,12 +76,15 @@ pub async fn log_data(
         &ip_addr,
         &method,
     ]) {
-        Ok(_) => (),
+        Ok(_) => {
+            info!("Logged Request");
+        },
         Err(err) => {
             error!("Error executing query: {}", err);
             return Err(APIErrors::DBError);
         }
     };
+    println!("committing log");
     match conn.commit() {
         Ok(_) => Ok(()),
         Err(err) => {
