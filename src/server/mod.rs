@@ -7,13 +7,18 @@ pub mod request_guard;
 use fairings::log::Logger;
 use fairings::cors::CORS;
 
+use crate::utils::sql::SQLManager;
+
 pub struct JHApiServer {
     pub server: rocket::Rocket<rocket::Build>,
 }
 
+// TODO: Switch to a single shared object
+
 impl JHApiServer {
     pub fn init(routes: Vec<rocket::Route>) -> JHApiServer {
         let pool = JHApiServer::build_pool();
+        let sql_manager = SQLManager::init();
         let rocket = rocket::build()
         .attach(CORS)
         .attach(Logger)
@@ -22,6 +27,7 @@ impl JHApiServer {
             Self::get_catchers()
         )
         .manage(pool)
+        .manage(sql_manager)
         .mount(
             "/api",
             routes
