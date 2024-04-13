@@ -15,17 +15,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Install Image Magick
-      run: |
-        sudo apt-get update
-        sudo apt install make build-essential automake
-        git clone https://github.com/ImageMagick/ImageMagick.git
-        cd ImageMagick
-        ./configure
-        make -j`nproc`
-        sudo make install
-        sudo ldconfig /usr/local/lib
-        export IMAGE_MAGICK_DIR=/usr/local/
-    - uses: actions/checkout@v3
+    - uses: mfinelli/setup-imagemagick@v5
     - name: Build
       run: cargo build --verbose
