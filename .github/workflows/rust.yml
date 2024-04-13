@@ -19,14 +19,14 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt install make build-essential automake
-        git clone https://github.com/ImageMagick/ImageMagick.git /usr/local/src/ImageMagick
-        cd /usr/local/src/ImageMagick
+        git clone https://github.com/ImageMagick/ImageMagick.git
+        cd ImageMagick
         ./configure
         ./configure --with-modules
         make
         make -j`nproc`
         sudo make install
-        export IMAGE_MAGICK_DIR=/usr/local/src/ImageMagick
+        export IMAGE_MAGICK_DIR=/usr/local/
     - uses: actions/checkout@v3
     - name: Build
       run: cargo build --verbose
