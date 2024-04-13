@@ -16,6 +16,7 @@ use routes::products::*;
 use routes::authentication::*;
 use routes::users::*;
 use routes::versions::*;
+use routes::health_check;
 
 use server::JHApiServer;
 
@@ -55,8 +56,9 @@ async fn main() {
         delete_log_logs,
         delete_user_logs,
         route_version_check,
+        health_check,
     ];
 
     let server = JHApiServer::init(routes).await;
-    server.launch().await;
+    let _ = server.launch().await;
 }

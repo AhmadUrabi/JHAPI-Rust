@@ -1,3 +1,5 @@
+use std::net::{IpAddr, Ipv4Addr};
+
 use rocket::{fairing::{Fairing, Info, Kind}, Request, Response};
 
 use crate::{functions::authentication::decode_token_data, utils::logging::{get_timestamp, log_data}};
@@ -19,7 +21,7 @@ impl Fairing for Logger {
         let sql_manager = &state.sql_manager;
         let token = req.headers().get_one("Authorization");
         let username;
-        let client_ip = req.client_ip().unwrap();
+        let client_ip = req.client_ip().unwrap_or(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)));
         let method = req.method().as_str().to_string();
         let route: String = req.uri().path().to_string();
         let current_time = get_timestamp();

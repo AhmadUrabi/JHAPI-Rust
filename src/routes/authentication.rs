@@ -1,5 +1,5 @@
 use crate::server::JHApiServerState;
-use oracle::pool;
+
 use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::{post, State};

@@ -6,6 +6,7 @@ use super::structs::APIErrors;
 
 use std::collections::HashMap;
 
+#[allow(dead_code)]
 pub async fn read_sql(name: &str) -> Result<String, APIErrors> {
     let start = std::time::Instant::now();
     let path = Path::new("src/sql").join(name.to_owned() + ".sql");
@@ -43,7 +44,7 @@ pub async fn load_to_hashmap() -> Result<HashMap<String,String>,APIErrors> {
 }
 
 pub struct SQLManager{
-    map: HashMap<String,String>
+    pub map: HashMap<String,String>
 }
 
 impl SQLManager {

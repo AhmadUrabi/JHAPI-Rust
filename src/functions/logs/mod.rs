@@ -1,8 +1,7 @@
 #![allow(non_snake_case)]
-use oracle::pool::{self, Pool};
+use oracle::pool::Pool;
 
 use rocket::serde::json::Json;
-use rocket::State;
 
 pub mod structs;
 
