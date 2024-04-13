@@ -15,6 +15,6 @@ chrono = "0.4.37"
 ssh2 = "0.9.4"
 dotenv = "0.15.0"
 tokio = { version = "1.37.0", features = ["full"] }
-magick_rust = { path = "magick-rust" }
+magick_rust = { git = "https://github.com/nlfiedler/magick-rust.git" }
 bcrypt = "0.15.1"
 rocket = { version = "0.5.0", features = ["json"] }
