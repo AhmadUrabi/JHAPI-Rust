@@ -59,7 +59,6 @@ pub fn log_data(
         .statement(sql_manager.get_sql("log_api")?.as_str())
         .build();
 
-    println!("SQL: {}", sql_manager.get_sql("log_api")?);
     if stmt.is_err() {
         error!("Error building statement: {}", stmt.err().unwrap());
         return Err(APIErrors::DBError);
