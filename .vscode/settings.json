@@ -11,5 +11,6 @@
     ],
     "githubPullRequests.ignoredPullRequestBranches": [
         "master"
-    ]
+    ],
+    "rust-analyzer.showUnlinkedFileNotification": false
 }

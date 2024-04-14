@@ -56,7 +56,9 @@ async fn main() {
         delete_log_logs,
         delete_user_logs,
         route_version_check,
+        get_products_by_supplier,
         health_check,
+        print_test_report
     ];
 
     let server = JHApiServer::init(routes).await;

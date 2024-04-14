@@ -1,6 +1,7 @@
 use rocket::tokio::io::AsyncReadExt;
 use ssh2::Session;
 use std::io::prelude::*;
+use std::io::Cursor;
 use std::io::Read;
 use std::net::TcpStream;
 use std::path::Path;
@@ -139,6 +140,69 @@ pub async fn download_file(file_name: &String) -> Result<(), APIErrors> {
         let mut local_file = local_file.unwrap();
         local_file.write_all(&contents).unwrap();
         Ok(())
+    } else {
+        println!("File does not exist");
+        return Err(APIErrors::FileNotFound);
+    }
+}
+
+pub fn get_file_stream(filename: &str) -> Result<Cursor<Vec<u8>>,APIErrors> {
+    let tcp_stream =
+        TcpStream::connect(std::env::var("SFTP_HOST").expect("SFTP_HOST must be set.")).unwrap();
+    let mut sess = Session::new().unwrap();
+    sess.set_tcp_stream(tcp_stream);
+    match sess.handshake() {
+        Ok(_) => println!("SFTP Handshake successful"),
+        Err(e) => {
+            error!("SFTP Handshake failed: {:?}", e);
+            return Err(APIErrors::SFTPError);
+        }
+    };
+
+    // Error if username or password is not set, but should not panic
+    let username = std::env::var("SFTP_USERNAME");
+    let password = std::env::var("SFTP_PASSWORD");
+    if username.is_err() || password.is_err() {
+        println!("SFTP_USERNAME or SFTP_PASSWORD not set");
+        return Err(APIErrors::InvalidCredentials);
+    }
+    let username = username.unwrap();
+    let password = password.unwrap();
+
+    match sess.userauth_password(&username, &password) {
+        Ok(_) => println!("Authentication successful"),
+        Err(e) => {
+            error!("Authentication failed: {:?}", e);
+            return Err(APIErrors::InvalidCredentials);
+        }
+    };
+
+    let filetarget = "/u02/forms/erp/images/".to_string() + filename + ".jpg";
+
+    if let Ok((mut remote_file, stat)) = sess.scp_recv(Path::new(&filetarget)) {
+        println!("File exists");
+        println!("remote file size: {}", stat.size());
+        let mut contents = Vec::new();
+        match remote_file.read_to_end(&mut contents) {
+            Ok(_) => (),
+            Err(e) => {
+                error!("File read failed: {:?}", e);
+                return Err(APIErrors::SFTPError);
+            }
+        };
+        // Close the channel and wait for the whole content to be tranferred
+        // Too many unwraps here, should be handled better
+        remote_file.send_eof().unwrap();
+        remote_file.wait_eof().unwrap();
+        
+        // create a File struct with the contents
+        
+        let mut cursor = std::io::Cursor::new(Vec::new());
+
+        
+        std::io::Read::read_to_end(&mut cursor, &mut contents).unwrap();
+
+        Ok(cursor)
     } else {
         println!("File does not exist");
         return Err(APIErrors::FileNotFound);

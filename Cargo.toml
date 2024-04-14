@@ -18,3 +18,4 @@ tokio = { version = "1.37.0", features = ["full"] }
 magick_rust = { git = "https://github.com/nlfiedler/magick-rust.git" }
 bcrypt = "0.15.1"
 rocket = { version = "0.5.0", features = ["json"] }
+genpdf = { version = "0.2.0", features = ["images"] }
