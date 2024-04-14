@@ -2,9 +2,15 @@ use chrono::{Datelike, Local, Timelike};
 use oracle::pool::Pool;
 use oracle::sql_type::Timestamp;
 
-// TODO: fix this mess
+
+use super::sql::SQLManager;
+use super::structs::APIErrors;
+
+
+/// Log request data to the database
 pub fn log_data(
     pool: &Pool,
+    sql_manager: &SQLManager,
     mut username: String,
     mut ip_addr: String,
     mut route: String,
@@ -13,17 +19,18 @@ pub fn log_data(
     mut token: String,
     mut result: String,
     mut method: String,
-) {
+) -> Result<(), APIErrors> {
+    
     let conn = pool.get();
     if conn.is_err() {
         error!("Error: {}", conn.err().unwrap());
-        return;
+        return Err(APIErrors::DBError);
     }
     let conn = conn.unwrap();
 
     // Chop long VALUES
     // Only really applies for extra long parameters and routes (User Input)
-    // TODO: Add a flag for chopped values
+    
     if username.len() > 64 {
         username = username[..64].to_string();
     }
@@ -49,35 +56,15 @@ pub fn log_data(
     }
 
     let stmt = conn
-        .statement(
-            "
-        INSERT INTO odbc_jhc.API_LOGS (
-            username,
-            route,
-            parameters,
-            timestamp,
-            result,
-            token_used,
-            ip_address,
-            method
-        ) VALUES (
-            :username,
-            :route,
-            :parameters,
-            :timestamp,
-            :result,
-            :token_used,
-            :ip_address,
-            :method
-        )",
-        )
+        .statement(sql_manager.get_sql("log_api")?.as_str())
         .build();
+
     if stmt.is_err() {
         error!("Error building statement: {}", stmt.err().unwrap());
-        return;
+        return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
-
+    
     match stmt.execute(&[
         &username,
         &route,
@@ -88,21 +75,25 @@ pub fn log_data(
         &ip_addr,
         &method,
     ]) {
-        Ok(_) => (),
+        Ok(_) => {
+            info!("Logged Request");
+        },
         Err(err) => {
             error!("Error executing query: {}", err);
-            return;
+            return Err(APIErrors::DBError);
         }
     };
+    println!("committing log");
     match conn.commit() {
-        Ok(_) => (),
+        Ok(_) => Ok(()),
         Err(err) => {
             error!("Error: {}", err);
-            return;
+            return Err(APIErrors::DBError);
         }
     }
 }
 
+/// Helper function to get current timestamp
 pub fn get_timestamp() -> Timestamp {
     // Get Current timestamp and convert to year, month, day
     let now = Local::now();
