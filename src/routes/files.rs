@@ -16,7 +16,6 @@ use crate::utils::structs::APIErrors;
 
 use std::path::*;
 
-// TODO: Rework temporary file storage
 #[get("/images/<file..>")]
 pub async fn get_image(
     file: PathBuf,

@@ -20,8 +20,6 @@ pub struct JHApiServerState {
     pub sql_manager: SQLManager,
 }
 
-// TODO: Switch to a single shared object
-
 impl JHApiServer {
     pub async fn init(routes: Vec<rocket::Route>) -> JHApiServer {
         let state = JHApiServer::get_state().await;

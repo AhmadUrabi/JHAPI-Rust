@@ -132,7 +132,7 @@ pub async fn delete_user_logs(
     }
 }
 
-// TODO: warn on missing log
+
 #[delete("/logs/<log_id>")]
 pub async fn delete_log_logs(
     state: &State<JHApiServerState>,

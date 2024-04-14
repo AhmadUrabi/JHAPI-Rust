@@ -1,10 +1,12 @@
 use crate::server::JHApiServer;
 
+#[allow(dead_code)]
 pub async fn get_server_with_route(routes: Vec<rocket::Route>) -> rocket::Rocket<rocket::Build> {
     let server_wrapper = JHApiServer::init(routes).await;
     server_wrapper.server
 }
 
+#[allow(dead_code)]
 pub async fn get_client(routes: Vec<rocket::Route>) -> rocket::local::asynchronous::Client {
     let server = get_server_with_route(routes).await;
     rocket::local::asynchronous::Client::tracked(server)
@@ -12,6 +14,7 @@ pub async fn get_client(routes: Vec<rocket::Route>) -> rocket::local::asynchrono
         .expect("Failed to create client")
 }
 
+#[allow(dead_code)]
 pub async fn get_valid_user_token() -> Option<String> {
     let client = get_client(routes![crate::routes::authentication::sign]).await;
     let auth = (

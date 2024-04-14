@@ -17,12 +17,11 @@ use crate::server::request_guard::api_key::ApiKey;
 
 use crate::functions::authentication::decode_token_data;
 use crate::utils::permissions::is_cost_perm;
-use crate::utils::structs::APIErrors;
 use crate::utils::sql::SQLManager;
+use crate::utils::structs::APIErrors;
 
 pub mod structs;
 
-// TODO: Test performance of this function
 #[allow(unused_assignments)]
 pub async fn get_product(
     params: Json<FetchParams>,
@@ -51,8 +50,7 @@ pub async fn get_product(
 
     // To ensure user only gets data for stores they have access to
     // This does have a performance penalty, as the function has to touch the DB twice
-    // Could be optimized by creating a more complex query, or by using hashsets
-    // TODO Test using a more complex query
+
     let mut store_ids: HashSet<String> = HashSet::new();
 
     match get_stores(pool, &sql_manager, username).await {
@@ -144,7 +142,6 @@ pub async fn get_product(
         return Ok(Vec::new());
     }
 
-
     let conn = pool.get();
     if conn.is_err() {
         info!("Connection Error");
@@ -152,18 +149,20 @@ pub async fn get_product(
     }
     let conn = conn.unwrap();
 
-    // TODO: Fix error handling on the query
-
     let mut stmt;
     let rows;
     let now = tokio::time::Instant::now();
 
-    stmt = conn.statement(&sql).build().unwrap();
-    rows = stmt.query_named(&my_params).unwrap();
+    stmt = conn.statement(&sql).build().map_err(|e| {
+        error!("Error building statement: {:?}", e);
+        APIErrors::DBError
+    })?;
+    rows = stmt.query_named(&my_params).map_err(|e| {
+        error!("Error executing query: {:?}", e);
+        APIErrors::DBError
+    })?;
 
-    
     println!("Total Query Time: {:?}", now.elapsed().as_millis());
-
 
     let mut products: Vec<Product> = Vec::new();
 

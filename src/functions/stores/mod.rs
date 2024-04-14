@@ -56,8 +56,7 @@ pub async fn get_stores(pool: &Pool, sql_manager: &SQLManager, user_id: String) 
         let row = row.unwrap();
 
         // Multiple use of unwraps here, but we know the types are correct
-        // Might have to change the handling of this later
-        // TODO: Review error handling on value unwraps
+        
         let store = Store {
             STORE_ID: row.get(0).unwrap(),
             STORE_DESC: row.get(1).unwrap(),

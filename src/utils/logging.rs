@@ -6,7 +6,7 @@ use oracle::sql_type::Timestamp;
 use super::sql::SQLManager;
 use super::structs::APIErrors;
 
-// TODO: fix this mess
+
 /// Log request data to the database
 pub fn log_data(
     pool: &Pool,
@@ -30,7 +30,7 @@ pub fn log_data(
 
     // Chop long VALUES
     // Only really applies for extra long parameters and routes (User Input)
-    // TODO: Add a flag for chopped values
+    
     if username.len() > 64 {
         username = username[..64].to_string();
     }

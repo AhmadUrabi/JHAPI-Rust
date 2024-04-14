@@ -32,7 +32,6 @@ pub async fn get_latest_version(platform: &str, sql_manager: &SQLManager, pool: 
                 Ok(row) => {
                     info!("Version Found");
                     Ok(Json(Version {
-                        // TODO: Fix this unwrap
                         version: row.get("VERSION").unwrap(),
                         platform: row.get("PLATFORM").unwrap(),
                         url: row.get("URL").unwrap(),
