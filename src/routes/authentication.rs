@@ -34,3 +34,41 @@ pub async fn sign(
         }
     }
 }
+
+
+#[cfg(test)]
+mod test {
+    use crate::utils::testing::*;
+    use dotenv::dotenv;
+    
+    #[tokio::test]
+    pub async fn test_login_valid() {
+        dotenv().ok();
+        assert!(get_valid_user_token().await.is_some());
+    }
+
+    #[tokio::test]
+    pub async fn test_login_invalid() {
+        dotenv().ok();
+        let client = get_client(routes![super::sign]).await;
+        let auth = (
+            std::env::var("INVALID_USER_TEST").unwrap(),
+            std::env::var("INVALID_PASS_TEST").unwrap(),
+        );
+        let response = client
+            .post("/api/login")
+            .header(rocket::http::Header::new(
+                "Content-Type",
+                "application/json",
+            ))
+            .body(format!(
+                "{{\"p_username\":\"{}\",\"p_password\":\"{}\"}}",
+                auth.0, auth.1
+            ))
+            .dispatch()
+            .await;
+        assert_eq!(response.status(), rocket::http::Status::Unauthorized);
+    }
+
+
+}

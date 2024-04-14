@@ -8,6 +8,7 @@ pub mod logging;
 pub mod permissions;
 pub mod structs;
 pub mod sql;
+pub mod testing;
 
 pub async fn check_user_exists(username: String, pool: &Pool, sql_manager: &SQLManager) -> Result<bool, APIErrors> {
     let conn = pool.get();

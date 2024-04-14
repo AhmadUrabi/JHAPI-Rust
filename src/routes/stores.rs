@@ -170,3 +170,158 @@ pub async fn get_store_list_for_user(
         }
     }
 }
+
+
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::utils::testing::*;
+    use dotenv::dotenv;
+
+    #[tokio::test]
+    pub async fn test_get_store_list() {
+        dotenv().ok();
+        let token = get_valid_user_token().await;
+        let client = get_client(routes![get_store_list]).await;
+        let response = client
+            .get("/api/stores")
+            .header(rocket::http::Header::new(
+                "Authorization",
+                format!("{}", token.unwrap()),
+            ))
+            .dispatch()
+            .await;
+        println!("{:?}", response.body());
+        assert_eq!(response.status(), rocket::http::Status::Ok);
+    }
+
+    #[tokio::test]
+    pub async fn test_get_user_stores() {
+        dotenv().ok();
+        let token = get_valid_user_token().await;
+        let client = get_client(routes![get_store_list_for_user]).await;
+        let response = client
+            .get(format!(
+                "/api/stores/{}",
+                std::env::var("VALID_USER_TEST").unwrap()
+            ))
+            .header(rocket::http::Header::new(
+                "Authorization",
+                format!("{}", token.unwrap()),
+            ))
+            .dispatch()
+            .await;
+        assert_eq!(response.status(), rocket::http::Status::Ok);
+        let res = response
+            .into_json::<Vec<crate::functions::stores::structs::Store>>()
+            .await
+            .unwrap();
+        assert_eq!(res.len() > 0, true);
+
+        // Check if the first store is the correct one
+        assert_eq!(res[0].STORE_ID, Some("01".to_string()));
+    }
+
+    #[tokio::test]
+    pub async fn test_post_stores() {
+        dotenv().ok();
+        let token = get_valid_user_token().await;
+        let client = get_client(routes![update_store_list, get_store_list_for_user]).await;
+
+        // Create an object of type EditStoresParams
+        let params = crate::functions::stores::structs::StoreListUpdateParams {
+            p_username: std::env::var("TESTING_USER").unwrap(),
+            p_stores: Some(vec![1, 2, 5]),
+            p_allstoresaccess: 0,
+        };
+
+        // Send the object as JSON in the request body
+        let response = client
+            .post("/api/stores")
+            .header(rocket::http::Header::new(
+                "Authorization",
+                format!("{}", &token.clone().unwrap()),
+            ))
+            .header(rocket::http::Header::new(
+                "Content-Type",
+                "application/json",
+            ))
+            .body(serde_json::to_string(&params).unwrap())
+            .dispatch()
+            .await;
+
+        assert_eq!(response.status(), rocket::http::Status::Ok);
+
+        // Call the get stores route to check if the store was created correctly
+        let response = client
+            .get(format!(
+                "/api/stores/{}",
+                std::env::var("TESTING_USER").unwrap()
+            ))
+            .header(rocket::http::Header::new(
+                "Authorization",
+                format!("{}", &token.clone().unwrap()),
+            ))
+            .dispatch()
+            .await;
+
+        assert_eq!(response.status(), rocket::http::Status::Ok);
+        let stores = response
+            .into_json::<Vec<crate::functions::stores::structs::Store>>()
+            .await
+            .unwrap();
+
+        // Check if the added stores are in the list
+        assert_eq!(stores.len() > 0, true);
+        assert_eq!(stores[0].STORE_ID, Some("01".to_string()));
+        assert_eq!(stores[1].STORE_ID, Some("02".to_string()));
+        assert_eq!(stores[2].STORE_ID, Some("05".to_string()));
+
+        // Check if only 3 stores are in the list
+        assert_eq!(stores.len(), 3);
+
+        // Clean up the test by removing the stores
+        let params = crate::functions::stores::structs::StoreListUpdateParams {
+            p_username: std::env::var("TESTING_USER").unwrap(),
+            p_stores: Some(vec![]),
+            p_allstoresaccess: 0,
+        };
+
+        let response = client
+            .post("/api/stores")
+            .header(rocket::http::Header::new(
+                "Authorization",
+                format!("{}", &token.clone().unwrap()),
+            ))
+            .header(rocket::http::Header::new(
+                "Content-Type",
+                "application/json",
+            ))
+            .body(serde_json::to_string(&params).unwrap())
+            .dispatch()
+            .await;
+
+        assert_eq!(response.status(), rocket::http::Status::Ok);
+
+        // Call the get stores route to check if the store was removed correctly
+        let response = client
+            .get(format!(
+                "/api/stores/{}",
+                std::env::var("TESTING_USER").unwrap()
+            ))
+            .header(rocket::http::Header::new(
+                "Authorization",
+                format!("{}", &token.unwrap()),
+            ))
+            .dispatch()
+            .await;
+
+        assert_eq!(response.status(), rocket::http::Status::Ok);
+        let stores = response
+            .into_json::<Vec<crate::functions::stores::structs::Store>>()
+            .await
+            .unwrap();
+        assert_eq!(stores.len(), 0);
+    }
+}
