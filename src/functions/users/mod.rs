@@ -284,6 +284,36 @@ pub async fn delete_user(user_id: &str, sql_manager: &SQLManager, pool: &Pool) -
     }
     let conn = conn.unwrap();
 
+    let delete_stmt = conn.statement(sql_manager.get_sql("delete_user_permissions")?.as_str()).build();
+    if delete_stmt.is_err() {
+        error!("Error building statement");
+        return Err(APIErrors::DBError);
+    }
+    let mut delete_stmt = delete_stmt.unwrap();
+
+    match delete_stmt.execute(&[&(user_id.to_lowercase())]) {
+        Ok(_) => println!("Deleted user permissions"),
+        Err(err) => {
+            error!("Error executing delete: {}", err);
+            return Err(APIErrors::DBError);
+        }
+    }
+
+    let delete_stmt = conn.statement(sql_manager.get_sql("delete_user_stores")?.as_str()).build();
+    if delete_stmt.is_err() {
+        error!("Error building statement");
+        return Err(APIErrors::DBError);
+    }
+    let mut delete_stmt = delete_stmt.unwrap();
+
+    match delete_stmt.execute(&[&(user_id.to_lowercase())]) {
+        Ok(_) => println!("Deleted user stores"),
+        Err(err) => {
+            error!("Error executing delete: {}", err);
+            return Err(APIErrors::DBError);
+        }
+    }
+
     let stmt = conn
         .statement(sql_manager.get_sql("delete_user")?.as_str())
         .build();

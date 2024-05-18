@@ -29,7 +29,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Stage 3: Build the Rust application
-FROM rust:latest
+FROM rust:latest as final
 
 ENV MAGICK_VERSION 7.1
 
@@ -42,7 +42,7 @@ RUN curl https://imagemagick.org/archive/ImageMagick.tar.gz | tar xz \
  && rm -r ImageMagick-${MAGICK_VERSION}*
 
 COPY --from=instantclient /usr/lib/oracle /usr/lib/oracle
-COPY --from=libaio /usr/lib/x86_64-linux-gnu/libaio.so.1 /usr/lib/x86_64-linux-gnu/libaio.so.1
+COPY --from=libaio /usr/lib/x86_64-linux-gnu/libaio.so /usr/lib/x86_64-linux-gnu/libaio.so.1
 
 # Set the working directory to /app
 WORKDIR /app
