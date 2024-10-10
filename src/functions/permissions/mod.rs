@@ -10,7 +10,11 @@ use self::structs::Permissions;
 pub mod structs;
 
 // TODO: try to optimize this function
-pub async fn get_user_permissions(user_id: &str, sql_manager: &SQLManager, pool: &Pool) -> Result<Permissions, APIErrors> {
+pub async fn get_user_permissions(
+    user_id: &str,
+    sql_manager: &SQLManager,
+    pool: &Pool,
+) -> Result<Permissions, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
@@ -18,7 +22,10 @@ pub async fn get_user_permissions(user_id: &str, sql_manager: &SQLManager, pool:
     }
 
     // Check for user
-    if !check_user_exists(user_id.to_string(), pool, &sql_manager).await.unwrap_or(false) {
+    if !check_user_exists(user_id.to_string(), pool, &sql_manager)
+        .await
+        .unwrap_or(false)
+    {
         error!("User does not exist");
         return Err(APIErrors::UserNotFound);
     }
@@ -82,11 +89,14 @@ pub async fn edit_user_permissions(
     let conn = conn.unwrap();
 
     // Check for user
-    if !check_user_exists(username.to_string(), pool, &sql_manager).await.unwrap_or(false) {
+    if !check_user_exists(username.to_string(), pool, &sql_manager)
+        .await
+        .unwrap_or(false)
+    {
         error!("User does not exist");
         return Err(APIErrors::UserNotFound);
     }
-    
+
     // Same Weird threads error as routes/users.rs
     let insert_stmt = sql_manager.get_sql("insert_user_permissions")?;
     let user_id = username.to_string();
@@ -98,7 +108,7 @@ pub async fn edit_user_permissions(
         return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
-
+    println!("stmt: {:?}", stmt);
     match stmt.execute(&[&user_id]) {
         Ok(_) => (),
         Err(err) => {
@@ -106,7 +116,6 @@ pub async fn edit_user_permissions(
             return Err(APIErrors::DBError);
         }
     };
-
 
     let stmt = conn.statement(insert_stmt.as_str()).build();
     if stmt.is_err() {

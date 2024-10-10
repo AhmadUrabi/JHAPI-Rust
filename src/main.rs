@@ -3,20 +3,20 @@ extern crate rocket;
 
 mod functions;
 mod routes;
-mod utils;
 mod server;
+mod utils;
 
 use dotenv::dotenv;
 
-use routes::stores::*;
+use routes::authentication::*;
 use routes::files::*;
+use routes::health_check;
 use routes::logs::*;
 use routes::permissions::*;
 use routes::products::*;
-use routes::authentication::*;
+use routes::stores::*;
 use routes::users::*;
 use routes::versions::*;
-use routes::health_check;
 
 use server::JHApiServer;
 
@@ -32,7 +32,7 @@ async fn main() {
     dotenv().ok();
 
     // Logging Setup, Unwrapping is fine here, if it fails, the program should crash
-    log4rs::init_file("config/log4rs.yaml", Default::default()).unwrap();
+    // log4rs::init_file("config/log4rs.yaml", Default::default()).unwrap();
     // Logging Setup End
 
     let routes = routes![

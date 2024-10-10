@@ -2,10 +2,8 @@ use chrono::{Datelike, Local, Timelike};
 use oracle::pool::Pool;
 use oracle::sql_type::Timestamp;
 
-
 use super::sql::SQLManager;
 use super::structs::APIErrors;
-
 
 /// Log request data to the database
 pub fn log_data(
@@ -20,7 +18,6 @@ pub fn log_data(
     mut result: String,
     mut method: String,
 ) -> Result<(), APIErrors> {
-    
     let conn = pool.get();
     if conn.is_err() {
         error!("Error: {}", conn.err().unwrap());
@@ -30,7 +27,7 @@ pub fn log_data(
 
     // Chop long VALUES
     // Only really applies for extra long parameters and routes (User Input)
-    
+
     if username.len() > 64 {
         username = username[..64].to_string();
     }
@@ -64,7 +61,7 @@ pub fn log_data(
         return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
-    
+
     match stmt.execute(&[
         &username,
         &route,
@@ -77,7 +74,7 @@ pub fn log_data(
     ]) {
         Ok(_) => {
             info!("Logged Request");
-        },
+        }
         Err(err) => {
             error!("Error executing query: {}", err);
             return Err(APIErrors::DBError);
@@ -108,5 +105,5 @@ pub fn get_timestamp() -> Timestamp {
         now.nanosecond(),
     );
 
-    timestamp
+    timestamp.unwrap()
 }

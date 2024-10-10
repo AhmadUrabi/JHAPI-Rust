@@ -1,3 +1,4 @@
+use magick_rust::GravityType;
 use rocket::tokio::io::AsyncReadExt;
 use ssh2::Session;
 use std::io::prelude::*;
@@ -47,8 +48,8 @@ fn resize(filename: &str, name: &str) -> Result<bool, String> {
     // Too many unwraps here, but magickwand is not very good at error handling
     let mut magickwand = MagickWand::new();
     magickwand.read_image_blob(&temp).unwrap();
-    magickwand.set_image_gravity(5).unwrap();
-    magickwand.set_gravity(5).unwrap();
+    magickwand.set_image_gravity(GravityType::Center).unwrap();
+    magickwand.set_gravity(GravityType::Center).unwrap();
     magickwand.fit(640, 640);
 
     let width = magickwand.get_image_width() as isize;
