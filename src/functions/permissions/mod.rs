@@ -108,7 +108,7 @@ pub async fn edit_user_permissions(
         return Err(APIErrors::DBError);
     }
     let mut stmt = stmt.unwrap();
-    println!("stmt: {:?}", stmt);
+
     match stmt.execute(&[&user_id]) {
         Ok(_) => (),
         Err(err) => {
