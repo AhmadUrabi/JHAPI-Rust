@@ -88,4 +88,14 @@ pub struct FetchParams {
     pub p_ref: Option<String>,
     pub p_barcode: Option<String>,
     pub p_id: Option<String>,
+    pub p_desc: Option<String>,
+}
+
+impl FetchParams {
+    pub fn is_none(&self) -> bool {
+        self.p_ref.is_none()
+            && self.p_barcode.is_none()
+            && self.p_id.is_none()
+            && self.p_desc.is_none()
+    }
 }

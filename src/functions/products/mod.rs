@@ -30,8 +30,7 @@ pub async fn get_product(
     key: &ApiKey<'_>,
 ) -> Result<Vec<Product>, APIErrors> {
     // Empty params are not an error, but they should return an empty vec
-    if params.p_ref.is_none() && params.p_barcode.is_none() && params.p_id.is_none() {
-        // vec![] is shorthand for Vec::new(), omitted for compile time optimization
+    if params.is_none() {
         println!("Empty params");
         return Ok(Vec::new());
     }
@@ -82,82 +81,66 @@ pub async fn get_product(
         }
     }
 
+    fn add_param(sql: &mut String, param_count: &mut i32, column_name: &str, param: &str) {
+        if *param_count > 0 {
+            sql.push_str(" AND");
+        }
+        *param_count += 1;
+        if param.starts_with("%") || param.ends_with("%") {
+            sql.push_str(&format!(" {} LIKE :{}", column_name, column_name));
+        } else {
+            sql.push_str(&format!(" {} = :{}", column_name, column_name));
+        }
+    }
+
     let mut sql = String::from("SELECT * FROM ODBC_JHC.JHC_INVDATA WHERE");
     let mut my_params: Vec<(&str, &dyn ToSql)> = Vec::new();
     let mut param_count = 0;
+
     if let Some(p_ref) = &params.p_ref {
-        if p_ref.contains("%") {
-            if param_count > 0 {
-                sql.push_str(" AND");
-            }
-            param_count += 1;
-            sql.push_str(" FOREIGN_ITEM_CODE LIKE :ref");
-        } else {
-            if param_count > 0 {
-                sql.push_str(" AND");
-            }
-            param_count += 1;
-            sql.push_str(" FOREIGN_ITEM_CODE = :ref");
-        }
-        my_params.push(("ref", p_ref as &dyn ToSql));
+        add_param(&mut sql, &mut param_count, "FOREIGN_ITEM_CODE", p_ref);
+        my_params.push(("FOREIGN_ITEM_CODE", p_ref as &dyn ToSql));
+    }
+
+    if let Some(p_id) = &params.p_id {
+        add_param(&mut sql, &mut param_count, "ITEM_ID", p_id);
+        my_params.push(("ITEM_ID", p_id as &dyn ToSql));
+    }
+
+    if let Some(p_desc) = &params.p_desc {
+        add_param(&mut sql, &mut param_count, "ITEM_DESC_S", p_desc);
+        my_params.push(("ITEM_DESC_S", p_desc as &dyn ToSql));
     }
 
     if let Some(p_barcode) = &params.p_barcode {
-        if p_barcode.contains("%") {
-            if param_count > 0 {
-                sql.push_str(" AND");
-            }
-            param_count += 1;
+        if param_count > 0 {
+            sql.push_str(" AND");
+        }
+        param_count += 1;
+        if p_barcode.starts_with("%") || p_barcode.ends_with("%") {
             sql.push_str(" BARCODE_LISTED LIKE '%' || :barcode");
         } else {
-            if param_count > 0 {
-                sql.push_str(" AND");
-            }
             param_count += 1;
             sql.push_str(" BARCODE_LISTED LIKE '%' || :barcode || '%'");
         }
         my_params.push(("barcode", p_barcode as &dyn ToSql));
     }
 
-    if let Some(p_id) = &params.p_id {
-        if p_id.contains("%") {
-            if param_count > 0 {
-                sql.push_str(" AND");
-            }
-            param_count += 1;
-            sql.push_str(" ITEM_ID LIKE :id");
-        } else {
-            if param_count > 0 {
-                sql.push_str(" AND");
-            }
-            param_count += 1;
-            sql.push_str(" ITEM_ID = :id");
-        }
-        my_params.push(("id", p_id as &dyn ToSql));
-    }
+    info!("SQL Statement: {:?}", sql);
 
-    println!("SQL: {:?}", sql);
+    let conn = pool.get().map_err(|e| {
+        error!("Connection Error: {:?}", e);
+        APIErrors::DBError
+    })?;
 
-    if my_params.is_empty() {
-        return Ok(Vec::new());
-    }
-
-    let conn = pool.get();
-    if conn.is_err() {
-        info!("Connection Error");
-        return Err(APIErrors::DBError);
-    }
-    let conn = conn.unwrap();
-
-    let mut stmt;
-    let rows;
     let now = tokio::time::Instant::now();
 
-    stmt = conn.statement(&sql).build().map_err(|e| {
+    let mut stmt = conn.statement(&sql).build().map_err(|e| {
         error!("Error building statement: {:?}", e);
         APIErrors::DBError
     })?;
-    rows = stmt.query_named(&my_params).map_err(|e| {
+
+    let rows = stmt.query_named(&my_params).map_err(|e| {
         error!("Error executing query: {:?}", e);
         APIErrors::DBError
     })?;
