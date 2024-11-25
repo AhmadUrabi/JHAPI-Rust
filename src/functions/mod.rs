@@ -1,8 +1,9 @@
-pub mod stores;
+pub mod authentication;
 pub mod files;
+pub mod ldap;
 pub mod logs;
 pub mod permissions;
 pub mod products;
-pub mod authentication;
+pub mod stores;
 pub mod users;
 pub mod versions;

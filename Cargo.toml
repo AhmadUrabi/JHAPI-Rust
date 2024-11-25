@@ -17,3 +17,6 @@ tokio = { version = "1.37.0", features = ["full"] }
 magick_rust = { git = "https://github.com/nlfiedler/magick-rust.git" }
 bcrypt = "0.15.1"
 rocket = { version = "0.5.0", features = ["json"] }
+ldap3 = "0.11.5"
+base64 = "0.22.1"
+reqwest = "0.12.9"

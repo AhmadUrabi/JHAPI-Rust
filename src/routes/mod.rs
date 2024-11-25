@@ -1,5 +1,6 @@
 pub mod authentication;
 pub mod files;
+pub mod ldap;
 pub mod logs;
 pub mod permissions;
 pub mod products;
@@ -16,7 +17,7 @@ pub async fn health_check() -> &'static str {
 mod test {
     use crate::utils::testing::*;
     use dotenv::dotenv;
-    
+
     #[tokio::test]
     pub async fn test_health_check() {
         dotenv().ok();
