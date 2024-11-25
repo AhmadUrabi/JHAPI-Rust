@@ -1,11 +1,14 @@
 use crate::server::JHApiServerState;
 use rocket::http::Status;
 use rocket::serde::json::Json;
-use rocket::{post, State};
-
+use rocket::{post, Route, State};
 
 use crate::functions::versions::get_latest_version;
 use crate::functions::versions::structs::*;
+
+pub fn routes() -> Vec<Route> {
+    routes![route_version_check]
+}
 
 #[post("/version", data = "<params>")]
 pub async fn route_version_check(

@@ -4,7 +4,7 @@ use crate::server::request_guard::api_key::ApiKey;
 
 use crate::functions::permissions::get_user_permissions;
 
-use crate::functions::authentication::decode_token_data;
+use crate::functions::auth::decode_token_data;
 
 use super::sql::SQLManager;
 
@@ -13,7 +13,7 @@ pub async fn has_admin_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLMan
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
+            let permissions = get_user_permissions(&user_id, &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }
@@ -25,11 +25,15 @@ pub async fn has_admin_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLMan
 }
 
 /// Check for Permission Management Permissions
-pub async fn has_permissions_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLManager) -> bool {
+pub async fn has_permissions_perm(
+    _key: &ApiKey<'_>,
+    pool: &Pool,
+    sql_manager: &SQLManager,
+) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
+            let permissions = get_user_permissions(&user_id, &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }
@@ -45,7 +49,7 @@ pub async fn has_users_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLMan
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
+            let permissions = get_user_permissions(&user_id, &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }
@@ -61,7 +65,7 @@ pub async fn is_images_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLMan
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
+            let permissions = get_user_permissions(&user_id, &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }
@@ -77,7 +81,7 @@ pub async fn is_cost_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLManag
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
+            let permissions = get_user_permissions(&user_id, &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }
@@ -93,7 +97,7 @@ pub async fn has_query_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLMan
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
+            let permissions = get_user_permissions(&user_id, &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }
@@ -110,7 +114,7 @@ pub async fn is_stock_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLMana
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
+            let permissions = get_user_permissions(&user_id, &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }
@@ -121,14 +125,13 @@ pub async fn is_stock_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLMana
     }
 }
 
-
 #[allow(dead_code)]
 /// Check for Reports Permissions
 pub async fn has_reports_perm(_key: &ApiKey<'_>, pool: &Pool, sql_manager: &SQLManager) -> bool {
     match decode_token_data(_key.0) {
         Some(x) => {
             let user_id = x.USER_ID.unwrap();
-            let permissions = get_user_permissions(&user_id,  &sql_manager, &pool).await;
+            let permissions = get_user_permissions(&user_id, &sql_manager, &pool).await;
             if permissions.is_err() {
                 return false;
             }

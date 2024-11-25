@@ -3,13 +3,17 @@ use crate::server::JHApiServerState;
 
 use rocket::log::private::info;
 use rocket::serde::json::Json;
-use rocket::{post, State};
+use rocket::{post, Route, State};
 
 use crate::functions::products::get_product;
 use crate::server::request_guard::api_key::ApiKey;
 
 use crate::functions::products::structs::FetchParams;
 use crate::functions::products::structs::Product;
+
+pub fn routes() -> Vec<Route> {
+    routes![get_products]
+}
 
 #[post("/products", data = "<params>")]
 pub async fn get_products(
@@ -21,9 +25,7 @@ pub async fn get_products(
     let sql_manager = &state.sql_manager;
     info!("GetProductData Request: {:?}", params);
     match get_product(params, &pool, &sql_manager, &key).await {
-        Ok(products) => {
-            Json(products)
-        }
+        Ok(products) => Json(products),
         Err(_err) => {
             error!("Error");
             Json(vec![])

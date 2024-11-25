@@ -1,7 +1,10 @@
-use rocket::{http::Status, request::{FromRequest, Outcome}, Request};
+use rocket::{
+    http::Status,
+    request::{FromRequest, Outcome},
+    Request,
+};
 
-use crate::functions::authentication::validate_token;
-
+use crate::functions::auth::validate_token;
 
 // Start Request Guard Functions
 #[derive(Debug, Clone)]

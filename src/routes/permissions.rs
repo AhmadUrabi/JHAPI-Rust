@@ -1,18 +1,21 @@
 use rocket::http::Status;
 use rocket::serde::json::Json;
-use rocket::{post, State};
+use rocket::{post, Route, State};
 
 use crate::server::JHApiServerState;
 
 use crate::functions::permissions::structs::{PermissionEditParams, Permissions};
 
-use crate::functions::authentication::decode_token_data;
+use crate::functions::auth::decode_token_data;
 
 use crate::server::request_guard::api_key::ApiKey;
 
 use crate::utils::permissions::{has_admin_perm, has_permissions_perm};
 use crate::utils::structs::APIErrors;
 
+pub fn routes() -> Vec<Route> {
+    routes![get_permissions, edit_permissions]
+}
 
 #[get("/permissions/<username>")]
 pub async fn get_permissions(
@@ -39,17 +42,19 @@ pub async fn get_permissions(
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::permissions::get_user_permissions(&username.to_lowercase(), &sql_manager, &pool).await {
-        Ok(permissions) => {
-            Ok(Json(permissions))
-        }
-        Err(err) => {
-            match err {
-                APIErrors::UserNotFound => Err(Status::NotFound),
-                APIErrors::DBError => Err(Status::InternalServerError),
-                _ => Err(Status::InternalServerError),
-            }
-        }
+    match crate::functions::permissions::get_user_permissions(
+        &username.to_lowercase(),
+        &sql_manager,
+        &pool,
+    )
+    .await
+    {
+        Ok(permissions) => Ok(Json(permissions)),
+        Err(err) => match err {
+            APIErrors::UserNotFound => Err(Status::NotFound),
+            APIErrors::DBError => Err(Status::InternalServerError),
+            _ => Err(Status::InternalServerError),
+        },
     }
 }
 
@@ -63,7 +68,9 @@ pub async fn edit_permissions(
     info!("/permissions/{:?} Request: {:?}", username.clone(), params);
     let pool = &state.pool;
     let sql_manager = &state.sql_manager;
-    if !has_permissions_perm(&_key, pool, &sql_manager).await && !has_admin_perm(&_key, pool, &sql_manager).await {
+    if !has_permissions_perm(&_key, pool, &sql_manager).await
+        && !has_admin_perm(&_key, pool, &sql_manager).await
+    {
         return Err(Status::Unauthorized);
     }
     match crate::functions::permissions::edit_user_permissions(
@@ -71,18 +78,18 @@ pub async fn edit_permissions(
         &pool,
         &sql_manager,
         params.p_permissions.clone(),
-    ).await {
+    )
+    .await
+    {
         Ok(permissions) => {
             info!("Permissions Edited");
             info!("New Permissions: {:?}", permissions);
             Ok("Permissions Edited".to_string())
         }
-        Err(err) => {
-            match err {
-                APIErrors::UserNotFound => Err(Status::NotFound),
-                APIErrors::DBError => Err(Status::InternalServerError),
-                _ => Err(Status::InternalServerError),
-            }
-        }
+        Err(err) => match err {
+            APIErrors::UserNotFound => Err(Status::NotFound),
+            APIErrors::DBError => Err(Status::InternalServerError),
+            _ => Err(Status::InternalServerError),
+        },
     }
 }

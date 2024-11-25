@@ -15,7 +15,7 @@ use crate::functions::stores::get_stores;
 
 use crate::server::request_guard::api_key::ApiKey;
 
-use crate::functions::authentication::decode_token_data;
+use crate::functions::auth::decode_token_data;
 use crate::utils::permissions::is_cost_perm;
 use crate::utils::sql::SQLManager;
 use crate::utils::structs::APIErrors;

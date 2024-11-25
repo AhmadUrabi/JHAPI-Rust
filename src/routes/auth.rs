@@ -2,17 +2,21 @@ use crate::server::JHApiServerState;
 
 use rocket::http::Status;
 use rocket::serde::json::Json;
-use rocket::{post, State};
+use rocket::{post, Route, State};
 
-use crate::functions::authentication::signin;
-use crate::functions::authentication::structs::LoginParams;
+use crate::functions::auth::signin;
+use crate::functions::auth::structs::LoginParams;
 
 use crate::utils::structs::APIErrors;
+
+pub fn routes() -> Vec<Route> {
+    routes![sign]
+}
 
 #[post("/login", data = "<params>")]
 pub async fn sign(
     params: Json<LoginParams>,
-    state: &State<JHApiServerState>
+    state: &State<JHApiServerState>,
 ) -> Result<String, Status> {
     info!("Sign Request: {:?}", params.0.p_username);
     let pool = &state.pool;
@@ -35,12 +39,11 @@ pub async fn sign(
     }
 }
 
-
 #[cfg(test)]
 mod test {
-    use crate::utils::testing::*;
+    use crate::{routes::auth, utils::testing::*};
     use dotenv::dotenv;
-    
+
     #[tokio::test]
     pub async fn test_login_valid() {
         dotenv().ok();
@@ -50,7 +53,7 @@ mod test {
     #[tokio::test]
     pub async fn test_login_invalid() {
         dotenv().ok();
-        let client = get_client(routes![super::sign]).await;
+        let client = get_client(routes![auth::sign]).await;
         let auth = (
             std::env::var("INVALID_USER_TEST").unwrap(),
             std::env::var("INVALID_PASS_TEST").unwrap(),
@@ -69,6 +72,4 @@ mod test {
             .await;
         assert_eq!(response.status(), rocket::http::Status::Unauthorized);
     }
-
-
 }

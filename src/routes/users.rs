@@ -1,16 +1,26 @@
-use crate::functions::authentication::decode_token_data;
+use crate::functions::auth::decode_token_data;
 use crate::functions::users::structs::*;
 use crate::functions::users::*;
-use crate::utils::structs::APIErrors;
 use crate::server::request_guard::api_key::ApiKey;
+use crate::utils::structs::APIErrors;
 
 use crate::server::JHApiServerState;
 
-use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::State;
+use rocket::{http::Status, Route};
 
 use crate::utils::permissions::{has_admin_perm, has_users_perm};
+
+pub fn routes() -> Vec<Route> {
+    routes![
+        get_user_list,
+        get_user_by_id,
+        create_user_route,
+        edit_user_route,
+        delete_user_route
+    ]
+}
 
 // Get User List
 #[get("/users")]
@@ -20,14 +30,14 @@ pub async fn get_user_list(
 ) -> Result<Json<Vec<User>>, Status> {
     let pool = &state.pool;
     let sql_manager = &state.sql_manager;
-    if !has_admin_perm(&_key, pool, &sql_manager).await && !has_users_perm(&_key, pool, &sql_manager).await {
+    if !has_admin_perm(&_key, pool, &sql_manager).await
+        && !has_users_perm(&_key, pool, &sql_manager).await
+    {
         return Err(Status::Unauthorized);
     }
     match get_users(&_key, &sql_manager, &pool).await {
         Ok(users) => Ok(Json(users)),
-        Err(_error) => {
-            Err(Status::InternalServerError)
-        }
+        Err(_error) => Err(Status::InternalServerError),
     }
 }
 
@@ -55,12 +65,8 @@ pub async fn get_user_by_id(
     }
 
     match get_user(&user_id, &sql_manager, pool).await {
-        Ok(user) => {
-            Ok(Json(user))
-        }
-        Err(_error) => {
-            Err(Status::NotFound)
-        }
+        Ok(user) => Ok(Json(user)),
+        Err(_error) => Err(Status::NotFound),
     }
 }
 
@@ -76,20 +82,18 @@ pub async fn create_user_route(
     );
     let pool = &state.pool;
     let sql_manager = &state.sql_manager;
-    if !has_admin_perm(&_key, &pool, &sql_manager).await && !has_users_perm(&_key, &pool, &sql_manager).await {
+    if !has_admin_perm(&_key, &pool, &sql_manager).await
+        && !has_users_perm(&_key, &pool, &sql_manager).await
+    {
         return Err(Status::Unauthorized);
     }
     match create_user(params.0, &sql_manager, &pool).await {
-        Ok(_) => {
-            Ok("User Created".to_string())
-        }
-        Err(error) => {
-            match error {
-                APIErrors::UserExists => Err(Status::Conflict),
-                APIErrors::DBError => Err(Status::InternalServerError),
-                _ => Err(Status::InternalServerError),
-            }
-        }
+        Ok(_) => Ok("User Created".to_string()),
+        Err(error) => match error {
+            APIErrors::UserExists => Err(Status::Conflict),
+            APIErrors::DBError => Err(Status::InternalServerError),
+            _ => Err(Status::InternalServerError),
+        },
     }
 }
 
@@ -112,22 +116,21 @@ pub async fn edit_user_route(
     }
 
     println!("Edit User Request: {:?}", username);
-    if !has_admin_perm(&_key, &pool, &sql_manager).await && !has_users_perm(&_key, &pool, &sql_manager).await {
+    if !has_admin_perm(&_key, &pool, &sql_manager).await
+        && !has_users_perm(&_key, &pool, &sql_manager).await
+    {
         return Err(Status::Unauthorized);
     }
     let perm = has_admin_perm(&_key, &pool, &sql_manager).await.clone();
-    
+
     match edit_user(params.0.clone(), username, &pool, &sql_manager, perm).await {
         Ok(_) => Ok("User Edited".to_string()),
-        Err(error) => {
-            match error {
-                APIErrors::UserNotFound => return Err(Status::NotFound),
-                APIErrors::DBError => return Err(Status::InternalServerError),
-                _ => return Err(Status::InternalServerError),
-            }
-        }
+        Err(error) => match error {
+            APIErrors::UserNotFound => return Err(Status::NotFound),
+            APIErrors::DBError => return Err(Status::InternalServerError),
+            _ => return Err(Status::InternalServerError),
+        },
     }
-    
 }
 
 #[delete("/user/<user_id>")]
@@ -138,20 +141,18 @@ pub async fn delete_user_route(
 ) -> Result<String, Status> {
     let pool = &state.pool;
     let sql_manager = &state.sql_manager;
-    if !has_admin_perm(&_key, &pool, &sql_manager).await && !has_users_perm(&_key, &pool, &sql_manager).await {
+    if !has_admin_perm(&_key, &pool, &sql_manager).await
+        && !has_users_perm(&_key, &pool, &sql_manager).await
+    {
         return Err(Status::Unauthorized);
     }
     match delete_user(&user_id, &sql_manager, &pool).await {
-        Ok(_) => {
-            Ok("User Deleted".to_string())
-        }
-        Err(error) => {
-            match error {
-                APIErrors::UserNotFound => Err(Status::NotFound),
-                APIErrors::DBError => Err(Status::InternalServerError),
-                _ => Err(Status::InternalServerError),
-            }
-        }
+        Ok(_) => Ok("User Deleted".to_string()),
+        Err(error) => match error {
+            APIErrors::UserNotFound => Err(Status::NotFound),
+            APIErrors::DBError => Err(Status::InternalServerError),
+            _ => Err(Status::InternalServerError),
+        },
     }
 }
 

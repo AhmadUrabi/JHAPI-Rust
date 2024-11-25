@@ -7,7 +7,11 @@ use crate::{
     utils::structs::APIErrors,
 };
 use ldap3::{Scope, SearchEntry};
-use rocket::{serde::json::Json, State};
+use rocket::{serde::json::Json, Route, State};
+
+pub fn routes() -> Vec<Route> {
+    routes![get_all_users, get_all_computers, create_user, delete_user,]
+}
 
 #[get("/ldap/users")]
 pub async fn get_all_users(

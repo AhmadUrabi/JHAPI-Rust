@@ -2,21 +2,24 @@ use crate::server::JHApiServerState;
 use rocket::http::Status;
 use rocket::log::private::info;
 use rocket::serde::json::Json;
-use rocket::{get, State};
+use rocket::{get, Route, State};
 
 use crate::functions::stores::structs::*;
 
-use crate::utils::structs::APIErrors;
 use crate::server::request_guard::api_key::ApiKey;
+use crate::utils::structs::APIErrors;
 
 use crate::functions::stores::get_stores;
 
-use crate::functions::authentication::decode_token_data;
+use crate::functions::auth::decode_token_data;
 
 use crate::utils::{check_user_exists, permissions::*};
 
 use crate::functions::stores::structs::Store;
 
+pub fn routes() -> Vec<Route> {
+    routes![get_store_list, update_store_list, get_store_list_for_user]
+}
 
 #[get("/stores")]
 pub async fn get_store_list(
@@ -35,34 +38,29 @@ pub async fn get_store_list(
         None => info!("Token Data: None"),
     }
 
-    if has_stores_perm(&_key, &pool, &sql_manager).await || has_admin_perm(&_key, &pool, &sql_manager).await {
+    if has_stores_perm(&_key, &pool, &sql_manager).await
+        || has_admin_perm(&_key, &pool, &sql_manager).await
+    {
         match get_stores(&pool, &sql_manager, "admin".to_string()).await {
             Ok(stores) => {
                 return Ok(Json(stores));
             }
-            Err(err) => {
-                match err {
-                    APIErrors::DBError => return Err(Status::InternalServerError),
-                    APIErrors::UserNotFound => return Err(Status::NotFound),
-                    _ => return Err(Status::InternalServerError),
-                }
-            }
-        }
-    }
-    match get_stores(&pool, &sql_manager, user_id).await {
-        Ok(stores) => {
-            Ok(Json(stores))
-        }
-        Err(err) => {
-            match err {
+            Err(err) => match err {
                 APIErrors::DBError => return Err(Status::InternalServerError),
                 APIErrors::UserNotFound => return Err(Status::NotFound),
                 _ => return Err(Status::InternalServerError),
-            }
+            },
         }
     }
+    match get_stores(&pool, &sql_manager, user_id).await {
+        Ok(stores) => Ok(Json(stores)),
+        Err(err) => match err {
+            APIErrors::DBError => return Err(Status::InternalServerError),
+            APIErrors::UserNotFound => return Err(Status::NotFound),
+            _ => return Err(Status::InternalServerError),
+        },
+    }
 }
-
 
 // TODO: extract to function
 #[post("/stores", data = "<params>")]
@@ -74,7 +72,9 @@ pub async fn update_store_list(
     let pool = &state.pool;
     let sql_manager = &state.sql_manager;
     info!("stores Request: {:?}", params);
-    if has_admin_perm(&_key, pool, &sql_manager).await || has_stores_perm(&_key, pool, &sql_manager).await {
+    if has_admin_perm(&_key, pool, &sql_manager).await
+        || has_stores_perm(&_key, pool, &sql_manager).await
+    {
         info!("User has permissions");
     } else {
         info!("User does not have permissions");
@@ -152,26 +152,22 @@ pub async fn get_store_list_for_user(
     let sql_manager = &state.sql_manager;
     info!("User stores Request");
 
-    if !has_stores_perm(&_key, &pool, &sql_manager).await && !has_admin_perm(&_key, &pool, &sql_manager).await {
+    if !has_stores_perm(&_key, &pool, &sql_manager).await
+        && !has_admin_perm(&_key, &pool, &sql_manager).await
+    {
         info!("Token does not have permissions");
         return Err(Status::Unauthorized);
     }
 
     match get_stores(&pool, &sql_manager, username).await {
-        Ok(stores) => {
-            Ok(Json(stores))
-        }
-        Err(err) => {
-            match err {
-                APIErrors::DBError => return Err(Status::InternalServerError),
-                APIErrors::UserNotFound => return Err(Status::NotFound),
-                _ => return Err(Status::InternalServerError),
-            }
-        }
+        Ok(stores) => Ok(Json(stores)),
+        Err(err) => match err {
+            APIErrors::DBError => return Err(Status::InternalServerError),
+            APIErrors::UserNotFound => return Err(Status::NotFound),
+            _ => return Err(Status::InternalServerError),
+        },
     }
 }
-
-
 
 #[cfg(test)]
 mod test {

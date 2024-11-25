@@ -16,7 +16,7 @@ pub async fn get_client(routes: Vec<rocket::Route>) -> rocket::local::asynchrono
 
 #[allow(dead_code)]
 pub async fn get_valid_user_token() -> Option<String> {
-    let client = get_client(routes![crate::routes::authentication::sign]).await;
+    let client = get_client(routes![crate::routes::auth::sign]).await;
     let auth = (
         std::env::var("VALID_USER_TEST").unwrap(),
         std::env::var("VALID_PASS_TEST").unwrap(),

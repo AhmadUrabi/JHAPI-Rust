@@ -1,4 +1,4 @@
-pub mod authentication;
+pub mod auth;
 pub mod files;
 pub mod ldap;
 pub mod logs;

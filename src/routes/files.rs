@@ -1,7 +1,7 @@
-use crate::utils::permissions::has_admin_perm;
-use crate::utils::permissions::is_images_perm;
-use crate::utils::permissions::has_query_perm;
 use crate::server::request_guard::api_key::ApiKey;
+use crate::utils::permissions::has_admin_perm;
+use crate::utils::permissions::has_query_perm;
+use crate::utils::permissions::is_images_perm;
 
 use crate::server::JHApiServerState;
 use rocket::fs::NamedFile;
@@ -13,8 +13,11 @@ use crate::functions::files::upload_file;
 
 use crate::utils::structs::APIErrors;
 
-
 use std::path::*;
+
+pub fn routes() -> Vec<rocket::Route> {
+    routes![get_image, upload]
+}
 
 #[get("/images/<file..>")]
 pub async fn get_image(
@@ -24,7 +27,9 @@ pub async fn get_image(
 ) -> Result<Option<NamedFile>, Status> {
     let pool = &state.pool;
     let sql_manager = &state.sql_manager;
-    if !has_query_perm(&_key, pool, &sql_manager).await && !has_admin_perm(&_key, pool, &sql_manager).await {
+    if !has_query_perm(&_key, pool, &sql_manager).await
+        && !has_admin_perm(&_key, pool, &sql_manager).await
+    {
         return Err(Status::Unauthorized);
     }
     info!("Image Request: {:?}", file);
@@ -67,7 +72,9 @@ pub async fn upload(
 ) -> Result<String, Status> {
     let pool = &state.pool;
     let sql_manager = &state.sql_manager;
-    if !is_images_perm(&_key, pool, &sql_manager).await && !has_admin_perm(&_key, pool, &sql_manager).await {
+    if !is_images_perm(&_key, pool, &sql_manager).await
+        && !has_admin_perm(&_key, pool, &sql_manager).await
+    {
         return Err(Status::Unauthorized);
     }
 
