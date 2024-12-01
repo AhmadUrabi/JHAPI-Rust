@@ -8,7 +8,7 @@ use crate::server::request_guard::api_key::ApiKey;
 
 use crate::utils::permissions::has_admin_perm;
 
-use crate::functions::logs::structs::LogData;
+use crate::controllers::logs::structs::LogData;
 
 pub fn routes() -> Vec<Route> {
     routes![
@@ -31,7 +31,7 @@ pub async fn get_all_logs(
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::logs::get_all_logs_fn(&pool, &sql_manager, limit).await {
+    match crate::controllers::logs::get_all_logs_fn(&pool, &sql_manager, limit).await {
         Ok(logs) => Ok(logs),
         Err(_err) => {
             return Err(Status::InternalServerError);
@@ -52,7 +52,7 @@ pub async fn get_user_logs(
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::logs::get_user_logs_fn(username, &pool, &sql_manager, limit).await {
+    match crate::controllers::logs::get_user_logs_fn(username, &pool, &sql_manager, limit).await {
         Ok(logs) => Ok(logs),
         Err(_err) => Err(Status::InternalServerError),
     }
@@ -128,7 +128,8 @@ pub async fn delete_user_logs(
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::logs::delete_user_logs_fn(username, &pool, &sql_manager, limit).await {
+    match crate::controllers::logs::delete_user_logs_fn(username, &pool, &sql_manager, limit).await
+    {
         Ok(_logs) => Ok("Logs Deleted".to_string()),
         Err(_err) => Err(Status::InternalServerError),
     }
@@ -146,7 +147,7 @@ pub async fn delete_log_logs(
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::logs::delete_log_logs_fn(log_id, &pool, &sql_manager).await {
+    match crate::controllers::logs::delete_log_logs_fn(log_id, &pool, &sql_manager).await {
         Ok(_logs) => Ok("Logs Deleted".to_string()),
         Err(_err) => Err(Status::InternalServerError),
     }

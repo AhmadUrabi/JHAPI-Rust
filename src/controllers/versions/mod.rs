@@ -1,10 +1,17 @@
 pub mod structs;
 
-use crate::{functions::versions::structs::Version, utils::{sql::SQLManager, structs::APIErrors}};
+use crate::{
+    controllers::versions::structs::Version,
+    utils::{sql::SQLManager, structs::APIErrors},
+};
 use oracle::pool::Pool;
 use rocket::serde::json::Json;
 
-pub async fn get_latest_version(platform: &str, sql_manager: &SQLManager, pool: &Pool) -> Result<Json<Version>, APIErrors> {
+pub async fn get_latest_version(
+    platform: &str,
+    sql_manager: &SQLManager,
+    pool: &Pool,
+) -> Result<Json<Version>, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error: {}", conn.err().unwrap());
@@ -12,7 +19,9 @@ pub async fn get_latest_version(platform: &str, sql_manager: &SQLManager, pool: 
     }
     let conn = conn.unwrap();
 
-    let stmt = conn.statement(sql_manager.get_sql("get_platform_version")?.as_str()).build();
+    let stmt = conn
+        .statement(sql_manager.get_sql("get_platform_version")?.as_str())
+        .build();
     println!("{:?}", stmt);
     if stmt.is_err() {
         error!("Error: {}", stmt.err().unwrap());

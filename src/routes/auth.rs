@@ -4,19 +4,20 @@ use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::{post, Route, State};
 
-use crate::functions::auth::signin;
-use crate::functions::auth::structs::LoginParams;
+use crate::controllers::auth::structs::LoginParams;
+use crate::controllers::auth::{signin, validate_token};
 
 use crate::utils::structs::APIErrors;
 
 pub fn routes() -> Vec<Route> {
-    routes![sign]
+    routes![sign, authcheck]
 }
 
 #[post("/login", data = "<params>")]
 pub async fn sign(
     params: Json<LoginParams>,
     state: &State<JHApiServerState>,
+    cookies: &rocket::http::CookieJar<'_>,
 ) -> Result<String, Status> {
     info!("Sign Request: {:?}", params.0.p_username);
     let pool = &state.pool;
@@ -24,6 +25,11 @@ pub async fn sign(
     match signin(params, &pool, &sql_manager).await {
         Ok(token) => {
             info!("Valid User Data, Token Sent");
+            let cookie = rocket::http::Cookie::build(("token", token.to_string()))
+                .path("/")
+                .same_site(rocket::http::SameSite::None)
+                .secure(true);
+            cookies.add(cookie);
             Ok(token.to_string())
         }
         Err(e) => {
@@ -36,6 +42,23 @@ pub async fn sign(
                 _ => Err(Status::InternalServerError),
             }
         }
+    }
+}
+
+#[get("/authcheck")]
+pub async fn authcheck(cookies: &rocket::http::CookieJar<'_>) -> Result<&'static str, Status> {
+    match cookies.get("token") {
+        Some(value) => {
+            info!("Token Found");
+            if validate_token(value.value()) {
+                info!("Valid Token Found");
+                return Ok("Token Found");
+            } else {
+                error!("Invalid Token Found");
+                Err(Status::Unauthorized)
+            }
+        }
+        None => Err(Status::Unauthorized),
     }
 }
 
@@ -53,7 +76,7 @@ mod test {
     #[tokio::test]
     pub async fn test_login_invalid() {
         dotenv().ok();
-        let client = get_client(routes![auth::sign]).await;
+        let client = get_client().await;
         let auth = (
             std::env::var("INVALID_USER_TEST").unwrap(),
             std::env::var("INVALID_PASS_TEST").unwrap(),

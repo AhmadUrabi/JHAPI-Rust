@@ -11,6 +11,7 @@ use fairings::cors::CORS;
 use fairings::log::Logger;
 use rocket::{tokio::sync::Mutex, Ignite, Rocket};
 
+use crate::routes::get_all_routes;
 use crate::utils::sql::SQLManager;
 use crate::utils::structs::APIErrors;
 
@@ -25,7 +26,8 @@ pub struct JHApiServerState {
 }
 
 impl JHApiServer {
-    pub async fn init(routes: Vec<rocket::Route>) -> JHApiServer {
+    pub async fn init() -> JHApiServer {
+        let routes = get_all_routes();
         let state = JHApiServer::get_state().await;
         let rocket = rocket::build()
             .attach(CORS)
@@ -86,8 +88,8 @@ impl JHApiServer {
         let ldap_server = std::env::var("LDAP_SERVER").unwrap();
 
         // Define the domain, username, and password
-        let username = std::env::var("LOGIN_USERNAME").unwrap();
-        let password = std::env::var("LOGIN_PASSWORD").unwrap();
+        let username = std::env::var("LDAP_USERNAME").unwrap();
+        let password = std::env::var("LDAP_PASSWORD").unwrap();
 
         // Establish a connection with the LDAP server
         let ldap_conn_settings = LdapConnSettings::new().set_starttls(true);
@@ -115,7 +117,6 @@ impl JHApiServer {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::routes::health_check;
     use dotenv::dotenv;
 
     // Ensure that the pool is being built correctly
@@ -138,8 +139,7 @@ mod test {
     #[tokio::test]
     async fn test_launch() {
         dotenv().ok();
-        let routes = routes![health_check];
-        let server_wrapper = JHApiServer::init(routes).await;
+        let server_wrapper = JHApiServer::init().await;
         let server = server_wrapper.server;
         let client = rocket::local::asynchronous::Client::tracked(server)
             .await

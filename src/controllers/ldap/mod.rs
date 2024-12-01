@@ -13,8 +13,8 @@ pub mod models;
 
 pub async fn check_connection(state: &JHApiServerState) -> Result<(), String> {
     let mut ldap = state.ldap.lock().await;
-    let username = std::env::var("LOGIN_USERNAME").unwrap();
-    let password = std::env::var("LOGIN_PASSWORD").unwrap();
+    let username = std::env::var("LDAP_USERNAME").unwrap();
+    let password = std::env::var("LDAP_PASSWORD").unwrap();
 
     match ldap.simple_bind(&username, &password).await {
         Ok(_) => Ok(()),

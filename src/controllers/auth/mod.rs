@@ -7,8 +7,8 @@ use oracle::pool::Pool;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 
-use crate::functions::auth::structs::LoginParams;
-use crate::functions::auth::structs::User;
+use crate::controllers::auth::structs::LoginParams;
+use crate::controllers::auth::structs::User;
 
 use crate::utils::sql::SQLManager;
 use crate::utils::structs::APIErrors;

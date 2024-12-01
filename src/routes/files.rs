@@ -8,8 +8,8 @@ use rocket::fs::NamedFile;
 use rocket::http::Status;
 use rocket::{get, State};
 
-use crate::functions::files::download_file;
-use crate::functions::files::upload_file;
+use crate::controllers::files::download_file;
+use crate::controllers::files::upload_file;
 
 use crate::utils::structs::APIErrors;
 

@@ -5,11 +5,11 @@ use rocket::log::private::info;
 use rocket::serde::json::Json;
 use rocket::{post, Route, State};
 
-use crate::functions::products::get_product;
+use crate::controllers::products::get_product;
 use crate::server::request_guard::api_key::ApiKey;
 
-use crate::functions::products::structs::FetchParams;
-use crate::functions::products::structs::Product;
+use crate::controllers::products::structs::FetchParams;
+use crate::controllers::products::structs::Product;
 
 pub fn routes() -> Vec<Route> {
     routes![get_products]

@@ -1,5 +1,5 @@
 use crate::{
-    functions::ldap::{
+    controllers::ldap::{
         check_connection,
         models::{UserAccount, UserParams},
     },

@@ -2,9 +2,9 @@ use oracle::pool::Pool;
 
 use crate::server::request_guard::api_key::ApiKey;
 
-use crate::functions::permissions::get_user_permissions;
+use crate::controllers::permissions::get_user_permissions;
 
-use crate::functions::auth::decode_token_data;
+use crate::controllers::auth::decode_token_data;
 
 use super::sql::SQLManager;
 

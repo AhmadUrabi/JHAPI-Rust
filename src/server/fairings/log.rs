@@ -6,7 +6,7 @@ use rocket::{
 };
 
 use crate::{
-    functions::auth::decode_token_data,
+    controllers::auth::decode_token_data,
     utils::logging::{get_timestamp, log_data},
 };
 

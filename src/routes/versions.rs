@@ -3,8 +3,8 @@ use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::{post, Route, State};
 
-use crate::functions::versions::get_latest_version;
-use crate::functions::versions::structs::*;
+use crate::controllers::versions::get_latest_version;
+use crate::controllers::versions::structs::*;
 
 pub fn routes() -> Vec<Route> {
     routes![route_version_check]

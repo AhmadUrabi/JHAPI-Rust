@@ -1,6 +1,6 @@
-use crate::functions::auth::decode_token_data;
-use crate::functions::users::structs::*;
-use crate::functions::users::*;
+use crate::controllers::auth::decode_token_data;
+use crate::controllers::users::structs::*;
+use crate::controllers::users::*;
 use crate::server::request_guard::api_key::ApiKey;
 use crate::utils::structs::APIErrors;
 

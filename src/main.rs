@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate rocket;
 
-mod functions;
+mod controllers;
 mod routes;
 mod server;
 mod utils;
@@ -16,12 +16,6 @@ async fn main() {
     // Load .env file
     dotenv().ok();
 
-    // Logging Setup, Unwrapping is fine here, if it fails, the program should crash
-    // log4rs::init_file("config/log4rs.yaml", Default::default()).unwrap();
-    // Logging Setup End
-
-    let routes = get_all_routes();
-
-    let server = JHApiServer::init(routes).await;
+    let server = JHApiServer::init().await;
     let _ = server.launch().await;
 }

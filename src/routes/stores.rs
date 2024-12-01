@@ -4,18 +4,18 @@ use rocket::log::private::info;
 use rocket::serde::json::Json;
 use rocket::{get, Route, State};
 
-use crate::functions::stores::structs::*;
+use crate::controllers::stores::structs::*;
 
 use crate::server::request_guard::api_key::ApiKey;
 use crate::utils::structs::APIErrors;
 
-use crate::functions::stores::get_stores;
+use crate::controllers::stores::get_stores;
 
-use crate::functions::auth::decode_token_data;
+use crate::controllers::auth::decode_token_data;
 
 use crate::utils::{check_user_exists, permissions::*};
 
-use crate::functions::stores::structs::Store;
+use crate::controllers::stores::structs::Store;
 
 pub fn routes() -> Vec<Route> {
     routes![get_store_list, update_store_list, get_store_list_for_user]
@@ -179,7 +179,7 @@ mod test {
     pub async fn test_get_store_list() {
         dotenv().ok();
         let token = get_valid_user_token().await;
-        let client = get_client(routes![get_store_list]).await;
+        let client = get_client().await;
         let response = client
             .get("/api/stores")
             .header(rocket::http::Header::new(
@@ -196,7 +196,7 @@ mod test {
     pub async fn test_get_user_stores() {
         dotenv().ok();
         let token = get_valid_user_token().await;
-        let client = get_client(routes![get_store_list_for_user]).await;
+        let client = get_client().await;
         let response = client
             .get(format!(
                 "/api/stores/{}",
@@ -210,7 +210,7 @@ mod test {
             .await;
         assert_eq!(response.status(), rocket::http::Status::Ok);
         let res = response
-            .into_json::<Vec<crate::functions::stores::structs::Store>>()
+            .into_json::<Vec<crate::controllers::stores::structs::Store>>()
             .await
             .unwrap();
         assert_eq!(res.len() > 0, true);
@@ -223,10 +223,10 @@ mod test {
     pub async fn test_post_stores() {
         dotenv().ok();
         let token = get_valid_user_token().await;
-        let client = get_client(routes![update_store_list, get_store_list_for_user]).await;
+        let client = get_client().await;
 
         // Create an object of type EditStoresParams
-        let params = crate::functions::stores::structs::StoreListUpdateParams {
+        let params = crate::controllers::stores::structs::StoreListUpdateParams {
             p_username: std::env::var("TESTING_USER").unwrap(),
             p_stores: Some(vec![1, 2, 5]),
             p_allstoresaccess: 0,
@@ -264,7 +264,7 @@ mod test {
 
         assert_eq!(response.status(), rocket::http::Status::Ok);
         let stores = response
-            .into_json::<Vec<crate::functions::stores::structs::Store>>()
+            .into_json::<Vec<crate::controllers::stores::structs::Store>>()
             .await
             .unwrap();
 
@@ -278,7 +278,7 @@ mod test {
         assert_eq!(stores.len(), 3);
 
         // Clean up the test by removing the stores
-        let params = crate::functions::stores::structs::StoreListUpdateParams {
+        let params = crate::controllers::stores::structs::StoreListUpdateParams {
             p_username: std::env::var("TESTING_USER").unwrap(),
             p_stores: Some(vec![]),
             p_allstoresaccess: 0,
@@ -315,7 +315,7 @@ mod test {
 
         assert_eq!(response.status(), rocket::http::Status::Ok);
         let stores = response
-            .into_json::<Vec<crate::functions::stores::structs::Store>>()
+            .into_json::<Vec<crate::controllers::stores::structs::Store>>()
             .await
             .unwrap();
         assert_eq!(stores.len(), 0);

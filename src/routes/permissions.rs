@@ -4,9 +4,9 @@ use rocket::{post, Route, State};
 
 use crate::server::JHApiServerState;
 
-use crate::functions::permissions::structs::{PermissionEditParams, Permissions};
+use crate::controllers::permissions::structs::{PermissionEditParams, Permissions};
 
-use crate::functions::auth::decode_token_data;
+use crate::controllers::auth::decode_token_data;
 
 use crate::server::request_guard::api_key::ApiKey;
 
@@ -42,7 +42,7 @@ pub async fn get_permissions(
         return Err(Status::Unauthorized);
     }
 
-    match crate::functions::permissions::get_user_permissions(
+    match crate::controllers::permissions::get_user_permissions(
         &username.to_lowercase(),
         &sql_manager,
         &pool,
@@ -73,7 +73,7 @@ pub async fn edit_permissions(
     {
         return Err(Status::Unauthorized);
     }
-    match crate::functions::permissions::edit_user_permissions(
+    match crate::controllers::permissions::edit_user_permissions(
         (username.clone()).to_lowercase(),
         &pool,
         &sql_manager,

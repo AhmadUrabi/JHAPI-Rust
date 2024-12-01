@@ -7,7 +7,6 @@ pub mod structs;
 
 use structs::LogData;
 
-
 use crate::utils::sql::SQLManager;
 use crate::utils::structs::APIErrors;
 
@@ -90,7 +89,9 @@ pub async fn get_user_logs_fn(
     }
 
     let mut logs: Vec<LogData> = Vec::new();
-    let stmt = conn.statement(sql_manager.get_sql("get_user_logs")?.as_str()).build();
+    let stmt = conn
+        .statement(sql_manager.get_sql("get_user_logs")?.as_str())
+        .build();
     if stmt.is_err() {
         error!("Error building statement");
         return Err(APIErrors::DBError);
@@ -141,7 +142,9 @@ pub async fn delete_user_logs_fn(
     let stmt;
     match limit {
         Some(lim) => {
-            stmt = conn.statement(sql_manager.get_sql("delete_user_logs_limit")?.as_str()).build();
+            stmt = conn
+                .statement(sql_manager.get_sql("delete_user_logs_limit")?.as_str())
+                .build();
             if stmt.is_err() {
                 error!("Error building statement");
                 return Err(APIErrors::DBError);
@@ -184,7 +187,11 @@ pub async fn delete_user_logs_fn(
     Ok(())
 }
 
-pub async fn delete_log_logs_fn(log_id: i32, pool: &Pool,sql_manager: &SQLManager) -> Result<(), APIErrors> {
+pub async fn delete_log_logs_fn(
+    log_id: i32,
+    pool: &Pool,
+    sql_manager: &SQLManager,
+) -> Result<(), APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");

@@ -13,11 +13,17 @@ use crate::utils::permissions::{has_admin_perm, has_users_perm};
 
 pub mod structs;
 
-use crate::functions::users::structs::*;
+use crate::controllers::users::structs::*;
 
-pub async fn get_users(_key: &ApiKey<'_>, sql_manager: &SQLManager, pool: &Pool) -> Result<Vec<User>, APIErrors> {
+pub async fn get_users(
+    _key: &ApiKey<'_>,
+    sql_manager: &SQLManager,
+    pool: &Pool,
+) -> Result<Vec<User>, APIErrors> {
     let mut users: Vec<User> = Vec::new();
-    if has_admin_perm(_key, pool, &sql_manager).await || has_users_perm(_key, pool, &sql_manager).await {
+    if has_admin_perm(_key, pool, &sql_manager).await
+        || has_users_perm(_key, pool, &sql_manager).await
+    {
         println!("Admin Permissions Found");
         let conn = pool.get();
         if conn.is_err() {
@@ -62,7 +68,11 @@ pub async fn get_users(_key: &ApiKey<'_>, sql_manager: &SQLManager, pool: &Pool)
     Ok(users)
 }
 
-pub async fn get_user(user_id: &str, sql_manager: &SQLManager, pool: &Pool) -> Result<User, APIErrors> {
+pub async fn get_user(
+    user_id: &str,
+    sql_manager: &SQLManager,
+    pool: &Pool,
+) -> Result<User, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
@@ -110,7 +120,11 @@ pub async fn get_user(user_id: &str, sql_manager: &SQLManager, pool: &Pool) -> R
     }
 }
 
-pub async fn create_user(data: NewUser, sql_manager: &SQLManager, pool: &Pool) -> Result<(), APIErrors> {
+pub async fn create_user(
+    data: NewUser,
+    sql_manager: &SQLManager,
+    pool: &Pool,
+) -> Result<(), APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error Connecting to DB");
@@ -180,7 +194,7 @@ pub async fn edit_user(
             return Err(APIErrors::DBError);
         }
     };
-    
+
     // Weird bug where threads errors are shown when using sql_manager.get_sql, the line position also seems to matter
     let pass_stmt = sql_manager.get_sql("update_user_password");
 
@@ -219,12 +233,14 @@ pub async fn edit_user(
     }
     let mut stmt = stmt.unwrap();
 
-    let _ = stmt.execute(&[
-        &new_user.fullname,
-        &new_user.email,
-        &new_user.login_duration,
-        &new_user.username,
-    ]).unwrap(); 
+    let _ = stmt
+        .execute(&[
+            &new_user.fullname,
+            &new_user.email,
+            &new_user.login_duration,
+            &new_user.username,
+        ])
+        .unwrap();
 
     match conn.commit() {
         Ok(_) => (),
@@ -235,10 +251,7 @@ pub async fn edit_user(
     }
 
     if params_unwrapped.p_password.is_some() && is_admin {
-        match conn
-            .statement(pass_stmt.unwrap().as_str())
-            .build()
-        {
+        match conn.statement(pass_stmt.unwrap().as_str()).build() {
             Ok(data) => stmt = data,
             Err(err) => {
                 error!("Error building statement: {}", err);
@@ -246,10 +259,12 @@ pub async fn edit_user(
             }
         }
 
-        let _ = stmt.execute(&[
-            &hash(params_unwrapped.p_password.unwrap(), DEFAULT_COST).unwrap(),
-            &new_user.username,
-        ]).unwrap();
+        let _ = stmt
+            .execute(&[
+                &hash(params_unwrapped.p_password.unwrap(), DEFAULT_COST).unwrap(),
+                &new_user.username,
+            ])
+            .unwrap();
 
         match conn.commit() {
             Ok(_) => (),
@@ -263,7 +278,11 @@ pub async fn edit_user(
     Ok(())
 }
 
-pub async fn delete_user(user_id: &str, sql_manager: &SQLManager, pool: &Pool) -> Result<(), APIErrors> {
+pub async fn delete_user(
+    user_id: &str,
+    sql_manager: &SQLManager,
+    pool: &Pool,
+) -> Result<(), APIErrors> {
     match check_user_exists(user_id.to_string(), &pool, &sql_manager).await {
         Ok(exists) => {
             if !exists {
@@ -284,7 +303,9 @@ pub async fn delete_user(user_id: &str, sql_manager: &SQLManager, pool: &Pool) -
     }
     let conn = conn.unwrap();
 
-    let delete_stmt = conn.statement(sql_manager.get_sql("delete_user_permissions")?.as_str()).build();
+    let delete_stmt = conn
+        .statement(sql_manager.get_sql("delete_user_permissions")?.as_str())
+        .build();
     if delete_stmt.is_err() {
         error!("Error building statement");
         return Err(APIErrors::DBError);
@@ -299,7 +320,9 @@ pub async fn delete_user(user_id: &str, sql_manager: &SQLManager, pool: &Pool) -
         }
     }
 
-    let delete_stmt = conn.statement(sql_manager.get_sql("delete_user_stores")?.as_str()).build();
+    let delete_stmt = conn
+        .statement(sql_manager.get_sql("delete_user_stores")?.as_str())
+        .build();
     if delete_stmt.is_err() {
         error!("Error building statement");
         return Err(APIErrors::DBError);

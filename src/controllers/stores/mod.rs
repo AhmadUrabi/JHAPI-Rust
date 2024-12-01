@@ -3,11 +3,15 @@ use oracle::pool::Pool;
 use crate::utils::check_user_exists;
 
 use crate::utils::sql::SQLManager;
-use crate::{functions::stores::structs::Store, utils::structs::APIErrors};
+use crate::{controllers::stores::structs::Store, utils::structs::APIErrors};
 
 pub mod structs;
 
-pub async fn get_stores(pool: &Pool, sql_manager: &SQLManager, user_id: String) -> Result<Vec<Store>, APIErrors> {
+pub async fn get_stores(
+    pool: &Pool,
+    sql_manager: &SQLManager,
+    user_id: String,
+) -> Result<Vec<Store>, APIErrors> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
@@ -56,7 +60,7 @@ pub async fn get_stores(pool: &Pool, sql_manager: &SQLManager, user_id: String) 
         let row = row.unwrap();
 
         // Multiple use of unwraps here, but we know the types are correct
-        
+
         let store = Store {
             STORE_ID: row.get(0).unwrap(),
             STORE_DESC: row.get(1).unwrap(),

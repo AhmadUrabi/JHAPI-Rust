@@ -4,7 +4,7 @@ use rocket::{
     Request,
 };
 
-use crate::functions::auth::validate_token;
+use crate::controllers::auth::validate_token;
 
 // Start Request Guard Functions
 #[derive(Debug, Clone)]
@@ -16,24 +16,38 @@ impl<'r> FromRequest<'r> for ApiKey<'r> {
 
     async fn from_request(req: &'r Request<'_>) -> Outcome<Self, Self::Error> {
         // Returns true if `key` is a valid JWT Token.
-
-        match req.headers().get_one("Authorization") {
-            None => {
-                error!("No Authentication header found");
-                Outcome::Error((
+        // First check cookies
+        if let Some(cookie) = req.cookies().get("token") {
+            if validate_token(cookie.value()) {
+                info!("Valid Token Found in Cookie");
+                return Outcome::Success(ApiKey(cookie.value()));
+            } else {
+                error!("Invalid Token Found in Cookie");
+                return Outcome::Error((
                     Status::Unauthorized,
-                    "Please include an Authentication header".to_string(),
-                ))
+                    "Invalid authentication token in cookie".to_string(),
+                ));
             }
+        }
+
+        // If no valid cookie, check headers (For Legacy Support)
+        match req.headers().get_one("Authorization") {
             Some(key) if validate_token(key) => {
-                info!("Valid Token Found");
+                info!("Valid Token Found in Header");
                 Outcome::Success(ApiKey(key))
             }
             Some(_) => {
-                error!("Invalid Token Found");
+                error!("Invalid Token Found in Header");
                 Outcome::Error((
                     Status::Unauthorized,
-                    "Please include a valid Authentication header".to_string(),
+                    "Invalid authentication token in header".to_string(),
+                ))
+            }
+            None => {
+                error!("No Token Found");
+                Outcome::Error((
+                    Status::Unauthorized,
+                    "No authentication token found".to_string(),
                 ))
             }
         }
