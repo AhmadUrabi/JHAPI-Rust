@@ -1,5 +1,5 @@
 #[derive(Debug)]
-pub enum APIErrors {
+pub enum APIError {
     DBError,
     UserNotFound,
     UserExists,
@@ -10,26 +10,26 @@ pub enum APIErrors {
     FileNotFound,
     InvalidCredentials,
     NoData,
-    IOError
+    IOError,
 }
 
 use std::fmt;
 
-impl fmt::Display for APIErrors {
+impl fmt::Display for APIError {
     // This trait requires `fmt` with this exact signature.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            APIErrors::DBError => write!(f, "Database Error"),
-            APIErrors::UserNotFound => write!(f, "User Not Found"),
-            APIErrors::UserExists => write!(f, "User Already Exists"),
-            APIErrors::InvalidData => write!(f, "Invalid Data"),
-            APIErrors::InvalidToken => write!(f, "Invalid Token"),
-            APIErrors::SFTPError => write!(f, "SFTP Error"),
-            APIErrors::InternalServerError => write!(f, "Internal Server Error"),
-            APIErrors::FileNotFound => write!(f, "File Not Found"),
-            APIErrors::InvalidCredentials => write!(f, "Invalid Credentials"),
-            APIErrors::NoData => write!(f, "No Data Found"),
-            APIErrors::IOError => write!(f, "IO Error"),
+            APIError::DBError => write!(f, "Database Error"),
+            APIError::UserNotFound => write!(f, "User Not Found"),
+            APIError::UserExists => write!(f, "User Already Exists"),
+            APIError::InvalidData => write!(f, "Invalid Data"),
+            APIError::InvalidToken => write!(f, "Invalid Token"),
+            APIError::SFTPError => write!(f, "SFTP Error"),
+            APIError::InternalServerError => write!(f, "Internal Server Error"),
+            APIError::FileNotFound => write!(f, "File Not Found"),
+            APIError::InvalidCredentials => write!(f, "Invalid Credentials"),
+            APIError::NoData => write!(f, "No Data Found"),
+            APIError::IOError => write!(f, "IO Error"),
         }
     }
 }

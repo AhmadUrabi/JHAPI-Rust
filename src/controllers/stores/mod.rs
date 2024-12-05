@@ -3,7 +3,7 @@ use oracle::pool::Pool;
 use crate::utils::check_user_exists;
 
 use crate::utils::sql::SQLManager;
-use crate::{controllers::stores::structs::Store, utils::structs::APIErrors};
+use crate::{controllers::stores::structs::Store, utils::structs::APIError};
 
 pub mod structs;
 
@@ -11,11 +11,11 @@ pub async fn get_stores(
     pool: &Pool,
     sql_manager: &SQLManager,
     user_id: String,
-) -> Result<Vec<Store>, APIErrors> {
+) -> Result<Vec<Store>, APIError> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let conn = conn.unwrap();
 
@@ -23,12 +23,12 @@ pub async fn get_stores(
         Ok(b) => {
             if !b {
                 error!("User does not exist");
-                return Err(APIErrors::UserNotFound);
+                return Err(APIError::UserNotFound);
             }
         }
         Err(_err) => {
             error!("Error checking for duplicate user");
-            return Err(APIErrors::DBError);
+            return Err(APIError::DBError);
         }
     }
 
@@ -38,7 +38,7 @@ pub async fn get_stores(
 
     if stmt.is_err() {
         error!("Error building statement");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let mut stmt = stmt.unwrap();
 
@@ -46,7 +46,7 @@ pub async fn get_stores(
 
     if rows.is_err() {
         error!("Error executing query");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let rows = rows.unwrap();
 
@@ -55,7 +55,7 @@ pub async fn get_stores(
         let row = row_result;
         if row.is_err() {
             error!("Error fetching row");
-            return Err(APIErrors::DBError);
+            return Err(APIError::DBError);
         }
         let row = row.unwrap();
 

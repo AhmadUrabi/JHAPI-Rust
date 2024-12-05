@@ -8,7 +8,6 @@ mod utils;
 
 use dotenv::dotenv;
 
-use routes::get_all_routes;
 use server::JHApiServer;
 
 #[tokio::main]

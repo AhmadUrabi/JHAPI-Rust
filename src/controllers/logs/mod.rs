@@ -8,17 +8,17 @@ pub mod structs;
 use structs::LogData;
 
 use crate::utils::sql::SQLManager;
-use crate::utils::structs::APIErrors;
+use crate::utils::structs::APIError;
 
 pub async fn get_all_logs_fn(
     pool: &Pool,
     sql_manager: &SQLManager,
     limit: Option<i32>,
-) -> Result<Json<Vec<LogData>>, APIErrors> {
+) -> Result<Json<Vec<LogData>>, APIError> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let conn = conn.unwrap();
 
@@ -34,14 +34,14 @@ pub async fn get_all_logs_fn(
         .build();
     if stmt.is_err() {
         error!("Error building statement");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let mut stmt = stmt.unwrap();
 
     let rows = stmt.query(&[&logLimit]);
     if rows.is_err() {
         error!("Error executing statement");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let rows = rows.unwrap();
 
@@ -49,7 +49,7 @@ pub async fn get_all_logs_fn(
         let row = row_res;
         if row.is_err() {
             error!("Error getting row");
-            return Err(APIErrors::DBError);
+            return Err(APIError::DBError);
         }
         let row = row.unwrap();
 
@@ -74,11 +74,11 @@ pub async fn get_user_logs_fn(
     pool: &Pool,
     sql_manager: &SQLManager,
     limit: Option<i32>,
-) -> Result<Json<Vec<LogData>>, APIErrors> {
+) -> Result<Json<Vec<LogData>>, APIError> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let conn = conn.unwrap();
 
@@ -94,14 +94,14 @@ pub async fn get_user_logs_fn(
         .build();
     if stmt.is_err() {
         error!("Error building statement");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let mut stmt = stmt.unwrap();
 
     let rows = stmt.query(&[&username, &logLimit]);
     if rows.is_err() {
         error!("Error executing statement");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let rows = rows.unwrap();
 
@@ -109,7 +109,7 @@ pub async fn get_user_logs_fn(
         let row = row_res;
         if row.is_err() {
             error!("Error getting row");
-            return Err(APIErrors::DBError);
+            return Err(APIError::DBError);
         }
         let row = row.unwrap();
         logs.push(LogData {
@@ -132,11 +132,11 @@ pub async fn delete_user_logs_fn(
     pool: &Pool,
     sql_manager: &SQLManager,
     limit: Option<i32>,
-) -> Result<(), APIErrors> {
+) -> Result<(), APIError> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let conn = conn.unwrap();
     let stmt;
@@ -147,14 +147,14 @@ pub async fn delete_user_logs_fn(
                 .build();
             if stmt.is_err() {
                 error!("Error building statement");
-                return Err(APIErrors::DBError);
+                return Err(APIError::DBError);
             }
             let mut stmt = stmt.unwrap();
             match stmt.execute(&[&username, &lim]) {
                 Ok(_) => (),
                 Err(_err) => {
                     error!("Error executing statement");
-                    return Err(APIErrors::DBError);
+                    return Err(APIError::DBError);
                 }
             };
         }
@@ -164,14 +164,14 @@ pub async fn delete_user_logs_fn(
                 .build();
             if stmt.is_err() {
                 error!("Error building statement");
-                return Err(APIErrors::DBError);
+                return Err(APIError::DBError);
             }
             let mut stmt = stmt.unwrap();
             match stmt.execute(&[&username]) {
                 Ok(_) => (),
                 Err(err) => {
                     error!("Error: {}", err);
-                    return Err(APIErrors::DBError);
+                    return Err(APIError::DBError);
                 }
             };
         }
@@ -180,7 +180,7 @@ pub async fn delete_user_logs_fn(
         Ok(_) => (),
         Err(err) => {
             error!("Error: {}", err);
-            return Err(APIErrors::DBError);
+            return Err(APIError::DBError);
         }
     }
 
@@ -191,11 +191,11 @@ pub async fn delete_log_logs_fn(
     log_id: i32,
     pool: &Pool,
     sql_manager: &SQLManager,
-) -> Result<(), APIErrors> {
+) -> Result<(), APIError> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let conn = conn.unwrap();
 
@@ -204,7 +204,7 @@ pub async fn delete_log_logs_fn(
         .build();
     if stmt.is_err() {
         error!("Error building statement");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let mut stmt = stmt.unwrap();
 
@@ -212,7 +212,7 @@ pub async fn delete_log_logs_fn(
         Ok(_) => (),
         Err(err) => {
             error!("Error executing query: {}", err);
-            return Err(APIErrors::DBError);
+            return Err(APIError::DBError);
         }
     };
 
@@ -220,7 +220,7 @@ pub async fn delete_log_logs_fn(
         Ok(_) => Ok(()),
         Err(err) => {
             error!("Error: {}", err);
-            return Err(APIErrors::DBError);
+            return Err(APIError::DBError);
         }
     }
 }

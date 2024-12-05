@@ -6,6 +6,7 @@ use oracle::pool::{Pool, PoolBuilder};
 mod catchers;
 mod fairings;
 pub mod request_guard;
+pub mod response;
 
 use fairings::cors::CORS;
 use fairings::log::Logger;
@@ -13,7 +14,7 @@ use rocket::{tokio::sync::Mutex, Ignite, Rocket};
 
 use crate::routes::get_all_routes;
 use crate::utils::sql::SQLManager;
-use crate::utils::structs::APIErrors;
+use crate::utils::structs::APIError;
 
 pub struct JHApiServer {
     pub server: rocket::Rocket<rocket::Build>,
@@ -38,7 +39,7 @@ impl JHApiServer {
         JHApiServer { server: rocket }
     }
 
-    fn build_pool() -> Result<Pool, APIErrors> {
+    fn build_pool() -> Result<Pool, APIError> {
         let username = std::env::var("LOGIN_USERNAME").expect("LOGIN_USERNAME must be set.");
         let password = std::env::var("LOGIN_PASSWORD").expect("LOGIN_PASSWORD must be set.");
         let database = std::env::var("DB_CONNECTION").expect("DB_CONNECTION must be set.");
@@ -51,7 +52,7 @@ impl JHApiServer {
         // If pool is an error, log and exit
         pool.map_err(|e| {
             error!("Error building pool: {:?}", e);
-            APIErrors::DBError
+            APIError::DBError
         })
     }
 

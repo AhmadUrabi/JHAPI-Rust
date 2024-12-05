@@ -7,10 +7,10 @@ use rocket::{post, Route, State};
 use crate::controllers::auth::structs::LoginParams;
 use crate::controllers::auth::{signin, validate_token};
 
-use crate::utils::structs::APIErrors;
+use crate::utils::structs::APIError;
 
 pub fn routes() -> Vec<Route> {
-    routes![sign, authcheck]
+    routes![sign, authcheck, logout]
 }
 
 #[post("/login", data = "<params>")]
@@ -35,14 +35,21 @@ pub async fn sign(
         Err(e) => {
             error!("Error authorizing, Token Not Sent");
             match e {
-                APIErrors::InvalidData => Err(Status::Unauthorized),
-                APIErrors::DBError => Err(Status::InternalServerError),
-                APIErrors::UserNotFound => Err(Status::Unauthorized),
-                APIErrors::InvalidCredentials => Err(Status::Unauthorized),
+                APIError::InvalidData => Err(Status::Unauthorized),
+                APIError::DBError => Err(Status::InternalServerError),
+                APIError::UserNotFound => Err(Status::Unauthorized),
+                APIError::InvalidCredentials => Err(Status::Unauthorized),
                 _ => Err(Status::InternalServerError),
             }
         }
     }
+}
+
+#[post("/logout")]
+pub async fn logout(cookies: &rocket::http::CookieJar<'_>) -> Result<&'static str, Status> {
+    info!("Logout Request");
+    cookies.remove(rocket::http::Cookie::from("token"));
+    Ok("Logged Out")
 }
 
 #[get("/authcheck")]
@@ -64,7 +71,7 @@ pub async fn authcheck(cookies: &rocket::http::CookieJar<'_>) -> Result<&'static
 
 #[cfg(test)]
 mod test {
-    use crate::{routes::auth, utils::testing::*};
+    use crate::utils::testing::*;
     use dotenv::dotenv;
 
     #[tokio::test]

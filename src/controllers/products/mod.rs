@@ -18,7 +18,7 @@ use crate::server::request_guard::api_key::ApiKey;
 use crate::controllers::auth::decode_token_data;
 use crate::utils::permissions::is_cost_perm;
 use crate::utils::sql::SQLManager;
-use crate::utils::structs::APIErrors;
+use crate::utils::structs::APIError;
 
 pub mod structs;
 
@@ -28,7 +28,7 @@ pub async fn get_product(
     pool: &Pool,
     sql_manager: &SQLManager,
     key: &ApiKey<'_>,
-) -> Result<Vec<Product>, APIErrors> {
+) -> Result<Vec<Product>, APIError> {
     // Empty params are not an error, but they should return an empty vec
     if params.is_none() {
         println!("Empty params");
@@ -43,7 +43,7 @@ pub async fn get_product(
             username = data.USER_ID.unwrap().to_string(); // Safe Unwrap, Username is never null in DB
         }
         None => {
-            return Err(APIErrors::InvalidToken);
+            return Err(APIError::InvalidToken);
         }
     }
 
@@ -130,19 +130,19 @@ pub async fn get_product(
 
     let conn = pool.get().map_err(|e| {
         error!("Connection Error: {:?}", e);
-        APIErrors::DBError
+        APIError::DBError
     })?;
 
     let now = tokio::time::Instant::now();
 
     let mut stmt = conn.statement(&sql).build().map_err(|e| {
         error!("Error building statement: {:?}", e);
-        APIErrors::DBError
+        APIError::DBError
     })?;
 
     let rows = stmt.query_named(&my_params).map_err(|e| {
         error!("Error executing query: {:?}", e);
-        APIErrors::DBError
+        APIError::DBError
     })?;
 
     println!("Total Query Time: {:?}", now.elapsed().as_millis());
@@ -152,7 +152,7 @@ pub async fn get_product(
     for row_result in rows {
         if row_result.is_err() {
             info!("Row Error");
-            return Err(APIErrors::DBError);
+            return Err(APIError::DBError);
         }
         let row = row_result.unwrap();
         products.push(Product {

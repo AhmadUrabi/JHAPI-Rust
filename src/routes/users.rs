@@ -2,7 +2,7 @@ use crate::controllers::auth::decode_token_data;
 use crate::controllers::users::structs::*;
 use crate::controllers::users::*;
 use crate::server::request_guard::api_key::ApiKey;
-use crate::utils::structs::APIErrors;
+use crate::utils::structs::APIError;
 
 use crate::server::JHApiServerState;
 
@@ -90,8 +90,8 @@ pub async fn create_user_route(
     match create_user(params.0, &sql_manager, &pool).await {
         Ok(_) => Ok("User Created".to_string()),
         Err(error) => match error {
-            APIErrors::UserExists => Err(Status::Conflict),
-            APIErrors::DBError => Err(Status::InternalServerError),
+            APIError::UserExists => Err(Status::Conflict),
+            APIError::DBError => Err(Status::InternalServerError),
             _ => Err(Status::InternalServerError),
         },
     }
@@ -126,8 +126,8 @@ pub async fn edit_user_route(
     match edit_user(params.0.clone(), username, &pool, &sql_manager, perm).await {
         Ok(_) => Ok("User Edited".to_string()),
         Err(error) => match error {
-            APIErrors::UserNotFound => return Err(Status::NotFound),
-            APIErrors::DBError => return Err(Status::InternalServerError),
+            APIError::UserNotFound => return Err(Status::NotFound),
+            APIError::DBError => return Err(Status::InternalServerError),
             _ => return Err(Status::InternalServerError),
         },
     }
@@ -149,8 +149,8 @@ pub async fn delete_user_route(
     match delete_user(&user_id, &sql_manager, &pool).await {
         Ok(_) => Ok("User Deleted".to_string()),
         Err(error) => match error {
-            APIErrors::UserNotFound => Err(Status::NotFound),
-            APIErrors::DBError => Err(Status::InternalServerError),
+            APIError::UserNotFound => Err(Status::NotFound),
+            APIError::DBError => Err(Status::InternalServerError),
             _ => Err(Status::InternalServerError),
         },
     }

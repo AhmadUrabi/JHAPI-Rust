@@ -2,7 +2,7 @@ pub mod structs;
 
 use crate::{
     controllers::versions::structs::Version,
-    utils::{sql::SQLManager, structs::APIErrors},
+    utils::{sql::SQLManager, structs::APIError},
 };
 use oracle::pool::Pool;
 use rocket::serde::json::Json;
@@ -11,11 +11,11 @@ pub async fn get_latest_version(
     platform: &str,
     sql_manager: &SQLManager,
     pool: &Pool,
-) -> Result<Json<Version>, APIErrors> {
+) -> Result<Json<Version>, APIError> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error: {}", conn.err().unwrap());
-        return Err(APIErrors::InternalServerError);
+        return Err(APIError::InternalServerError);
     }
     let conn = conn.unwrap();
 
@@ -25,7 +25,7 @@ pub async fn get_latest_version(
     println!("{:?}", stmt);
     if stmt.is_err() {
         error!("Error: {}", stmt.err().unwrap());
-        return Err(APIErrors::InternalServerError);
+        return Err(APIError::InternalServerError);
     }
     let mut stmt = stmt.unwrap();
 
@@ -34,7 +34,7 @@ pub async fn get_latest_version(
         Ok(rows) => {
             let rows: Vec<_> = rows.collect();
             if rows.is_empty() {
-                return Err(APIErrors::NoData);
+                return Err(APIError::NoData);
             }
             let row = &rows[0];
             match row {
@@ -49,13 +49,13 @@ pub async fn get_latest_version(
                 }
                 Err(err) => {
                     error!("Error: {}", err);
-                    Err(APIErrors::NoData)
+                    Err(APIError::NoData)
                 }
             }
         }
         Err(err) => {
             error!("Error: {}", err);
-            Err(APIErrors::DBError)
+            Err(APIError::DBError)
         }
     }
 }

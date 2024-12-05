@@ -11,7 +11,7 @@ use crate::controllers::auth::decode_token_data;
 use crate::server::request_guard::api_key::ApiKey;
 
 use crate::utils::permissions::{has_admin_perm, has_permissions_perm};
-use crate::utils::structs::APIErrors;
+use crate::utils::structs::APIError;
 
 pub fn routes() -> Vec<Route> {
     routes![get_permissions, edit_permissions]
@@ -51,8 +51,8 @@ pub async fn get_permissions(
     {
         Ok(permissions) => Ok(Json(permissions)),
         Err(err) => match err {
-            APIErrors::UserNotFound => Err(Status::NotFound),
-            APIErrors::DBError => Err(Status::InternalServerError),
+            APIError::UserNotFound => Err(Status::NotFound),
+            APIError::DBError => Err(Status::InternalServerError),
             _ => Err(Status::InternalServerError),
         },
     }
@@ -87,8 +87,8 @@ pub async fn edit_permissions(
             Ok("Permissions Edited".to_string())
         }
         Err(err) => match err {
-            APIErrors::UserNotFound => Err(Status::NotFound),
-            APIErrors::DBError => Err(Status::InternalServerError),
+            APIError::UserNotFound => Err(Status::NotFound),
+            APIError::DBError => Err(Status::InternalServerError),
             _ => Err(Status::InternalServerError),
         },
     }

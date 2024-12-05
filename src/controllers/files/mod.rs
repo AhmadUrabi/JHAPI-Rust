@@ -10,7 +10,7 @@ use tokio::fs::File;
 use magick_rust::{magick_wand_genesis, MagickWand, PixelWand};
 use std::sync::Once;
 
-use crate::utils::structs::APIErrors;
+use crate::utils::structs::APIError;
 
 // Used to make sure MagickWand is initialized exactly once. Note that we
 // do not bother shutting down, we simply exit when we're done.
@@ -69,7 +69,7 @@ fn resize(filename: &str, name: &str) -> Result<bool, String> {
     Ok(true)
 }
 
-pub async fn download_file(file_name: &String) -> Result<(), APIErrors> {
+pub async fn download_file(file_name: &String) -> Result<(), APIError> {
     // No caching, will always download file
 
     // Delete temporary file
@@ -88,7 +88,7 @@ pub async fn download_file(file_name: &String) -> Result<(), APIErrors> {
         Ok(_) => println!("SFTP Handshake successful"),
         Err(e) => {
             error!("SFTP Handshake failed: {:?}", e);
-            return Err(APIErrors::SFTPError);
+            return Err(APIError::SFTPError);
         }
     };
 
@@ -97,7 +97,7 @@ pub async fn download_file(file_name: &String) -> Result<(), APIErrors> {
     let password = std::env::var("SFTP_PASSWORD");
     if username.is_err() || password.is_err() {
         println!("SFTP_USERNAME or SFTP_PASSWORD not set");
-        return Err(APIErrors::InvalidCredentials);
+        return Err(APIError::InvalidCredentials);
     }
     let username = username.unwrap();
     let password = password.unwrap();
@@ -106,7 +106,7 @@ pub async fn download_file(file_name: &String) -> Result<(), APIErrors> {
         Ok(_) => println!("Authentication successful"),
         Err(e) => {
             error!("Authentication failed: {:?}", e);
-            return Err(APIErrors::InvalidCredentials);
+            return Err(APIError::InvalidCredentials);
         }
     };
 
@@ -120,7 +120,7 @@ pub async fn download_file(file_name: &String) -> Result<(), APIErrors> {
             Ok(_) => (),
             Err(e) => {
                 error!("File read failed: {:?}", e);
-                return Err(APIErrors::SFTPError);
+                return Err(APIError::SFTPError);
             }
         };
         // Close the channel and wait for the whole content to be tranferred
@@ -135,23 +135,23 @@ pub async fn download_file(file_name: &String) -> Result<(), APIErrors> {
         let local_file = std::fs::File::create("tmp/tmpdownload.jpg");
         if local_file.is_err() {
             error!("File create failed: {:?}", local_file.err().unwrap());
-            return Err(APIErrors::InternalServerError);
+            return Err(APIError::InternalServerError);
         }
         let mut local_file = local_file.unwrap();
         local_file.write_all(&contents).unwrap();
         Ok(())
     } else {
         println!("File does not exist");
-        return Err(APIErrors::FileNotFound);
+        return Err(APIError::FileNotFound);
     }
 }
 
-pub async fn upload_file(item_code: &String, filepath: &String) -> Result<(), APIErrors> {
+pub async fn upload_file(item_code: &String, filepath: &String) -> Result<(), APIError> {
     match resize(&filepath, &item_code) {
         Ok(_) => (),
         Err(e) => {
             error!("Error resizing image: {:?}", e);
-            return Err(APIErrors::InternalServerError);
+            return Err(APIError::InternalServerError);
         }
     }
     let temp_file = "tmp/".to_string() + item_code + ".jpg";
@@ -171,7 +171,7 @@ pub async fn upload_file(item_code: &String, filepath: &String) -> Result<(), AP
             Ok(_) => println!("SFTP Handshake successful"),
             Err(e) => {
                 error!("SFTP Handshake failed: {:?}", e);
-                return Err(APIErrors::SFTPError);
+                return Err(APIError::SFTPError);
             }
         };
 
@@ -180,7 +180,7 @@ pub async fn upload_file(item_code: &String, filepath: &String) -> Result<(), AP
         let password = std::env::var("SFTP_PASSWORD");
         if username.is_err() || password.is_err() {
             println!("SFTP_USERNAME or SFTP_PASSWORD not set");
-            return Err(APIErrors::InvalidCredentials);
+            return Err(APIError::InvalidCredentials);
         }
         let username = username.unwrap();
         let password = password.unwrap();
@@ -189,7 +189,7 @@ pub async fn upload_file(item_code: &String, filepath: &String) -> Result<(), AP
             Ok(_) => println!("SFTP Authentication successful"),
             Err(e) => {
                 error!("SFTP Authentication failed: {:?}", e);
-                return Err(APIErrors::InvalidCredentials);
+                return Err(APIError::InvalidCredentials);
             }
         };
 
@@ -210,11 +210,11 @@ pub async fn upload_file(item_code: &String, filepath: &String) -> Result<(), AP
         } else {
             println!("File Send Unsuccessful");
             std::fs::remove_file(temp_file).unwrap();
-            return Err(APIErrors::SFTPError);
+            return Err(APIError::SFTPError);
         }
     } else {
         println!("Session not created");
         std::fs::remove_file(temp_file).unwrap();
-        return Err(APIErrors::SFTPError);
+        return Err(APIError::SFTPError);
     }
 }

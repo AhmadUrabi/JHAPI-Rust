@@ -11,7 +11,7 @@ use crate::controllers::auth::structs::LoginParams;
 use crate::controllers::auth::structs::User;
 
 use crate::utils::sql::SQLManager;
-use crate::utils::structs::APIErrors;
+use crate::utils::structs::APIError;
 
 use bcrypt::verify;
 
@@ -53,13 +53,13 @@ pub async fn signin(
     params: Json<LoginParams>,
     pool: &Pool,
     sql_manager: &SQLManager,
-) -> Result<String, APIErrors> {
+) -> Result<String, APIError> {
     // Check for empty username and password
     info!("Login Attempt: {:?}", params.0.p_username);
 
     if params.p_username == "" {
         error!("Empty username");
-        return Err(APIErrors::InvalidData);
+        return Err(APIError::InvalidData);
     }
 
     let user = fetch_user_data(
@@ -91,11 +91,11 @@ async fn fetch_user_data(
     password: String,
     pool: &Pool,
     sql_manager: &SQLManager,
-) -> Result<User, APIErrors> {
+) -> Result<User, APIError> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let conn = conn.unwrap();
 
@@ -105,20 +105,20 @@ async fn fetch_user_data(
         .build();
     if stmt.is_err() {
         error!("Error building statement");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let mut stmt = stmt.unwrap();
     let rows = stmt.query_row(&[&username]);
     if rows.is_err() {
         error!("Error executing query");
-        return Err(APIErrors::UserNotFound);
+        return Err(APIError::UserNotFound);
     }
     let row = rows.unwrap();
 
     let mut user = User::new();
     if !verify(&password, &row.get::<&str, String>("PASSWORD").unwrap()).unwrap() {
         error!("Invalid password");
-        return Err(APIErrors::InvalidCredentials);
+        return Err(APIError::InvalidCredentials);
     }
     user.USER_ID = Some(row.get::<&str, String>("USERNAME").unwrap());
     user.USER_NAME = Some(row.get::<&str, String>("FULLNAME").unwrap());
@@ -127,7 +127,7 @@ async fn fetch_user_data(
     Ok(user)
 }
 
-fn generate_token(user: &User) -> Result<String, APIErrors> {
+fn generate_token(user: &User) -> Result<String, APIError> {
     let secret: String = std::env::var("SECRET_KEY").expect("SECRET_KEY must be set.");
     if user.USER_ID.is_none()
         || user.USER_NAME.is_none()
@@ -135,7 +135,7 @@ fn generate_token(user: &User) -> Result<String, APIErrors> {
         || user.LOGIN_DURATION.is_none()
     {
         error!("User data incomplete");
-        return Err(APIErrors::InvalidData);
+        return Err(APIError::InvalidData);
     }
 
     let claims = Claims::new(
@@ -155,7 +155,7 @@ fn generate_token(user: &User) -> Result<String, APIErrors> {
         Ok(token) => Ok(token),
         Err(err) => {
             error!("Error generating token: {}", err);
-            Err(APIErrors::InternalServerError)
+            Err(APIError::InternalServerError)
         }
     }
 }

@@ -4,7 +4,7 @@ use crate::{
         models::{UserAccount, UserParams},
     },
     server::JHApiServerState,
-    utils::structs::APIErrors,
+    utils::structs::APIError,
 };
 use ldap3::{Scope, SearchEntry};
 use rocket::{serde::json::Json, Route, State};

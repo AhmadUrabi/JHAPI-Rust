@@ -15,7 +15,7 @@ pub fn routes() -> Vec<Route> {
     routes![get_products]
 }
 
-#[post("/products", data = "<params>")]
+#[post("/product", data = "<params>")]
 pub async fn get_products(
     params: Json<FetchParams>,
     state: &State<JHApiServerState>,

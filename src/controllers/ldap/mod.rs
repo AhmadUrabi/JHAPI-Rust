@@ -6,7 +6,7 @@ use models::{UserAccount, UserParams};
 
 use crate::{
     server::{JHApiServer, JHApiServerState},
-    utils::structs::APIErrors,
+    utils::structs::APIError,
 };
 
 pub mod models;
@@ -93,14 +93,14 @@ impl UserAccount {
     pub async fn create_new_user(
         ldap: &mut Ldap,
         user: UserParams,
-    ) -> Result<UserAccount, APIErrors> {
+    ) -> Result<UserAccount, APIError> {
         let binding = format!("CN={},{}", user.cn, std::env::var("BASE_DN").unwrap()).to_owned();
         let new_user_dn = binding.as_str();
 
         // Lookup the userPrincipalName to see if it already exists
         let user_exists = Self::get_dn_from_uname(ldap, user.userPrincipalName.as_str()).await;
         if user_exists.is_some() {
-            return Err(APIErrors::UserExists);
+            return Err(APIError::UserExists);
         }
 
         let quoted_b64_password = format!("'{}'", user.password);
@@ -166,7 +166,7 @@ impl UserAccount {
         ];
         let res = ldap.add(new_user_dn, new_user_attrs).await;
         if res.is_err() {
-            return Err(APIErrors::InternalServerError);
+            return Err(APIError::InternalServerError);
         }
 
         let _ = Self::set_password(ldap, new_user_dn, &user.password).await;
@@ -182,7 +182,7 @@ impl UserAccount {
 
         match Self::fetch_user(ldap, new_user_dn).await {
             Some(user) => Ok(user),
-            None => Err(APIErrors::UserNotFound),
+            None => Err(APIError::UserNotFound),
         }
     }
 

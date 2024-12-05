@@ -3,7 +3,7 @@ use oracle::pool::Pool;
 use crate::utils::check_user_exists;
 
 use crate::utils::sql::SQLManager;
-use crate::utils::structs::APIErrors;
+use crate::utils::structs::APIError;
 
 use self::structs::Permissions;
 
@@ -14,11 +14,11 @@ pub async fn get_user_permissions(
     user_id: &str,
     sql_manager: &SQLManager,
     pool: &Pool,
-) -> Result<Permissions, APIErrors> {
+) -> Result<Permissions, APIError> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to DB");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
 
     // Check for user
@@ -27,7 +27,7 @@ pub async fn get_user_permissions(
         .unwrap_or(false)
     {
         error!("User does not exist");
-        return Err(APIErrors::UserNotFound);
+        return Err(APIError::UserNotFound);
     }
 
     let conn = conn.unwrap();
@@ -37,14 +37,14 @@ pub async fn get_user_permissions(
         .build();
     if stmt.is_err() {
         error!("Error building statement");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let mut stmt = stmt.unwrap();
 
     let rows = stmt.query(&[&user_id]);
     if rows.is_err() {
         error!("Error executing query");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let rows = rows.unwrap();
 
@@ -53,7 +53,7 @@ pub async fn get_user_permissions(
     for row_result in rows {
         if row_result.is_err() {
             error!("Error fetching row");
-            return Err(APIErrors::DBError);
+            return Err(APIError::DBError);
         }
         let row = row_result.unwrap();
 
@@ -80,11 +80,11 @@ pub async fn edit_user_permissions(
     pool: &Pool,
     sql_manager: &SQLManager,
     permissions: Permissions,
-) -> Result<String, APIErrors> {
+) -> Result<String, APIError> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error connecting to db");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let conn = conn.unwrap();
 
@@ -94,7 +94,7 @@ pub async fn edit_user_permissions(
         .unwrap_or(false)
     {
         error!("User does not exist");
-        return Err(APIErrors::UserNotFound);
+        return Err(APIError::UserNotFound);
     }
 
     // Same Weird threads error as routes/users.rs
@@ -105,7 +105,7 @@ pub async fn edit_user_permissions(
         .build();
     if stmt.is_err() {
         error!("Error building statement");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let mut stmt = stmt.unwrap();
 
@@ -113,14 +113,14 @@ pub async fn edit_user_permissions(
         Ok(_) => (),
         Err(err) => {
             error!("Error executing query: {}", err);
-            return Err(APIErrors::DBError);
+            return Err(APIError::DBError);
         }
     };
 
     let stmt = conn.statement(insert_stmt.as_str()).build();
     if stmt.is_err() {
         error!("Error building statement");
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let mut stmt = stmt.unwrap();
 
@@ -157,7 +157,7 @@ pub async fn edit_user_permissions(
         Ok(_) => (),
         Err(err) => {
             error!("Error: {}", err);
-            return Err(APIErrors::DBError);
+            return Err(APIError::DBError);
         }
     }
 

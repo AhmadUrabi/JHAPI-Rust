@@ -11,7 +11,7 @@ use rocket::{get, State};
 use crate::controllers::files::download_file;
 use crate::controllers::files::upload_file;
 
-use crate::utils::structs::APIErrors;
+use crate::utils::structs::APIError;
 
 use std::path::*;
 
@@ -45,8 +45,8 @@ pub async fn get_image(
         Err(e) => {
             info!("File Not Found");
             match e {
-                APIErrors::SFTPError => return Err(Status::InternalServerError),
-                APIErrors::FileNotFound => return Err(Status::NotFound),
+                APIError::SFTPError => return Err(Status::InternalServerError),
+                APIError::FileNotFound => return Err(Status::NotFound),
                 _ => return Err(Status::InternalServerError),
             }
         }
@@ -94,8 +94,8 @@ pub async fn upload(
         Err(e) => {
             info!("File Not Uploaded");
             match e {
-                APIErrors::SFTPError => return Err(Status::InternalServerError),
-                APIErrors::FileNotFound => return Err(Status::NotFound),
+                APIError::SFTPError => return Err(Status::InternalServerError),
+                APIError::FileNotFound => return Err(Status::NotFound),
                 _ => return Err(Status::InternalServerError),
             }
         }

@@ -7,7 +7,7 @@ use rocket::{get, Route, State};
 use crate::controllers::stores::structs::*;
 
 use crate::server::request_guard::api_key::ApiKey;
-use crate::utils::structs::APIErrors;
+use crate::utils::structs::APIError;
 
 use crate::controllers::stores::get_stores;
 
@@ -46,8 +46,8 @@ pub async fn get_store_list(
                 return Ok(Json(stores));
             }
             Err(err) => match err {
-                APIErrors::DBError => return Err(Status::InternalServerError),
-                APIErrors::UserNotFound => return Err(Status::NotFound),
+                APIError::DBError => return Err(Status::InternalServerError),
+                APIError::UserNotFound => return Err(Status::NotFound),
                 _ => return Err(Status::InternalServerError),
             },
         }
@@ -55,8 +55,8 @@ pub async fn get_store_list(
     match get_stores(&pool, &sql_manager, user_id).await {
         Ok(stores) => Ok(Json(stores)),
         Err(err) => match err {
-            APIErrors::DBError => return Err(Status::InternalServerError),
-            APIErrors::UserNotFound => return Err(Status::NotFound),
+            APIError::DBError => return Err(Status::InternalServerError),
+            APIError::UserNotFound => return Err(Status::NotFound),
             _ => return Err(Status::InternalServerError),
         },
     }
@@ -162,8 +162,8 @@ pub async fn get_store_list_for_user(
     match get_stores(&pool, &sql_manager, username).await {
         Ok(stores) => Ok(Json(stores)),
         Err(err) => match err {
-            APIErrors::DBError => return Err(Status::InternalServerError),
-            APIErrors::UserNotFound => return Err(Status::NotFound),
+            APIError::DBError => return Err(Status::InternalServerError),
+            APIError::UserNotFound => return Err(Status::NotFound),
             _ => return Err(Status::InternalServerError),
         },
     }

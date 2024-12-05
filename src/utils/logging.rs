@@ -3,7 +3,7 @@ use oracle::pool::Pool;
 use oracle::sql_type::Timestamp;
 
 use super::sql::SQLManager;
-use super::structs::APIErrors;
+use super::structs::APIError;
 
 /// Log request data to the database
 pub fn log_data(
@@ -17,11 +17,11 @@ pub fn log_data(
     mut token: String,
     mut result: String,
     mut method: String,
-) -> Result<(), APIErrors> {
+) -> Result<(), APIError> {
     let conn = pool.get();
     if conn.is_err() {
         error!("Error: {}", conn.err().unwrap());
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let conn = conn.unwrap();
 
@@ -58,7 +58,7 @@ pub fn log_data(
 
     if stmt.is_err() {
         error!("Error building statement: {}", stmt.err().unwrap());
-        return Err(APIErrors::DBError);
+        return Err(APIError::DBError);
     }
     let mut stmt = stmt.unwrap();
 
@@ -77,7 +77,7 @@ pub fn log_data(
         }
         Err(err) => {
             error!("Error executing query: {}", err);
-            return Err(APIErrors::DBError);
+            return Err(APIError::DBError);
         }
     };
     println!("committing log");
@@ -85,7 +85,7 @@ pub fn log_data(
         Ok(_) => Ok(()),
         Err(err) => {
             error!("Error: {}", err);
-            return Err(APIErrors::DBError);
+            return Err(APIError::DBError);
         }
     }
 }
