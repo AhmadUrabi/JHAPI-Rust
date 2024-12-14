@@ -1,3 +1,5 @@
+use crate::respond;
+use crate::server::response::ApiResponse;
 use crate::server::JHApiServerState;
 use rocket::http::Status;
 use rocket::log::private::info;
@@ -22,10 +24,7 @@ pub fn routes() -> Vec<Route> {
 }
 
 #[get("/stores")]
-pub async fn get_store_list(
-    state: &State<JHApiServerState>,
-    _key: ApiKey<'_>,
-) -> Result<Json<Vec<Store>>, Status> {
+pub async fn get_store_list(state: &State<JHApiServerState>, _key: ApiKey<'_>) -> ApiResponse {
     let pool = &state.pool;
     let sql_manager = &state.sql_manager;
     info!("Stores Get Request");
@@ -43,22 +42,16 @@ pub async fn get_store_list(
     {
         match get_stores(&pool, &sql_manager, "admin".to_string()).await {
             Ok(stores) => {
-                return Ok(Json(stores));
+                return respond!(200, "User Stores Found", stores);
             }
-            Err(err) => match err {
-                APIError::DBError => return Err(Status::InternalServerError),
-                APIError::DataNotFound => return Err(Status::NotFound),
-                _ => return Err(Status::InternalServerError),
-            },
+            Err(err) => {
+                return err.into();
+            }
         }
     }
     match get_stores(&pool, &sql_manager, user_id).await {
-        Ok(stores) => Ok(Json(stores)),
-        Err(err) => match err {
-            APIError::DBError => return Err(Status::InternalServerError),
-            APIError::DataNotFound => return Err(Status::NotFound),
-            _ => return Err(Status::InternalServerError),
-        },
+        Ok(stores) => respond!(200, "User Stores Found", stores),
+        Err(err) => err.into(),
     }
 }
 
@@ -68,7 +61,7 @@ pub async fn update_store_list(
     state: &State<JHApiServerState>,
     _key: ApiKey<'_>,
     params: Json<StoreListUpdateParams>,
-) -> Result<String, Status> {
+) -> ApiResponse {
     let pool = &state.pool;
     let sql_manager = &state.sql_manager;
     info!("stores Request: {:?}", params);
@@ -78,20 +71,20 @@ pub async fn update_store_list(
         info!("User has permissions");
     } else {
         info!("User does not have permissions");
-        return Err(Status::Unauthorized);
+        return respond!(401, "You are Unauthorized to perform this action");
     }
 
     // TODO: Whole function should be separated from route function
     match check_user_exists(params.0.p_username.clone(), &pool, &sql_manager).await {
         Ok(x) => {
             if !x {
-                return Err(Status::NotFound);
+                return respond!(404, "User Not Found");
             } else {
                 println!("User exists");
             }
         }
         Err(_err) => {
-            return Err(Status::InternalServerError);
+            return respond!(500, "Error");
         }
     }
 
@@ -139,7 +132,7 @@ pub async fn update_store_list(
         }
     }
 
-    return Ok("Success".to_string());
+    respond!(200, "Success")
 }
 
 #[get("/stores/<username>")]
@@ -147,7 +140,7 @@ pub async fn get_store_list_for_user(
     state: &State<JHApiServerState>,
     _key: ApiKey<'_>,
     username: String,
-) -> Result<Json<Vec<Store>>, Status> {
+) -> ApiResponse {
     let pool = &state.pool;
     let sql_manager = &state.sql_manager;
     info!("User stores Request");
@@ -156,16 +149,12 @@ pub async fn get_store_list_for_user(
         && !has_admin_perm(&_key, &pool, &sql_manager).await
     {
         info!("Token does not have permissions");
-        return Err(Status::Unauthorized);
+        return respond!(401, "You don't have any permissions");
     }
 
     match get_stores(&pool, &sql_manager, username).await {
-        Ok(stores) => Ok(Json(stores)),
-        Err(err) => match err {
-            APIError::DBError => return Err(Status::InternalServerError),
-            APIError::DataNotFound => return Err(Status::NotFound),
-            _ => return Err(Status::InternalServerError),
-        },
+        Ok(stores) => respond!(200, "Successfully fetched user stores", stores),
+        Err(err) => err.into(),
     }
 }
 

@@ -2,6 +2,8 @@ use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::{post, Route, State};
 
+use crate::respond;
+use crate::server::response::ApiResponse;
 use crate::server::JHApiServerState;
 
 use crate::controllers::permissions::structs::{PermissionEditParams, Permissions};
@@ -22,7 +24,7 @@ pub async fn get_permissions(
     username: String,
     state: &State<JHApiServerState>,
     _key: ApiKey<'_>,
-) -> Result<Json<Permissions>, Status> {
+) -> ApiResponse {
     let mut user_id: String = "".to_string();
     let pool = &state.pool;
     let sql_manager = &state.sql_manager;
@@ -39,7 +41,7 @@ pub async fn get_permissions(
         && !has_admin_perm(&_key, pool, &sql_manager).await
         && username.to_lowercase() != user_id.to_lowercase()
     {
-        return Err(Status::Unauthorized);
+        respond!(401, "User is Unauthorized")
     }
 
     match crate::controllers::permissions::get_user_permissions(
@@ -49,12 +51,8 @@ pub async fn get_permissions(
     )
     .await
     {
-        Ok(permissions) => Ok(Json(permissions)),
-        Err(err) => match err {
-            APIError::DataNotFound => Err(Status::NotFound),
-            APIError::DBError => Err(Status::InternalServerError),
-            _ => Err(Status::InternalServerError),
-        },
+        Ok(permissions) => respond!(200, "Permissions Found", permissions),
+        Err(err) => err.into(),
     }
 }
 
@@ -64,14 +62,14 @@ pub async fn edit_permissions(
     params: Json<PermissionEditParams>,
     state: &State<JHApiServerState>,
     _key: ApiKey<'_>,
-) -> Result<String, Status> {
+) -> ApiResponse {
     info!("/permissions/{:?} Request: {:?}", username.clone(), params);
     let pool = &state.pool;
     let sql_manager = &state.sql_manager;
     if !has_permissions_perm(&_key, pool, &sql_manager).await
         && !has_admin_perm(&_key, pool, &sql_manager).await
     {
-        return Err(Status::Unauthorized);
+        respond!(401, "Unauthorized")
     }
     match crate::controllers::permissions::edit_user_permissions(
         (username.clone()).to_lowercase(),
@@ -84,12 +82,8 @@ pub async fn edit_permissions(
         Ok(permissions) => {
             info!("Permissions Edited");
             info!("New Permissions: {:?}", permissions);
-            Ok("Permissions Edited".to_string())
+            respond!(200, "Permissions Edited", permissions)
         }
-        Err(err) => match err {
-            APIError::DataNotFound => Err(Status::NotFound),
-            APIError::DBError => Err(Status::InternalServerError),
-            _ => Err(Status::InternalServerError),
-        },
+        Err(err) => err.into(),
     }
 }

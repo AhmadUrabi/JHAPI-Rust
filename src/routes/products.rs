@@ -1,4 +1,6 @@
 #![allow(non_snake_case)]
+use crate::respond;
+use crate::server::response::ApiResponse;
 use crate::server::JHApiServerState;
 
 use rocket::log::private::info;
@@ -9,7 +11,6 @@ use crate::controllers::products::get_product;
 use crate::server::request_guard::api_key::ApiKey;
 
 use crate::controllers::products::structs::FetchParams;
-use crate::controllers::products::structs::Product;
 
 pub fn routes() -> Vec<Route> {
     routes![get_products]
@@ -20,15 +21,15 @@ pub async fn get_products(
     params: Json<FetchParams>,
     state: &State<JHApiServerState>,
     key: ApiKey<'_>,
-) -> Json<Vec<Product>> {
+) -> ApiResponse {
     let pool = &state.pool;
     let sql_manager = &state.sql_manager;
     info!("GetProductData Request: {:?}", params);
     match get_product(params, &pool, &sql_manager, &key).await {
-        Ok(products) => Json(products),
-        Err(_err) => {
+        Ok(products) => respond!(200, "", products),
+        Err(err) => {
             error!("Error");
-            Json(vec![])
+            err.into()
         }
     }
 }
