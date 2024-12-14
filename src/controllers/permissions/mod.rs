@@ -27,7 +27,7 @@ pub async fn get_user_permissions(
         .unwrap_or(false)
     {
         error!("User does not exist");
-        return Err(APIError::UserNotFound);
+        return Err(APIError::DataNotFound);
     }
 
     let conn = conn.unwrap();
@@ -94,7 +94,7 @@ pub async fn edit_user_permissions(
         .unwrap_or(false)
     {
         error!("User does not exist");
-        return Err(APIError::UserNotFound);
+        return Err(APIError::DataNotFound);
     }
 
     // Same Weird threads error as routes/users.rs

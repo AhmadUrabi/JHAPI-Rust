@@ -1,4 +1,6 @@
+use crate::respond;
 use crate::server::JHApiServerState;
+use crate::utils::structs::APIError;
 
 use rocket::http::Status;
 use rocket::serde::json::Json;
@@ -7,7 +9,7 @@ use rocket::{post, Route, State};
 use crate::controllers::auth::structs::LoginParams;
 use crate::controllers::auth::{signin, validate_token};
 
-use crate::utils::structs::APIError;
+use crate::server::response::ApiResponse;
 
 pub fn routes() -> Vec<Route> {
     routes![sign, authcheck, logout]
@@ -18,7 +20,7 @@ pub async fn sign(
     params: Json<LoginParams>,
     state: &State<JHApiServerState>,
     cookies: &rocket::http::CookieJar<'_>,
-) -> Result<String, Status> {
+) -> ApiResponse {
     info!("Sign Request: {:?}", params.0.p_username);
     let pool = &state.pool;
     let sql_manager = &state.sql_manager;
@@ -30,42 +32,36 @@ pub async fn sign(
                 .same_site(rocket::http::SameSite::None)
                 .secure(true);
             cookies.add(cookie);
-            Ok(token.to_string())
+            respond!(200, "Authenticated", token)
         }
         Err(e) => {
             error!("Error authorizing, Token Not Sent");
-            match e {
-                APIError::InvalidData => Err(Status::Unauthorized),
-                APIError::DBError => Err(Status::InternalServerError),
-                APIError::UserNotFound => Err(Status::Unauthorized),
-                APIError::InvalidCredentials => Err(Status::Unauthorized),
-                _ => Err(Status::InternalServerError),
-            }
+            e.into()
         }
     }
 }
 
 #[post("/logout")]
-pub async fn logout(cookies: &rocket::http::CookieJar<'_>) -> Result<&'static str, Status> {
+pub async fn logout(cookies: &rocket::http::CookieJar<'_>) -> ApiResponse {
     info!("Logout Request");
     cookies.remove(rocket::http::Cookie::from("token"));
-    Ok("Logged Out")
+    respond!(200, "Logged Out")
 }
 
 #[get("/authcheck")]
-pub async fn authcheck(cookies: &rocket::http::CookieJar<'_>) -> Result<&'static str, Status> {
+pub async fn authcheck(cookies: &rocket::http::CookieJar<'_>) -> ApiResponse {
     match cookies.get("token") {
         Some(value) => {
             info!("Token Found");
             if validate_token(value.value()) {
                 info!("Valid Token Found");
-                return Ok("Token Found");
+                respond!(200, "Token Found")
             } else {
                 error!("Invalid Token Found");
-                Err(Status::Unauthorized)
+                APIError::InvalidToken.into()
             }
         }
-        None => Err(Status::Unauthorized),
+        None => APIError::InvalidCredentials.into(),
     }
 }
 

@@ -46,7 +46,7 @@ pub async fn get_image(
             info!("File Not Found");
             match e {
                 APIError::SFTPError => return Err(Status::InternalServerError),
-                APIError::FileNotFound => return Err(Status::NotFound),
+                // APIError::FileNotFound => return Err(Status::NotFound),
                 _ => return Err(Status::InternalServerError),
             }
         }
@@ -95,7 +95,7 @@ pub async fn upload(
             info!("File Not Uploaded");
             match e {
                 APIError::SFTPError => return Err(Status::InternalServerError),
-                APIError::FileNotFound => return Err(Status::NotFound),
+                // APIError::FileNotFound => return Err(Status::NotFound),
                 _ => return Err(Status::InternalServerError),
             }
         }

@@ -111,7 +111,7 @@ async fn fetch_user_data(
     let rows = stmt.query_row(&[&username]);
     if rows.is_err() {
         error!("Error executing query");
-        return Err(APIError::UserNotFound);
+        return Err(APIError::DataNotFound);
     }
     let row = rows.unwrap();
 

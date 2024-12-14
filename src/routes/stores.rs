@@ -47,7 +47,7 @@ pub async fn get_store_list(
             }
             Err(err) => match err {
                 APIError::DBError => return Err(Status::InternalServerError),
-                APIError::UserNotFound => return Err(Status::NotFound),
+                APIError::DataNotFound => return Err(Status::NotFound),
                 _ => return Err(Status::InternalServerError),
             },
         }
@@ -56,7 +56,7 @@ pub async fn get_store_list(
         Ok(stores) => Ok(Json(stores)),
         Err(err) => match err {
             APIError::DBError => return Err(Status::InternalServerError),
-            APIError::UserNotFound => return Err(Status::NotFound),
+            APIError::DataNotFound => return Err(Status::NotFound),
             _ => return Err(Status::InternalServerError),
         },
     }
@@ -163,7 +163,7 @@ pub async fn get_store_list_for_user(
         Ok(stores) => Ok(Json(stores)),
         Err(err) => match err {
             APIError::DBError => return Err(Status::InternalServerError),
-            APIError::UserNotFound => return Err(Status::NotFound),
+            APIError::DataNotFound => return Err(Status::NotFound),
             _ => return Err(Status::InternalServerError),
         },
     }

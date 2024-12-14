@@ -114,7 +114,7 @@ pub async fn get_user(
     }
     if user.is_empty() {
         error!("User not found");
-        return Err(APIError::UserNotFound);
+        return Err(APIError::DataNotFound);
     } else {
         Ok(user)
     }
@@ -137,7 +137,7 @@ pub async fn create_user(
         Ok(exists) => {
             if exists {
                 error!("User already exists");
-                return Err(APIError::UserExists);
+                return Err(APIError::DataExists);
             }
         }
         Err(_err) => {
@@ -200,7 +200,7 @@ pub async fn edit_user(
 
     if original_user.username == "" {
         error!("User not found");
-        return Err(APIError::UserNotFound);
+        return Err(APIError::DataNotFound);
     }
 
     let mut new_user = original_user.clone();
@@ -287,7 +287,7 @@ pub async fn delete_user(
         Ok(exists) => {
             if !exists {
                 error!("User does not exist");
-                return Err(APIError::UserNotFound);
+                return Err(APIError::DataNotFound);
             }
         }
         Err(_err) => {

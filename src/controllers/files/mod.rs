@@ -142,7 +142,7 @@ pub async fn download_file(file_name: &String) -> Result<(), APIError> {
         Ok(())
     } else {
         println!("File does not exist");
-        return Err(APIError::FileNotFound);
+        return Err(APIError::DataNotFound);
     }
 }
 

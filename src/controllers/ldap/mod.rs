@@ -100,7 +100,7 @@ impl UserAccount {
         // Lookup the userPrincipalName to see if it already exists
         let user_exists = Self::get_dn_from_uname(ldap, user.userPrincipalName.as_str()).await;
         if user_exists.is_some() {
-            return Err(APIError::UserExists);
+            return Err(APIError::DataExists);
         }
 
         let quoted_b64_password = format!("'{}'", user.password);
@@ -182,7 +182,7 @@ impl UserAccount {
 
         match Self::fetch_user(ldap, new_user_dn).await {
             Some(user) => Ok(user),
-            None => Err(APIError::UserNotFound),
+            None => Err(APIError::DataNotFound),
         }
     }
 

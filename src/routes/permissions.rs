@@ -51,7 +51,7 @@ pub async fn get_permissions(
     {
         Ok(permissions) => Ok(Json(permissions)),
         Err(err) => match err {
-            APIError::UserNotFound => Err(Status::NotFound),
+            APIError::DataNotFound => Err(Status::NotFound),
             APIError::DBError => Err(Status::InternalServerError),
             _ => Err(Status::InternalServerError),
         },
@@ -87,7 +87,7 @@ pub async fn edit_permissions(
             Ok("Permissions Edited".to_string())
         }
         Err(err) => match err {
-            APIError::UserNotFound => Err(Status::NotFound),
+            APIError::DataNotFound => Err(Status::NotFound),
             APIError::DBError => Err(Status::InternalServerError),
             _ => Err(Status::InternalServerError),
         },

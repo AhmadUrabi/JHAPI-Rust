@@ -23,7 +23,7 @@ pub async fn get_stores(
         Ok(b) => {
             if !b {
                 error!("User does not exist");
-                return Err(APIError::UserNotFound);
+                return Err(APIError::DataNotFound);
             }
         }
         Err(_err) => {

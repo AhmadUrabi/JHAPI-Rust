@@ -3,8 +3,8 @@ use crate::{
         check_connection,
         models::{UserAccount, UserParams},
     },
-    server::JHApiServerState,
-    utils::structs::APIError,
+    respond,
+    server::{response::ApiResponse, JHApiServerState},
 };
 use ldap3::{Scope, SearchEntry};
 use rocket::{serde::json::Json, Route, State};
@@ -14,26 +14,21 @@ pub fn routes() -> Vec<Route> {
 }
 
 #[get("/ldap/users")]
-pub async fn get_all_users(
-    state: &State<JHApiServerState>,
-) -> Result<Json<Vec<UserAccount>>, String> {
-    // if let Err(_) = check_connection(&state).await {
-    //     loop {
-    //         if let Ok(_) = check_connection(&state).await {
-    //             break;
-    //         }
-    //     }
-    // }
+pub async fn get_all_users(state: &State<JHApiServerState>) -> ApiResponse {
+    if let Err(_) = check_connection(&state).await {
+        loop {
+            if let Ok(_) = check_connection(&state).await {
+                break;
+            }
+        }
+    }
     let mut ldap = state.ldap.lock().await;
     let users = UserAccount::fetch_all_users(&mut ldap).await;
-    // ApiResponse::new("Success".to_string(), rocket::http::Status::Ok, Some(users))
-    Ok(Json(users))
+    respond!(200, "Users Found", users)
 }
 
 #[get("/ldap/computers")]
-pub async fn get_all_computers(
-    state: &State<JHApiServerState>,
-) -> Result<Json<Vec<String>>, String> {
+pub async fn get_all_computers(state: &State<JHApiServerState>) -> ApiResponse {
     if let Err(_) = check_connection(&state).await {
         loop {
             if let Ok(_) = check_connection(&state).await {
@@ -59,64 +54,50 @@ pub async fn get_all_computers(
         .success()
         .unwrap();
 
-    println!("{:?}", rs);
+    // TODO: Clean up and error handling
+
+    let mut res: Vec<UserAccount> = vec![];
 
     // Iterate through search results and print them
     for entry in rs {
         let entry = SearchEntry::construct(entry);
         println!("{:?}", entry);
-        // let user: UserAccount = entry.attrs.into();
-        // res.push(user);
+        let user: UserAccount = entry.attrs.into();
+        res.push(user);
     }
 
-    Ok(Json(vec![]))
+    respond!(200, "Users Found", res)
 }
 
 #[post("/ldap/users", format = "json", data = "<user>")]
-pub async fn create_user(
-    user: Json<UserParams>,
-    state: &State<JHApiServerState>,
-) -> Result<Json<UserAccount>, String> {
+pub async fn create_user(user: Json<UserParams>, state: &State<JHApiServerState>) -> ApiResponse {
     let mut ldap = state.ldap.lock().await;
     let user_data = user.into_inner();
     let new_user = UserAccount::create_new_user(&mut ldap, user_data).await;
     match new_user {
-        Ok(user) => Ok(Json(user)),
-        Err(_) => Err("Error Creating User".to_string()),
+        Ok(user) => respond!(201, "User Created", user),
+        // TODO: Add handling for errors
+        Err(_) => respond!(422, "Couldn't Create User"),
     }
-    // match new_user {
-    //     Ok(user) => Ok(user),
-    //     Err(e) => Err(e),
-    //     // errors::APIErrors::EntryExists => ApiResponse::new(
-    //     //     "User Already Exists".to_string(),
-    //     //     rocket::http::Status::Conflict,
-    //     //     None,
-    //     // ),
-    //     // _ => ApiResponse::new(
-    //     //     "Error Creating User".to_string(),
-    //     //     rocket::http::Status::InternalServerError,
-    //     //     None,
-    //     // ),
-    // }
 }
 
 #[delete("/ldap/users/<uname>")]
-pub async fn delete_user(uname: String, state: &State<JHApiServerState>) -> Result<(), String> {
+pub async fn delete_user(uname: String, state: &State<JHApiServerState>) -> ApiResponse {
     let mut ldap = state.ldap.lock().await;
     let user_dn = UserAccount::get_dn_from_uname(&mut ldap, uname.as_str()).await;
     if user_dn.is_none() {
-        return Err("User Not Found".to_string());
+        return respond!(404, "User Not Found");
     }
 
     let user_dn = user_dn.unwrap();
-    println!("Deleting user: {}", user_dn);
 
     let res = ldap.delete(user_dn.as_str()).await;
     if res.is_err() {
-        return Err("Error Deleting User".to_string());
+        return respond!(500, "Error Deleting User");
     }
+    // TODO: Error Handling
     match res.unwrap().success() {
-        Ok(_) => Ok(()),
-        Err(_) => Err("Error Deleting User".to_string()),
+        Ok(_) => respond!(200, "User Deleted"),
+        Err(_) => respond!(500, "Error Deleting User"),
     }
 }
