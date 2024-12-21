@@ -1,4 +1,5 @@
 use crate::server::JHApiServer;
+use crate::server::response::{ApiResponse, ResponseData};
 
 #[allow(dead_code)]
 pub async fn get_server_with_route() -> rocket::Rocket<rocket::Build> {
@@ -34,6 +35,12 @@ pub async fn get_valid_user_token() -> Option<String> {
         .dispatch()
         .await;
     assert_eq!(response.status(), rocket::http::Status::Ok);
-    let response_body = response.into_string().await;
-    response_body
+    let response_body = response.into_json::<ApiResponse>().await.unwrap();
+    match response_body.data {
+        Some(data) => match data {
+            ResponseData::Text(text) => Some(text),
+            ResponseData::Json(value) => Some(value.to_string()),
+        },
+        None => None,
+    }
 }

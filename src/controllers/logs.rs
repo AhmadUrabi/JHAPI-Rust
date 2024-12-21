@@ -3,12 +3,23 @@ use oracle::pool::Pool;
 
 use rocket::serde::json::Json;
 
-pub mod structs;
-
-use structs::LogData;
-
 use crate::utils::sql::SQLManager;
 use crate::utils::structs::APIError;
+use rocket::serde::{Deserialize, Serialize};
+#[derive(Serialize, Deserialize, Debug)]
+pub struct LogData {
+    pub LOG_ID: i32,
+    pub USERNAME: Option<String>,
+    pub ROUTE: String,
+    pub PARAMETERS: Option<String>,
+    pub RESULT: String,
+    pub TIMESTAMP: String,
+    pub TOKEN_USED: String,
+    pub IP_ADDRESS: Option<String>,
+    pub METHOD: Option<String>,
+}
+
+
 
 pub async fn get_all_logs_fn(
     pool: &Pool,

@@ -5,9 +5,42 @@ use crate::utils::check_user_exists;
 use crate::utils::sql::SQLManager;
 use crate::utils::structs::APIError;
 
-use self::structs::Permissions;
+use rocket::serde::{Deserialize, Serialize};
 
-pub mod structs;
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct PermissionEditParams {
+    pub p_permissions: Permissions,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct Permissions {
+    pub users: bool,
+    pub permissions: bool,
+    pub query: bool,
+    pub images: bool,
+    pub cost: bool,
+    pub admin: bool,
+    pub stock: bool,
+    pub reports: bool,
+    pub stores: bool,
+}
+
+impl Permissions {
+    pub fn new() -> Permissions {
+        Permissions {
+            users: false,
+            permissions: false,
+            query: false,
+            images: false,
+            cost: false,
+            admin: false,
+            stock: false,
+            reports: false,
+            stores: false,
+        }
+    }
+}
+
 
 // TODO: try to optimize this function
 pub async fn get_user_permissions(

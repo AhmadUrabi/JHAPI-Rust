@@ -6,13 +6,13 @@ use crate::respond;
 use crate::server::response::ApiResponse;
 use crate::server::JHApiServerState;
 
-use crate::controllers::permissions::structs::{PermissionEditParams, Permissions};
+use crate::controllers::permissions::*;
+use crate::utils::permissions::*;
 
 use crate::controllers::auth::decode_token_data;
 
 use crate::server::request_guard::api_key::ApiKey;
 
-use crate::utils::permissions::{has_admin_perm, has_permissions_perm};
 use crate::utils::structs::APIError;
 
 pub fn routes() -> Vec<Route> {
@@ -41,7 +41,7 @@ pub async fn get_permissions(
         && !has_admin_perm(&_key, pool, &sql_manager).await
         && username.to_lowercase() != user_id.to_lowercase()
     {
-        respond!(401, "User is Unauthorized")
+        return respond!(401, "User is Unauthorized");
     }
 
     match crate::controllers::permissions::get_user_permissions(
@@ -69,8 +69,8 @@ pub async fn edit_permissions(
     if !has_permissions_perm(&_key, pool, &sql_manager).await
         && !has_admin_perm(&_key, pool, &sql_manager).await
     {
-        respond!(401, "Unauthorized")
-    }
+        return respond!(401, "Unauthorized");
+    };
     match crate::controllers::permissions::edit_user_permissions(
         (username.clone()).to_lowercase(),
         &pool,

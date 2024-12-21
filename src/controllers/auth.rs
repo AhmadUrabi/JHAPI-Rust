@@ -5,17 +5,41 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use oracle::pool::Pool;
 
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
-use serde::{Deserialize, Serialize};
-
-use crate::controllers::auth::structs::LoginParams;
-use crate::controllers::auth::structs::User;
 
 use crate::utils::sql::SQLManager;
 use crate::utils::structs::APIError;
 
 use bcrypt::verify;
 
-pub mod structs;
+use rocket::serde::{Deserialize, Serialize};
+
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize, Debug)]
+pub struct User {
+    pub USER_ID: Option<String>,
+    pub USER_NAME: Option<String>,
+    pub USER_EMAIL: Option<String>,
+    pub LOGIN_DURATION: Option<String>,
+}
+
+impl User {
+    pub fn new() -> User {
+        User {
+            USER_ID: None,
+            USER_NAME: None,
+            USER_EMAIL: None,
+            LOGIN_DURATION: None,
+        }
+    }
+}
+
+// These shouldn't be options, both values are required
+#[derive(Deserialize, Debug, Serialize, Clone)]
+pub struct LoginParams {
+    pub p_username: String,
+    pub p_password: String,
+}
+
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
@@ -68,7 +92,7 @@ pub async fn signin(
         pool,
         &sql_manager,
     )
-    .await;
+        .await;
     if user.is_err() {
         error!("Error fetching user data");
         return Err(user.err().unwrap());
@@ -172,9 +196,9 @@ pub fn validate_token(token: &str) -> bool {
         Ok(token) => {
             return token.claims.exp
                 > SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap() // Safe Unwap, earlier is const, always less than current time
-                    .as_secs() as usize;
+                .duration_since(UNIX_EPOCH)
+                .unwrap() // Safe Unwap, earlier is const, always less than current time
+                .as_secs() as usize;
         }
         Err(err) => {
             println!("Error decoding token: {}", err);

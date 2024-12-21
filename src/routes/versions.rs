@@ -4,8 +4,7 @@ use crate::server::JHApiServerState;
 use rocket::serde::json::Json;
 use rocket::{post, Route, State};
 
-use crate::controllers::versions::get_latest_version;
-use crate::controllers::versions::structs::*;
+use crate::controllers::versions::*;
 
 pub fn routes() -> Vec<Route> {
     routes![route_version_check]

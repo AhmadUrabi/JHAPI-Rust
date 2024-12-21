@@ -6,8 +6,7 @@ use rocket::http::Status;
 use rocket::serde::json::Json;
 use rocket::{post, Route, State};
 
-use crate::controllers::auth::structs::LoginParams;
-use crate::controllers::auth::{signin, validate_token};
+use crate::controllers::auth::*;
 
 use crate::server::response::ApiResponse;
 
@@ -43,6 +42,7 @@ pub async fn sign(
 
 #[post("/logout")]
 pub async fn logout(cookies: &rocket::http::CookieJar<'_>) -> ApiResponse {
+    // TODO: Extend functionality
     info!("Logout Request");
     cookies.remove(rocket::http::Cookie::from("token"));
     respond!(200, "Logged Out")

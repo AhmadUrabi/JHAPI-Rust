@@ -8,7 +8,7 @@ use crate::server::request_guard::api_key::ApiKey;
 
 use crate::utils::permissions::has_admin_perm;
 
-use crate::controllers::logs::structs::LogData;
+use crate::controllers::logs::LogData;
 
 pub fn routes() -> Vec<Route> {
     routes![
@@ -18,7 +18,7 @@ pub fn routes() -> Vec<Route> {
         delete_log_logs
     ]
 }
-
+//  TODO: Migrate to file based Logs
 #[get("/logs?<limit>")]
 pub async fn get_all_logs(
     state: &State<JHApiServerState>,

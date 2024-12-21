@@ -2,15 +2,14 @@
 use crate::respond;
 use crate::server::response::ApiResponse;
 use crate::server::JHApiServerState;
+use crate::controllers::products::get_product;
+use crate::server::request_guard::api_key::ApiKey;
+use crate::controllers::products::FetchParams;
 
 use rocket::log::private::info;
 use rocket::serde::json::Json;
 use rocket::{post, Route, State};
 
-use crate::controllers::products::get_product;
-use crate::server::request_guard::api_key::ApiKey;
-
-use crate::controllers::products::structs::FetchParams;
 
 pub fn routes() -> Vec<Route> {
     routes![get_products]

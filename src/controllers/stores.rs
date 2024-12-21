@@ -3,9 +3,25 @@ use oracle::pool::Pool;
 use crate::utils::check_user_exists;
 
 use crate::utils::sql::SQLManager;
-use crate::{controllers::stores::structs::Store, utils::structs::APIError};
 
-pub mod structs;
+use rocket::serde::{Deserialize, Serialize};
+use crate::utils::structs::APIError;
+
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize)]
+pub struct Store {
+    pub STORE_ID: Option<String>,
+    pub STORE_DESC: Option<String>,
+    pub STORE_DESC_S: Option<String>,
+}
+
+#[derive(Deserialize, Debug, Serialize, Clone)]
+pub struct StoreListUpdateParams {
+    pub p_username: String,
+    pub p_stores: Option<Vec<i8>>,
+    pub p_allstoresaccess: i8,
+}
+
 
 pub async fn get_stores(
     pool: &Pool,

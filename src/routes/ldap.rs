@@ -1,27 +1,39 @@
 use crate::{
     controllers::ldap::{
         check_connection,
-        models::{UserAccount, UserParams},
+        UserAccount, UserParams,
     },
     respond,
     server::{response::ApiResponse, JHApiServerState},
 };
 use ldap3::{Scope, SearchEntry};
 use rocket::{serde::json::Json, Route, State};
+use tokio::time::timeout;
+
+const TIMEOUT: core::time::Duration = core::time::Duration::from_secs(10);
 
 pub fn routes() -> Vec<Route> {
     routes![get_all_users, get_all_computers, create_user, delete_user,]
 }
 
-#[get("/ldap/users")]
-pub async fn get_all_users(state: &State<JHApiServerState>) -> ApiResponse {
-    if let Err(_) = check_connection(&state).await {
-        loop {
-            if let Ok(_) = check_connection(&state).await {
-                break;
-            }
+// TODO: Clean all functionality
+
+async fn refresh_connection(state: &State<JHApiServerState>) {
+    let mut retries = 5;
+    while retries > 0 {
+        if let Ok(Ok(_)) = timeout(TIMEOUT, check_connection(&state)).await {
+            println!("Connection established!");
+            break;
+        } else {
+            retries -= 1;
+            println!("Retrying... Remaining attempts: {}", retries);
         }
     }
+}
+
+#[get("/ldap/users")]
+pub async fn get_all_users(state: &State<JHApiServerState>) -> ApiResponse {
+    refresh_connection(&state).await;
     let mut ldap = state.ldap.lock().await;
     let users = UserAccount::fetch_all_users(&mut ldap).await;
     respond!(200, "Users Found", users)
@@ -29,13 +41,7 @@ pub async fn get_all_users(state: &State<JHApiServerState>) -> ApiResponse {
 
 #[get("/ldap/computers")]
 pub async fn get_all_computers(state: &State<JHApiServerState>) -> ApiResponse {
-    if let Err(_) = check_connection(&state).await {
-        loop {
-            if let Ok(_) = check_connection(&state).await {
-                break;
-            }
-        }
-    }
+    refresh_connection(&state).await;
     let mut ldap = state.ldap.lock().await;
     // let users = UserAccount::fetch_all_users(&mut ldap).await;
 
@@ -61,7 +67,6 @@ pub async fn get_all_computers(state: &State<JHApiServerState>) -> ApiResponse {
     // Iterate through search results and print them
     for entry in rs {
         let entry = SearchEntry::construct(entry);
-        println!("{:?}", entry);
         let user: UserAccount = entry.attrs.into();
         res.push(user);
     }
@@ -71,6 +76,7 @@ pub async fn get_all_computers(state: &State<JHApiServerState>) -> ApiResponse {
 
 #[post("/ldap/users", format = "json", data = "<user>")]
 pub async fn create_user(user: Json<UserParams>, state: &State<JHApiServerState>) -> ApiResponse {
+    refresh_connection(&state).await;
     let mut ldap = state.ldap.lock().await;
     let user_data = user.into_inner();
     let new_user = UserAccount::create_new_user(&mut ldap, user_data).await;
@@ -83,6 +89,7 @@ pub async fn create_user(user: Json<UserParams>, state: &State<JHApiServerState>
 
 #[delete("/ldap/users/<uname>")]
 pub async fn delete_user(uname: String, state: &State<JHApiServerState>) -> ApiResponse {
+    refresh_connection(&state).await;
     let mut ldap = state.ldap.lock().await;
     let user_dn = UserAccount::get_dn_from_uname(&mut ldap, uname.as_str()).await;
     if user_dn.is_none() {

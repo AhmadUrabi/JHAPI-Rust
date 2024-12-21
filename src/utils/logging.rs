@@ -6,6 +6,7 @@ use super::sql::SQLManager;
 use super::structs::APIError;
 
 /// Log request data to the database
+// TODO: Change to file based logs
 pub fn log_data(
     pool: &Pool,
     sql_manager: &SQLManager,

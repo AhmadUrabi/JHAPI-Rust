@@ -1,5 +1,4 @@
 use crate::controllers::auth::decode_token_data;
-use crate::controllers::users::structs::*;
 use crate::controllers::users::*;
 use crate::respond;
 use crate::server::request_guard::api_key::ApiKey;
@@ -10,7 +9,7 @@ use crate::server::JHApiServerState;
 
 use rocket::serde::json::Json;
 use rocket::State;
-use rocket::{http::Status, Route};
+use rocket::{Route};
 
 use crate::utils::permissions::{has_admin_perm, has_users_perm};
 

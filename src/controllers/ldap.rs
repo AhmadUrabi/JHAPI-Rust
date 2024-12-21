@@ -1,15 +1,65 @@
+#![allow(non_snake_case)]
 use std::collections::{HashMap, HashSet};
 
 use base64::Engine;
 use ldap3::{Ldap, Mod, Scope, SearchEntry};
-use models::{UserAccount, UserParams};
 
 use crate::{
     server::{JHApiServer, JHApiServerState},
     utils::structs::APIError,
 };
 
-pub mod models;
+use rocket::serde::{Deserialize, Serialize, json::serde_json::{from_str, Value}};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UserParams {
+    pub cn: String,
+    pub givenName: String,
+    pub sn: String,
+    pub displayName: String,
+    pub userPrincipalName: String,
+    pub sAMAccountName: String,
+    pub mail: String,
+    pub password: String,
+    pub create_cpanel_account: Option<bool>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UserAccount {
+    pub sAMAccountName: Option<Vec<String>>,
+    pub sn: Option<Vec<String>>,
+    pub badPasswordTime: Option<Vec<String>>,
+    pub uSNChanged: Option<Vec<String>>,
+    pub objectClass: Option<Vec<String>>,
+    pub logonCount: Option<Vec<String>>,
+    pub homeDirectory: Option<Vec<String>>,
+    pub accountExpires: Option<Vec<String>>,
+    pub lastLogonTimestamp: Option<Vec<String>>,
+    pub lastLogoff: Option<Vec<String>>,
+    pub distinguishedName: Option<Vec<String>>,
+    pub countryCode: Option<Vec<String>>,
+    pub objectCategory: Option<Vec<String>>,
+    pub cn: Option<Vec<String>>,
+    pub codePage: Option<Vec<String>>,
+    pub memberOf: Option<Vec<String>>,
+    pub instanceType: Option<Vec<String>>,
+    pub name: Option<Vec<String>>,
+    pub givenName: Option<Vec<String>>,
+    pub sAMAccountType: Option<Vec<String>>,
+    pub userPrincipalName: Option<Vec<String>>,
+    pub whenChanged: Option<Vec<String>>,
+    pub pwdLastSet: Option<Vec<String>>,
+    pub badPwdCount: Option<Vec<String>>,
+    pub lastLogon: Option<Vec<String>>,
+    pub whenCreated: Option<Vec<String>>,
+    pub displayName: Option<Vec<String>>,
+    pub homeDrive: Option<Vec<String>>,
+    pub userAccountControl: Option<Vec<String>>,
+    pub primaryGroupID: Option<Vec<String>>,
+    pub uSNCreated: Option<Vec<String>>,
+    pub dSCorePropagationData: Option<Vec<String>>,
+}
+
 
 pub async fn check_connection(state: &JHApiServerState) -> Result<(), String> {
     let mut ldap = state.ldap.lock().await;
@@ -319,6 +369,6 @@ async fn create_cpanel_account(user: String, domain: String) -> Result<String, r
         .send()
         .await?;
     let body = res.text().await?;
-    let json = serde_json::from_str::<serde_json::Value>(&body).unwrap();
+    let json = from_str::<Value>(&body).unwrap();
     Ok(json["data"].as_str().unwrap_or("").to_string())
 }

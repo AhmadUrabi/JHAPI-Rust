@@ -3,13 +3,13 @@ use std::io::Cursor;
 use rocket::http::{ContentType, Status};
 use rocket::request::Request;
 use rocket::response::{self, Responder, Response};
-use serde::{Deserialize, Serialize};
-use serde_json::json;
+use rocket::serde::{Deserialize, Serialize};
+use rocket::serde::json::serde_json::{json, Value, to_string};
 
 #[derive(Serialize, Deserialize)]
-#[serde(untagged)]
+#[serde(crate = "rocket::serde", untagged)]
 pub enum ResponseData {
-    Json(serde_json::Value),
+    Json(Value),
     Text(String),
 }
 
@@ -26,8 +26,8 @@ impl<'r> Responder<'r, 'static> for ApiResponse {
         Response::build()
             .header(ContentType::JSON)
             .sized_body(
-                serde_json::to_string(&self).unwrap().len(),
-                Cursor::new(serde_json::to_string(&self).unwrap()),
+                to_string(&self).unwrap().len(),
+                Cursor::new(to_string(&self).unwrap()),
             )
             .status(Status::from_code(self.status).unwrap())
             .ok()

@@ -1,11 +1,25 @@
-pub mod structs;
-
 use crate::{
-    controllers::versions::structs::Version,
     utils::{sql::SQLManager, structs::APIError},
 };
 use oracle::pool::Pool;
 use rocket::serde::json::Json;
+
+use rocket::serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Version {
+    pub version: String,
+    pub platform: String,
+    pub url: String,
+    pub release_date: String,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct VersionParams {
+    pub p_current_version: String,
+    pub p_platform: String,
+}
+
 
 pub async fn get_latest_version(
     platform: &str,

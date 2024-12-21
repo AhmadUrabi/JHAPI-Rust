@@ -10,10 +10,58 @@ use oracle::pool::Pool;
 use bcrypt::{hash, DEFAULT_COST};
 
 use crate::utils::permissions::{has_admin_perm, has_users_perm};
+use rocket::serde::{Deserialize, Serialize};
 
-pub mod structs;
+#[derive(Debug, Serialize, Deserialize)]
+pub struct User {
+    pub username: String,
+    pub fullname: Option<String>,
+    pub email: Option<String>,
+    pub login_duration: Option<i32>,
+}
 
-use crate::controllers::users::structs::*;
+impl User {
+    pub fn new() -> User {
+        User {
+            username: "".to_string(),
+            fullname: None,
+            email: None,
+            login_duration: None,
+        }
+    }
+    pub fn is_empty(&self) -> bool {
+        self.username == ""
+    }
+}
+
+impl Clone for User {
+    fn clone(&self) -> User {
+        User {
+            username: self.username.clone(),
+            fullname: self.fullname.clone(),
+            email: self.email.clone(),
+            login_duration: self.login_duration.clone(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NewUser {
+    pub p_username: String,
+    pub p_password: String,
+    pub p_fullname: String,
+    pub p_email: String,
+    pub p_loginduration: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EditUserParams {
+    pub p_password: Option<String>,
+    pub p_fullname: Option<String>,
+    pub p_email: Option<String>,
+    pub p_loginduration: Option<i32>,
+}
+
 
 pub async fn get_users(
     _key: &ApiKey<'_>,
